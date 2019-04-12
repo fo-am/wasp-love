@@ -763,22 +763,22 @@
      ((< (button-x b) 0)
       (button-modify-x
        (animated-button-modify-dir
-        b (vector (- 0 (vx d)) (vy d)))
+        b (vec2 (- 0 (vx d)) (vy d)))
        0))
      ((< (button-y b) 0)
       (button-modify-y
        (animated-button-modify-dir
-        b (vector (vx d) (- 0 (vy d))))
+        b (vec2 (vx d) (- 0 (vy d))))
        0))
      ((> (+ (button-x b) (button-w b)) screen-width)
       (button-modify-x
        (animated-button-modify-dir
-        b (vector (- 0 (vx d)) (vy d)))
+        b (vec2 (- 0 (vx d)) (vy d)))
        (- screen-width (button-w b))))
      ((> (+ (button-y b) (button-w b)) screen-height)
       (button-modify-y
        (animated-button-modify-dir
-        b (vector (vx d) (- 0 (vy d))))
+        b (vec2 (vx d) (- 0 (vy d))))
        (- screen-height (button-h b))))
      (else b))))
 
@@ -923,7 +923,6 @@
   ;; todo - pass in game specific func
   (set! game (nightjar-intro (make-new-game)))
   (window.requestAnimationFrame top-render ctx))
-
 
 (define (mutate-game f)
   (lambda (data)

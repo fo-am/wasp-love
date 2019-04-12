@@ -1,0 +1,23 @@
+;; -*- mode: scheme; -*-
+
+(define (make-nest energy location time-of-year wasps) 
+  (list energy location time-of-year wasps))
+
+(define (nest-energy n) (list-ref n 0))
+(define (nest-location n) (list-ref n 1))
+(define (nest-time-of-year n) (list-ref n 2))
+(define (nest-wasps n) (list-ref n 3))
+
+(define (nest-wasps-update n delta)
+  (map
+   (lambda (wasp)
+     (entity-update wasp delta))
+   (nest-wasps n)))
+
+(define (nest-update n delta)
+  (make-nest
+   (nest-energy n)
+   (nest-location n)
+   (nest-time-of-year n)
+   (nest-wasps-update n delta)))
+

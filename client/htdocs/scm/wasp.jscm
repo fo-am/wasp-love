@@ -1,0 +1,20 @@
+;; -*- mode: scheme; -*-
+
+(define wasp-animation
+  (list
+   (make-anim-move "7" "idle" (list "1" "2"))
+   (make-anim-move "7" "walk" (list "1" "2" "3"))))
+
+(define wasp-animation-idle 0)
+(define wasp-animation-walk 1)
+
+(define (make-wasp capabilities) 
+  (append 
+   (make-entity 
+    "wasp" (list 100 100) 0
+    (dbg (anim-load-frames wasp-animation))
+    0 3)
+   (list capabilities)))
+
+(define (wasp-capabilities w) (list-ref w (+ entity-size 0)))
+

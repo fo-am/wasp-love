@@ -1,0 +1,21 @@
+;; -*- mode: scheme; -*-
+
+(define (make-entity-list entities) (list entities))
+
+(define (entity-list-entities el) (list-ref el 0))
+
+(define (entity-list-render el ctx)
+  (for-each
+   (lambda (e)
+     (entity-render e ctx))
+   el))
+
+(define (entity-list-update el delta)
+  (map
+   (lambda (e)
+     (entity-update e delta))
+   el))
+
+(define (entity-list-add el e)
+  (cons e el))
+

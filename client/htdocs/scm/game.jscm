@@ -18,6 +18,11 @@
 (load "scm/maths.jscm")
 (load "scm/random.jscm")
 (load "scm/nightjar.jscm")
+(load "scm/animation.jscm")
+(load "scm/entity.jscm")
+(load "scm/entity-list.jscm")
+(load "scm/wasp.jscm")
+(load "scm/nest.jscm")
 
 (define empty-button-width 300)
 (define empty-button-height 200)
@@ -46,25 +51,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-nest energy location time-of-year wasps) 
-  (list energy location time-of-year wasps))
-
-(define (nest-energy n) (list-ref n 0))
-(define (nest-location n) (list-ref n 1))
-(define (nest-time-of-year n) (list-ref n 2))
-(define (nest-wasps n) (list-ref n 3))
-
-(define (make-wasp capabilities) 
-  (list capabilities))
-
-(define (wasp-capabilities w) (list-ref w 0))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (define (empty-nightjar-data)
-  (list (make-nest 100 'city 0 (list (make-wasp (list 'forage 'lay-egg 'build-cell))))))
-
-(define (nightjar-nest g) (list-ref g 0))
+  (make-nest 
+   100 'city 0 
+   (list 
+    (make-wasp (list 'forage 'lay-egg 'build-cell)))))
 
 ;; setup new game
 (define (nightjar-new-game c)
@@ -96,7 +87,10 @@
 	 
 	 (set! ctx.font "normal 25pt pompiere")
 	 (wrap-text ctx "Wasps are super..." 0 300 800 40)
-	 (set! ctx.font "normal 30pt open-sans"))
+	 (set! ctx.font "normal 30pt open-sans")
+
+
+	 )
        
        (game-modify-buttons
 	(list
@@ -161,10 +155,16 @@
      ;;(ctx.drawImage
      ;; (find-image (photo-filename example)) 0 0)
      (wrap-text-left ctx "Insert game here..." 230 230 1200 40)
+
+     (entity-list-render (nest-wasps (game-data c)) ctx)
+     
      )
    (game-modify-update
     (lambda (t c)
-      c)
+      (game-modify-data
+       (lambda (d)
+	 (nest-update (game-data c) (game-delta c)))
+       c))
     (game-modify-buttons
      (list
       ) c))))
@@ -178,6 +178,8 @@
 ;  ))
 
 (load-images!
- (list "button-1.png")
+ (append 
+  (anim->filenames wasp-animation)
+  (list "button-1.png"))
  (lambda ()
    (start-game canvas ctx)))

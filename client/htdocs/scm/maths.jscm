@@ -77,11 +77,11 @@
 (define (vec2 x y) (list x y))
 
 (define (v2add a b)
-  (vector (+ (vx a) (vx b))
+  (vec2 (+ (vx a) (vx b))
           (+ (vy a) (vy b))))
 
 (define (v2mul v a)
-  (vector (* (vx v) a) (* (vy v) a)))
+  (vec2 (* (vx v) a) (* (vy v) a)))
 
 (define (v2mul2 a b)
-  (vector (* (vx a) (vx b)) (* (vy a) (vy b))))
+  (vec2 (* (vx a) (vx b)) (* (vy a) (vy b))))

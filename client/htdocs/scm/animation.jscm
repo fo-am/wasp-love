@@ -1,0 +1,35 @@
+;; -*- mode: scheme; -*-
+
+(define (make-anim-move id name frames) (list id name frames))
+(define (anim-move-id a) (list-ref a 0))
+(define (anim-move-name a) (list-ref a 1))
+(define (anim-move-frames a) (list-ref a 2))
+
+(define (anim-build-path move frame)
+  (string-append 
+   "wasp-7/"
+   (anim-move-id move) "-" 
+   (anim-move-name move) "-" 
+   frame ".png"))
+
+(define (anim->filenames anim)
+  (foldl
+   (lambda (move r)
+     (append
+      (map 
+       (lambda (frame)
+	 (anim-build-path move frame))
+       (anim-move-frames move))
+      r))
+   '()
+   anim))
+
+(define (anim-load-frames anim)
+  (map
+   (lambda (move)
+     (map 
+      (lambda (frame)
+	(find-image (anim-build-path move frame)))
+      (anim-move-frames move)))
+   anim))
+
