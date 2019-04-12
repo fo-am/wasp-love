@@ -1,0 +1,21 @@
+@font-face {
+    font-family: 'pompiere';
+    src: url('../fonts/Pompiere-Regular.otf');
+}
+
+html, body {
+    overflow: hidden;
+    margin: 0;
+    font-family: 'pompiere';
+    color: #fff;
+    font-size:  20;
+    background: #000;
+    height: 100%;
+    min-height: 100%;
+}
+
+#canvas {
+    width: 100%; /* 100% causes slider sometimes */
+    min-width: 800px;
+    /*background: url(../images/bg.png);*/
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>NHM Crab Game</title>
+    <link href="css/style.css" rel="stylesheet" type="text/css">
+    <body onload="init(['scm/game.jscm']);" bgcolor="#fff">
+      <div>
+        <center>
+          <canvas id="canvas" width="1600" height="900"></canvas>
+        </center>
+
+        <div style="display:none;">
+          <pre><div id="output"></div></pre>
+          <pre><div id="compiled"></div></pre>
+        </div>
+      </div>
+    </body>
+    <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="js/ditto.js"></script>
+
+    <script>
+      $(document).ready(function(){
+          $('#canvas').height($('#canvas').width() * 0.5625);
+      });
+      $(window).resize(function(){
+          $('#canvas').height($('#canvas').width() * 0.5625);
+      });
+
+      $( document ).ready(function() {
+         init(["scm/game.jscm"]);    
+      });
+
+    </script>
+
+</html>

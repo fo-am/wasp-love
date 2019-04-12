@@ -1,0 +1,183 @@
+;; -*- mode: scheme; -*-
+; ------------------------------------------------
+;; Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(load "scm/maths.jscm")
+(load "scm/random.jscm")
+(load "scm/nightjar.jscm")
+
+(define empty-button-width 300)
+(define empty-button-height 200)
+
+(define (button-image)
+  (find-image (choose (list "button-1.png" "button-2.png" "button-3.png"))))
+
+(define (small-button-image)
+  (find-image (choose (list "button-s1.png"))))
+
+(define (button-sound)
+  0
+;  (play-sound
+;   (choose
+;    (list
+;     "bubble-1.wav"
+;     "bubble-2.wav"
+;     "bubble-3.wav"
+;     "bubble-7.wav"
+;     )))
+  )
+
+(define default-button-x (- (/ screen-width 2) 0))
+(define default-button-y (+ (/ screen-height 2) 200))
+(define button-gap 250)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (make-nest energy location time-of-year wasps) 
+  (list energy location time-of-year wasps))
+
+(define (nest-energy n) (list-ref n 0))
+(define (nest-location n) (list-ref n 1))
+(define (nest-time-of-year n) (list-ref n 2))
+(define (nest-wasps n) (list-ref n 3))
+
+(define (make-wasp capabilities) 
+  (list capabilities))
+
+(define (wasp-capabilities w) (list-ref w 0))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define (empty-nightjar-data)
+  (list (make-nest 100 'city 0 (list (make-wasp (list 'forage 'lay-egg 'build-cell))))))
+
+(define (nightjar-nest g) (list-ref g 0))
+
+;; setup new game
+(define (nightjar-new-game c)
+  (nightjar-game
+   (game-modify-data
+    (lambda (d)
+      (empty-nightjar-data))
+    c)))
+
+(set! randseed (choose (list 7.21 1)))
+
+(define (seeded-choose l)
+  (list-ref l (Math.floor (* (seeded-random) (length l)))))
+
+(define (nightjar-intro c)
+    (game-modify-timeout
+     (lambda ()
+       (set! window.location "/"))
+     (game-modify-data
+      (lambda (d)
+	(empty-nightjar-data))
+      (game-modify-render
+       (lambda (ctx)
+	 ;;(ctx.drawImage (find-image "crab1.png") 0 (+ crab-offset 355))
+	 
+	 (set! ctx.font "normal 75pt pompiere")
+	 (set! ctx.fillStyle "#fff")
+	 (wrap-text ctx "Why We Love Wasps" 0 200 1300 100)
+	 
+	 (set! ctx.font "normal 25pt pompiere")
+	 (wrap-text ctx "Wasps are super..." 0 300 800 40)
+	 (set! ctx.font "normal 30pt open-sans"))
+       
+       (game-modify-buttons
+	(list
+	 
+	 (empty-image-button
+	  "Start"
+	  (- default-button-x 200)
+	  (+ default-button-y 200)
+	  empty-button-width empty-button-height
+	  "none"
+	  (lambda (c)
+	    (button-sound)
+	    (nightjar-game-screen c)))
+	 
+	 (empty-image-button
+	  "About"
+	  (+ default-button-x 200)
+	  (+ default-button-y 200)
+	  empty-button-width empty-button-height
+	  "none"
+	  (lambda (c)
+	    (button-sound)
+	    (nightjar-about c)))
+	 )
+	c)))))
+
+(define (nightjar-about c)
+   (game-modify-render
+    (lambda (ctx)
+      ;;(ctx.drawImage (find-image "crab2.png") 1240 550)
+
+      (set! ctx.font "normal 75pt pompiere")
+      (wrap-text ctx "About the wasp game" 0 150 1300 100)
+      (set! ctx.font "normal 22pt pompiere")
+
+      (wrap-text-left ctx "Blah blah" 230 230 1200 40)
+      (set! ctx.font "normal 30pt pompiere")
+
+      (set! ctx.globalAlpha 0.5)
+      ;;(ctx.drawImage (find-image "foam-logo.png") (- (+ default-button-x 200) 50) 790)
+      (set! ctx.globalAlpha 1.0)      
+      )
+
+    (game-modify-buttons
+     (list
+      (empty-image-button
+       "Back"
+       default-button-x
+       (+ default-button-y 80)
+       empty-button-width empty-button-height "none"
+       (lambda (c)
+         (button-sound)
+         (nightjar-intro game))
+       c)
+
+      )
+     c)))
+
+(define (nightjar-game-screen c)
+  (game-modify-render
+   (lambda (ctx)
+     ;;(ctx.drawImage
+     ;; (find-image (photo-filename example)) 0 0)
+     (wrap-text-left ctx "Insert game here..." 230 230 1200 40)
+     )
+   (game-modify-update
+    (lambda (t c)
+      c)
+    (game-modify-buttons
+     (list
+      ) c))))
+
+(set! ctx.font "normal 75pt pompiere")
+(centre-text ctx "Loading..." 240)
+
+;(load-sounds!
+; (list
+;  "found.wav"
+;  ))
+
+(load-images!
+ (list "button-1.png")
+ (lambda ()
+   (start-game canvas ctx)))
