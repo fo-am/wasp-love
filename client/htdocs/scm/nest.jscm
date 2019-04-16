@@ -7,6 +7,7 @@
 (define (make-cell pos code) (list pos code))
 (define (cell-pos c) (list-ref c 0))
 (define (cell-code c) (list-ref c 1))
+(define (cell-modify-code c v) (list-replace c 1 v))
 
 (define (generate-cells w h)
   (foldl
@@ -36,7 +37,7 @@
 (define (nest-wasps-update n delta)
   (map
    (lambda (wasp)
-     (entity-update (wasp-update-state wasp delta) delta))
+     (entity-update (wasp-update wasp delta) delta))
    (nest-wasps n)))
 
 (define (nest-wasps-click n mx my)
@@ -55,6 +56,13 @@
 
 (define (nest-find-unbuilt-cell n)
   (choose (nest-cells n)))
+
+(define (nest-wasps-update-cells n)
+  (foldl
+   (lambda (wasp cells)
+     (wasp-update-cells wasp cells))
+   (nest-cells n)
+   (nest-wasps n)))
 
 (define (nest-update-wasps-from-menu n menu) 
   ;; don't take menu from nest, as this is the updated one
@@ -96,7 +104,7 @@
    (nest-time-of-year n)
    (nest-wasps-update n delta)
    (nest-menu n)
-   (nest-cells n)))
+   (nest-wasps-update-cells n)))
 
 (define (nest-render n ctx)
   (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)

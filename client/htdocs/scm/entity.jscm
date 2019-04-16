@@ -20,6 +20,7 @@
 (define (entity-sprite-list e) (list-ref e 6))
 (define (entity-frame e) (list-ref e 7))
 (define (entity-clip e) (list-ref e 8))
+(define (entity-modify-clip e v) (list-replace e 8 v))
 (define (entity-anim-speed e) (list-ref e 9))
 
 (define (entity-render e ctx)
