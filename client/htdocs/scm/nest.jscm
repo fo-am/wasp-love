@@ -1,7 +1,21 @@
 ;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (define cell-code-unbuilt 0)
-(define cell-code-avail 1)
+(define cell-code-empty 1)
 (define cell-code-occupied 2)
 
 (define cell-size-x 12)
@@ -28,7 +42,7 @@
 		       (if (zero? (modulo x 2)) 75 0)))
 	      (vec2 x y)
 	      (if (and (eq? x 6) (eq? y 2))
-		  cell-code-avail
+		  cell-code-empty
 		  cell-code-unbuilt))))))))
 
 (define (make-nest energy location time-of-year wasps menu cells) 
@@ -44,7 +58,7 @@
 (define (nest-wasps-update n delta)
   (map
    (lambda (wasp)
-     (entity-update (wasp-update wasp delta) delta))
+     (entity-update (wasp-update wasp delta n) delta))
    (nest-wasps n)))
 
 (define (nest-wasps-click n mx my)
@@ -52,8 +66,8 @@
    (lambda (w r)
      (if (and (not r) 
 	      (in-rect? 
-	       (vx (entity-pos w))
-	       (vy (entity-pos w))
+	       (- (vx (entity-pos w)) 150)
+	       (- (vy (entity-pos w)) 150)
 	       (vx (entity-sprite-size w))
 	       (vy (entity-sprite-size w))
 	       mx my))
@@ -68,6 +82,17 @@
 	 c r))
    #f
    (shuffle (nest-cells n))))
+
+(define (nest-find-empty-cell n)
+  (foldl
+   (lambda (c r)
+     (if (and (not r) (eq? (cell-code c) cell-code-empty))
+	 c r))
+   #f
+   (shuffle (nest-cells n))))
+
+(define (nest-find-any-cell n)
+  (choose (nest-cells n)))
 
 (define (cell-pos->index pos)
   (+ (min (- cell-size-x 1) (vx pos))
@@ -107,6 +132,13 @@
    (nest-cells n)
    (nest-wasps n)))
 
+(define (nest-wasps-update-wasps wasps)
+  (foldl
+   (lambda (wasp wasps)
+     (wasp-update-wasps wasp wasps))
+   wasps
+   wasps))
+
 (define (nest-update-wasps-from-menu n menu) 
   ;; don't take menu from nest, as this is the updated one
   (map
@@ -124,7 +156,7 @@
 		   (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
 	       (menu-update-click (nest-menu n) mx my)
 	       (build-menu
-		(entity-pos wasp)
+		(v2add (entity-pos wasp) (vec2 -100 -300))
 		#t
 		(wasp-build-menu-options wasp)
 		#f 
@@ -148,18 +180,20 @@
    (nest-energy n)
    (nest-location n)
    (nest-time-of-year n)
-   (nest-wasps-update n delta)
+   (nest-wasps-update-wasps
+    (nest-wasps-update n delta))
    (nest-menu n)
    (nest-wasps-update-cells n)))
 
 (define (nest-render n ctx)
   (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)
-  (for-each
-   (lambda (cell)
-     (when (not (eq? (cell-code cell) cell-code-unbuilt))
-	   (ctx.drawImage (find-image "sprites/hex.png") 
-			  (+ (vx (cell-pos cell) 10) 80)
-			  (+ (vy (cell-pos cell)) 20))))
-   (nest-cells n))
+  (let ((hex (find-image "sprites/hex.png")))
+    (for-each
+     (lambda (cell)
+       (when (not (eq? (cell-code cell) cell-code-unbuilt))
+	     (ctx.drawImage hex
+			    (- (vx (cell-pos cell)) (/ hex.width 2))
+			    (- (vy (cell-pos cell)) (/ hex.height 2)))))
+     (nest-cells n)))
   (entity-list-render (nest-wasps n) ctx)
   (menu-render (nest-menu n)))

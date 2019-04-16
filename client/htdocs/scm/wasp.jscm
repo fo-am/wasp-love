@@ -1,23 +1,44 @@
 ;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define wasp-speed 1)
+(define wasp-build-time 10)
+(define wasp-laying-time 10)
+(define wasp-pupa-time 50)
 
 (define wasp-animation
   (list
-   (make-anim-move "7" "idle" (list "1" "2"))
-   (make-anim-move "7" "walk" (list "1" "2" "3" "2"))
-   (make-anim-move "7" "defend" (list "1" "2" "3" "2"))
-   (make-anim-move "7" "build" (list "1" "2"))
-   (make-anim-move "7" "fly" (list "1" "2" "3" "4" "5"))
-   (make-anim-move "7" "lay" (list "1" "2" "3" "4"))
-   (make-anim-move "7" "tend" (list "1" "2"))
+   (make-anim-move "pupae" "pupa1" (list "1" "2" "3" "4"))
+   (make-anim-move "wasp-7" "7-idle" (list "1" "2"))
+   (make-anim-move "wasp-7" "7-walk" (list "1" "2" "3" "2"))
+   (make-anim-move "wasp-7" "7-defend" (list "1" "2" "3" "2"))
+   (make-anim-move "wasp-7" "7-build" (list "1" "2"))
+   (make-anim-move "wasp-7" "7-fly" (list "1" "2" "3" "4" "5"))
+   (make-anim-move "wasp-7" "7-lay" (list "1" "2" "3" "4"))
+   (make-anim-move "wasp-7" "7-tend" (list "1" "2"))
    ))
 
-(define wasp-animation-idle 0)
-(define wasp-animation-walk 1)
-(define wasp-animation-defend 2)
-(define wasp-animation-build 3)
-(define wasp-animation-fly 4)
-(define wasp-animation-lay 5)
-(define wasp-animation-tend 6)
+(define wasp-animation-pupa 0)
+(define wasp-animation-idle 1)
+(define wasp-animation-walk 2)
+(define wasp-animation-defend 3)
+(define wasp-animation-build 4)
+(define wasp-animation-fly 5)
+(define wasp-animation-lay 6)
+(define wasp-animation-tend 7)
 
 (define (make-wasp capabilities) 
   (let ((pos (vec2 (random 1000) (random 500))))
@@ -34,7 +55,21 @@
      (list capabilities)
      'idle pos #f 0 0)))
 
+(define (make-pupa pos cell capabilities) 
+  (append 
+   (make-entity 
+    (generate-entity-id!)
+    "wasp" 
+    pos
+    (vec2 300 300)
+    "left"
+    (rndf)
+    (anim-load-frames wasp-animation)
+    0 wasp-animation-pupa 8)
+   (list capabilities 'state-pupa pos cell 0 0)))
+
 (define (wasp-capabilities w) (list-ref w (+ entity-size 0)))
+(define (wasp-modify-capabilities w v) (list-replace w (+ entity-size 0) v))
 (define (wasp-state w) (list-ref w (+ entity-size 1)))
 (define (wasp-modify-state w s) (list-replace w (+ entity-size 1) s))
 (define (wasp-walk-from w) (list-ref w (+ entity-size 2)))
@@ -46,6 +81,7 @@
 (define (wasp-timer w) (list-ref w (+ entity-size 5)))
 (define (wasp-modify-timer w s) (list-replace w (+ entity-size 5) s))
 
+;; capabilities -> menu options
 (define (wasp-build-menu-options w)
   (map
    (lambda (c)
@@ -58,6 +94,20 @@
       (else (build-menu-option 'unknown "Unknown option...?"))))
    (wasp-capabilities w)))
 
+;; set up a wasp to walk to a destination cell
+(define (wasp-walk-to-cell w dest-cell)
+  (wasp-modify-walk-time 
+   (wasp-modify-dest-cell 
+    (wasp-modify-walk-from 
+     ;; face the right direction
+     (if (< (vx (entity-pos w)) (vx (cell-pos dest-cell)))
+	 (entity-modify-facing w 'right)
+	 (entity-modify-facing w 'left))
+     (entity-pos w))
+    dest-cell)
+   0))
+
+;; deal with menu clicks from the player
 (define (wasp-update-action w menu-code nest)
   (cond
    ((eq? menu-code 'build-cell) 
@@ -65,46 +115,75 @@
       ;; it's possible we coundn't find any free cells
       (if dest-cell
 	  (wasp-modify-state
-	   (wasp-modify-walk-time 
-	    (wasp-modify-dest-cell 
-	     (wasp-modify-walk-from 
-	      ;; face the right direction
-	      (if (< (vx (entity-pos w)) (vx (cell-pos dest-cell)))
-		  (entity-modify-facing w 'right)
-		  (entity-modify-facing w 'left))
-	      (entity-pos w))
-	     dest-cell)
-	    0)
+	   (wasp-walk-to-cell w dest-cell) 
 	   'state-walking-to-cell)
+	  w)))
+   ((eq? menu-code 'lay-egg) 
+    (let ((dest-cell (nest-find-empty-cell nest)))
+      ;; it's possible we coundn't find any free cells
+      (if dest-cell
+	  (wasp-modify-state
+	   (wasp-walk-to-cell w dest-cell) 
+	   'state-walking-to-lay)
 	  w)))
    (else w)))
 
-(define wasp-speed 2)
-(define wasp-build-time 2)
+(define (wasp-walk w delta)
+  (entity-modify-pos 
+   (wasp-modify-walk-time w (+ (wasp-walk-time w) (* wasp-speed delta)))
+   (v2lerp 
+    (wasp-walk-from w)
+    (cell-pos (wasp-dest-cell w)) 
+    (wasp-walk-time w))))
 
-(define (wasp-update w delta)
+;; main state update function, full lifecycle of the wasp
+(define (wasp-update w delta nest)
   (wasp-update-animation
    (let ((state (wasp-state w)))
      (cond
+      ((eq? state 'state-pupa)
+       (if (> (wasp-timer w) wasp-pupa-time)
+	   (wasp-modify-capabilities
+	    (wasp-modify-state w 'state-hatched)
+	    (list 'forage 'lay-egg 'build-cell))
+	   w))
+      ((eq? state 'state-hatched) 
+       (wasp-modify-state
+	(wasp-walk-to-cell w (nest-find-any-cell nest))
+	'state-wander))
       ((eq? state 'state-idle) w)
       ((eq? state 'state-walking-to-cell)
        (if (> (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-building-cell) 0)
-	   (entity-modify-pos 
-	    (wasp-modify-walk-time w (+ (wasp-walk-time w) (* wasp-speed delta)))
-	    (v2lerp 
-	     (wasp-walk-from w)
-	     (cell-pos (wasp-dest-cell w)) 
-	     (wasp-walk-time w)))))
+	   (wasp-walk w delta)))
       ((eq? state 'state-building-cell) 
        (if (> (wasp-timer w) wasp-build-time)
 	   (wasp-modify-state w 'state-built-cell)
 	   w))
       ((eq? state 'state-built-cell) 
-       (wasp-modify-state w 'state-idle))
+       (wasp-modify-state
+	(wasp-walk-to-cell w (nest-find-any-cell nest))
+	'state-wander))
+      ((eq? state 'state-walking-to-lay)
+       (if (> (wasp-walk-time w) 1)
+	   (wasp-modify-timer (wasp-modify-state w 'state-laying-egg) 0)
+	   (wasp-walk w delta)))
+      ((eq? state 'state-laying-egg) 
+       (if (> (wasp-timer w) wasp-laying-time)
+	   (wasp-modify-state w 'state-layed-egg)
+	   w))
+      ((eq? state 'state-layed-egg) 
+       (wasp-modify-state
+	(wasp-walk-to-cell w (nest-find-any-cell nest))
+	'state-wander))
+      ((eq? state 'state-wander)
+       (if (> (wasp-walk-time w) 1)
+	   (wasp-modify-timer (wasp-modify-state w 'state-idle) 0)
+	   (wasp-walk w delta)))
       (else w)))
    delta))
 
+;; map the states to the right animation clips
 (define (wasp-update-animation w delta)
   (let ((state (wasp-state w)))
     (entity-modify-clip 
@@ -113,17 +192,38 @@
       ((eq? state 'state-idle) wasp-animation-idle)
       ((eq? state 'state-walking-to-cell) wasp-animation-walk)
       ((eq? state 'state-building-cell) wasp-animation-build)
+      ((eq? state 'state-walking-to-lay) wasp-animation-walk)
+      ((eq? state 'state-laying-egg) wasp-animation-lay)
+      ((eq? state 'state-wander) wasp-animation-walk)
       (else (entity-clip w))))))
 
+(define (update-cell dest-cell cells code)
+  (map
+   (lambda (cell)
+     (if (and (eq? (vx (cell-pos dest-cell)) (vx (cell-pos cell)))
+	      (eq? (vy (cell-pos dest-cell)) (vy (cell-pos cell))))
+	 (cell-modify-code cell code)
+	 cell))
+   cells))
+
+;; update the code for the cells as things hatch etc
 (define (wasp-update-cells wasp cells)
   (cond
    ((eq? (wasp-state wasp) 'state-built-cell)
-    (msg "built cell")
-    (map
-     (lambda (cell)
-       (if (and (eq? (vx (cell-pos (wasp-dest-cell wasp))) (vx (cell-pos cell)))
-		(eq? (vy (cell-pos (wasp-dest-cell wasp))) (vy (cell-pos cell))))
-	   (cell-modify-code cell 'cell-code-avail)
-	   cell))
-     cells))
+    (update-cell (wasp-dest-cell wasp) cells cell-code-empty))
+   ((eq? (wasp-state wasp) 'state-layed-egg)
+    (update-cell (wasp-dest-cell wasp) cells cell-code-occupied))
+   ((eq? (wasp-state wasp) 'state-hatched)
+    (update-cell (wasp-dest-cell wasp) cells cell-code-empty))
    (else cells)))
+
+;; update new wasps mainly - could be much simpler
+(define (wasp-update-wasps wasp wasps)
+  (cond
+   ((eq? (wasp-state wasp) 'state-layed-egg)
+    (cons
+     (make-pupa (cell-pos (wasp-dest-cell wasp))
+		(wasp-dest-cell wasp)
+		(list))
+     wasps))
+   (else wasps)))
