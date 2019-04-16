@@ -4,10 +4,14 @@
 (define cell-code-avail 1)
 (define cell-code-occupied 2)
 
-(define (make-cell pos code) (list pos code))
+(define cell-size-x 12)
+(define cell-size-y 5)
+
+(define (make-cell pos logical code) (list pos logical code))
 (define (cell-pos c) (list-ref c 0))
-(define (cell-code c) (list-ref c 1))
-(define (cell-modify-code c v) (list-replace c 1 v))
+(define (cell-logical c) (list-ref c 1))
+(define (cell-code c) (list-ref c 2))
+(define (cell-modify-code c v) (list-replace c 2 v))
 
 (define (generate-cells w h)
   (foldl
@@ -22,7 +26,10 @@
 	      (vec2 (+ (* x 120) 50)
 		    (+ (* y 150) 50 
 		       (if (zero? (modulo x 2)) 75 0)))
-	      cell-code-unbuilt)))))))
+	      (vec2 x y)
+	      (if (and (eq? x 6) (eq? y 2))
+		  cell-code-avail
+		  cell-code-unbuilt))))))))
 
 (define (make-nest energy location time-of-year wasps menu cells) 
   (list energy location time-of-year wasps menu cells))
@@ -54,8 +61,44 @@
    #f
    (nest-wasps n)))
 
-(define (nest-find-unbuilt-cell n)
-  (choose (nest-cells n)))
+(define (nest-find-built-cell n)
+  (foldl
+   (lambda (c r)
+     (if (and (not r) (not (eq? (cell-code c) cell-code-unbuilt)))
+	 c r))
+   #f
+   (shuffle (nest-cells n))))
+
+(define (cell-pos->index pos)
+  (+ (min (- cell-size-x 1) (vx pos))
+     (* (min (- cell-size-y 1) (vy pos)) 12)))
+
+(define (cell-nindexes cell)
+  (let ((x (vx (cell-logical cell)))
+	(y (vy (cell-logical cell))))
+    ;; bloomin hexagons...
+    (append
+     (list
+      (cell-pos->index (vec2 x (+ y 1)))
+      (cell-pos->index (vec2 x (- y 1)))
+      (cell-pos->index (vec2 (+ x 1) y))
+      (cell-pos->index (vec2 (- x 1) y)))
+     (if (zero? (modulo x 2))
+	 (list
+	  (cell-pos->index (vec2 (+ x 1) (- y 1)))
+	  (cell-pos->index (vec2 (- x 1) (- y 1))))
+	 (list
+	  (cell-pos->index (vec2 (+ x 1) (+ y 1)))
+	  (cell-pos->index (vec2 (- x 1) (+ y 1))))))))
+
+(define (nest-find-unbuilt-cell n timeout)
+  (if (> timeout 100) 
+      #f
+      (let ((built (nest-find-built-cell n)))
+	(let ((candidate (list-ref (nest-cells n) (choose (cell-nindexes built)))))
+	  (if (eq? (cell-code candidate) cell-code-unbuilt)
+	      candidate
+	      (nest-find-unbuilt-cell n (+ timeout 1)))))))
 
 (define (nest-wasps-update-cells n)
   (foldl
@@ -94,7 +137,10 @@
      (if (menu-selection menu)
 	 (nest-update-wasps-from-menu n menu) 
 	 (nest-wasps n))
-     menu
+     ;; need to clear the menu to stop it retriggering
+     (if (menu-selection menu)
+	 (menu-clear menu)
+	 menu)
      (nest-cells n)))))
 
 (define (nest-update n delta)
@@ -112,8 +158,8 @@
    (lambda (cell)
      (when (not (eq? (cell-code cell) cell-code-unbuilt))
 	   (ctx.drawImage (find-image "sprites/hex.png") 
-			  (vx (cell-pos cell))
-			  (vy (cell-pos cell)))))
+			  (+ (vx (cell-pos cell) 10) 80)
+			  (+ (vy (cell-pos cell)) 20))))
    (nest-cells n))
   (entity-list-render (nest-wasps n) ctx)
   (menu-render (nest-menu n)))

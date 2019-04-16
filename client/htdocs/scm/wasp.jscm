@@ -30,7 +30,7 @@
       (choose (list "left" "right"))
       (rndf)
       (anim-load-frames wasp-animation)
-      wasp-animation-idle (random 7) 8)
+      0 wasp-animation-idle 8)
      (list capabilities)
      'idle pos #f 0 0)))
 
@@ -39,12 +39,12 @@
 (define (wasp-modify-state w s) (list-replace w (+ entity-size 1) s))
 (define (wasp-walk-from w) (list-ref w (+ entity-size 2)))
 (define (wasp-modify-walk-from w s) (list-replace w (+ entity-size 2) s))
-(define (wasp-dest-cell w) (list-ref w (+ entity-size 2)))
-(define (wasp-modify-dest-cell w s) (list-replace w (+ entity-size 2) s))
-(define (wasp-walk-time w) (list-ref w (+ entity-size 3)))
-(define (wasp-modify-walk-time w s) (list-replace w (+ entity-size 3) s))
-(define (wasp-timer w) (list-ref w (+ entity-size 4)))
-(define (wasp-modify-timer w s) (list-replace w (+ entity-size 4) s))
+(define (wasp-dest-cell w) (list-ref w (+ entity-size 3)))
+(define (wasp-modify-dest-cell w s) (list-replace w (+ entity-size 3) s))
+(define (wasp-walk-time w) (list-ref w (+ entity-size 4)))
+(define (wasp-modify-walk-time w s) (list-replace w (+ entity-size 4) s))
+(define (wasp-timer w) (list-ref w (+ entity-size 5)))
+(define (wasp-modify-timer w s) (list-replace w (+ entity-size 5) s))
 
 (define (wasp-build-menu-options w)
   (map
@@ -61,16 +61,25 @@
 (define (wasp-update-action w menu-code nest)
   (cond
    ((eq? menu-code 'build-cell) 
-    (wasp-modify-state
-     (wasp-modify-walk-time 
-      (wasp-modify-dest-cell 
-       (wasp-modify-walk-from w (entity-pos w))
-       (nest-find-unbuilt-cell nest))
-      0)
-     'state-walking-to-cell))
+    (let ((dest-cell (nest-find-unbuilt-cell nest 0)))
+      ;; it's possible we coundn't find any free cells
+      (if dest-cell
+	  (wasp-modify-state
+	   (wasp-modify-walk-time 
+	    (wasp-modify-dest-cell 
+	     (wasp-modify-walk-from 
+	      ;; face the right direction
+	      (if (< (vx (entity-pos w)) (vx (cell-pos dest-cell)))
+		  (entity-modify-facing w 'right)
+		  (entity-modify-facing w 'left))
+	      (entity-pos w))
+	     dest-cell)
+	    0)
+	   'state-walking-to-cell)
+	  w)))
    (else w)))
 
-(define wasp-speed 1)
+(define wasp-speed 2)
 (define wasp-build-time 2)
 
 (define (wasp-update w delta)
@@ -84,14 +93,12 @@
 	   (entity-modify-pos 
 	    (wasp-modify-walk-time w (+ (wasp-walk-time w) (* wasp-speed delta)))
 	    (v2lerp 
-	     (entity-pos w) 
+	     (wasp-walk-from w)
 	     (cell-pos (wasp-dest-cell w)) 
 	     (wasp-walk-time w)))))
       ((eq? state 'state-building-cell) 
        (if (> (wasp-timer w) wasp-build-time)
-	   (begin
-	     (msg "built")
-	     (wasp-modify-state w 'state-built-cell))
+	   (wasp-modify-state w 'state-built-cell)
 	   w))
       ((eq? state 'state-built-cell) 
        (wasp-modify-state w 'state-idle))
@@ -106,7 +113,7 @@
       ((eq? state 'state-idle) wasp-animation-idle)
       ((eq? state 'state-walking-to-cell) wasp-animation-walk)
       ((eq? state 'state-building-cell) wasp-animation-build)
-      (else wasp-animation-idle)))))
+      (else (entity-clip w))))))
 
 (define (wasp-update-cells wasp cells)
   (cond

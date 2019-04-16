@@ -67,8 +67,7 @@
      (build-menu-option 'three "Three")
      (build-menu-option 'four "Four"))
     #f 0)
-   (generate-cells
-    12 5)))
+   (generate-cells cell-size-x cell-size-y)))
 
 ;; setup new game
 (define (nightjar-new-game c)

@@ -16,6 +16,7 @@
 (define (entity-modify-pos e p) (list-replace e 2 p))
 (define (entity-sprite-size e) (list-ref e 3))
 (define (entity-facing e) (list-ref e 4))
+(define (entity-modify-facing e v) (list-replace e 4 v))
 (define (entity-t e) (list-ref e 5))
 (define (entity-sprite-list e) (list-ref e 6))
 (define (entity-frame e) (list-ref e 7))
