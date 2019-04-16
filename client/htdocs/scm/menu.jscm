@@ -1,0 +1,61 @@
+;; -*- mode: scheme; -*-
+
+(define (build-menu-option key text)
+  (list key text))
+
+(define (menu-option-key o) (list-ref o 0))
+(define (menu-option-text o) (list-ref o 1))
+
+(define (build-menu pos visible options selection entity-id)
+  (list pos visible options selection entity-id))
+
+(define (menu-pos m) (list-ref m 0))
+(define (menu-visible m) (list-ref m 1))
+(define (menu-options m) (list-ref m 2))
+(define (menu-selection m) (list-ref m 3))
+(define (menu-entity-id m) (list-ref m 4))
+
+(define menu-width 250)
+(define menu-height 70)
+
+(define (menu-update-click m mx my)
+  (if (not (menu-visible m)) 
+      m
+      (let ((selection
+	     ;; set selection to the key of the clicked on option
+	     (index-foldl
+	      (lambda (i o r)
+		(if (and (not r) 
+			 (in-rect? 
+			  (vx (menu-pos m)) 
+			  (+ (vy (menu-pos m)) (* (+ i 1) menu-height))
+			  menu-width menu-height
+			  mx my)) (menu-option-key o) r))
+	      #f
+	      (menu-options m))))
+	(build-menu 
+	 (menu-pos m)
+	 (if selection #f (menu-visible m))
+	 (menu-options m)
+	 selection
+	 (menu-entity-id m)))))
+
+(define (menu-render m)
+  (when (menu-visible m)
+	(ctx.save)
+	(ctx.translate (vx (menu-pos m)) (vy (menu-pos m)))
+	(set! ctx.font "normal 35pt pompiere")
+	(index-for-each
+	 (lambda (i o)
+	   (ctx.translate 0 menu-height)
+	   (set! ctx.fillStyle "#f9e973")
+	   (ctx.fillRect 0 0 menu-width (- menu-height 3))
+	   (set! ctx.fillStyle "#606353")
+	   (let ((m (ctx.measureText (menu-option-text o))))
+	     (ctx.fillText
+	      (menu-option-text o)
+	      (- (/ menu-width 2) (/ m.width 2))
+	      (+ (/ menu-height 2) 15))))
+	 (menu-options m))
+	(ctx.restore))))
+

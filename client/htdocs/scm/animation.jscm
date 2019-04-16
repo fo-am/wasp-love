@@ -5,9 +5,9 @@
 (define (anim-move-name a) (list-ref a 1))
 (define (anim-move-frames a) (list-ref a 2))
 
-(define (anim-build-path move frame)
+(define (anim-build-path dir move frame)
   (string-append 
-   "wasp-7/"
+   "sprites/wasp-7/" dir "/"
    (anim-move-id move) "-" 
    (anim-move-name move) "-" 
    frame ".png"))
@@ -15,12 +15,14 @@
 (define (anim->filenames anim)
   (foldl
    (lambda (move r)
-     (append
-      (map 
-       (lambda (frame)
-	 (anim-build-path move frame))
-       (anim-move-frames move))
-      r))
+     (foldl
+      (lambda (frame r)
+	(append
+	 (list (anim-build-path "left" move frame)
+	       (anim-build-path "right" move frame))
+	 r))
+      r
+      (anim-move-frames move)))
    '()
    anim))
 
@@ -29,7 +31,9 @@
    (lambda (move)
      (map 
       (lambda (frame)
-	(find-image (anim-build-path move frame)))
+	(list
+	 (find-image (anim-build-path "left" move frame))
+	 (find-image (anim-build-path "right" move frame))))
       (anim-move-frames move)))
    anim))
 

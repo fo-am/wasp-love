@@ -23,9 +23,7 @@
 (load "scm/entity-list.jscm")
 (load "scm/wasp.jscm")
 (load "scm/nest.jscm")
-
-(define empty-button-width 300)
-(define empty-button-height 200)
+(load "scm/menu.jscm")
 
 (define (button-image)
   (find-image (choose (list "button-1.png" "button-2.png" "button-3.png"))))
@@ -45,8 +43,11 @@
 ;     )))
   )
 
-(define default-button-x (- (/ screen-width 2) 0))
+(define default-button-x (- (/ screen-width 2) 170))
 (define default-button-y (+ (/ screen-height 2) 200))
+(define default-button-width 300)
+(define default-button-height 80)
+
 (define button-gap 250)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -54,8 +55,18 @@
 (define (empty-nightjar-data)
   (make-nest 
    100 'city 0 
-   (list 
-    (make-wasp (list 'forage 'lay-egg 'build-cell)))))
+   (build-list
+    2
+    (lambda (_)
+      (make-wasp (list 'forage 'lay-egg 'build-cell))))
+   (build-menu 
+    (vec2 100 100) #f 
+    (list
+     (build-menu-option 'one "One")
+     (build-menu-option 'two "Two")
+     (build-menu-option 'three "Three")
+     (build-menu-option 'four "Four"))
+    #f 0)))
 
 ;; setup new game
 (define (nightjar-new-game c)
@@ -76,18 +87,20 @@
        (set! window.location "/"))
      (game-modify-data
       (lambda (d)
+	(msg "making new game")
 	(empty-nightjar-data))
       (game-modify-render
        (lambda (ctx)
 	 ;;(ctx.drawImage (find-image "crab1.png") 0 (+ crab-offset 355))
+	 (set! ctx.fillStyle "#606353")
 	 
 	 (set! ctx.font "normal 75pt pompiere")
-	 (set! ctx.fillStyle "#fff")
+
 	 (wrap-text ctx "Why We Love Wasps" 0 200 1300 100)
 	 
 	 (set! ctx.font "normal 25pt pompiere")
 	 (wrap-text ctx "Wasps are super..." 0 300 800 40)
-	 (set! ctx.font "normal 30pt open-sans")
+	 (set! ctx.font "normal 30pt pompiere")
 
 
 	 )
@@ -95,22 +108,22 @@
        (game-modify-buttons
 	(list
 	 
-	 (empty-image-button
-	  "Start"
+	 (rect-button
+	  "PLAY!"
 	  (- default-button-x 200)
-	  (+ default-button-y 200)
-	  empty-button-width empty-button-height
-	  "none"
+	  default-button-y
+	  default-button-width default-button-height
+	  "jumpy"
 	  (lambda (c)
 	    (button-sound)
 	    (nightjar-game-screen c)))
 	 
-	 (empty-image-button
-	  "About"
+	 (rect-button
+	  "ABOUT"
 	  (+ default-button-x 200)
-	  (+ default-button-y 200)
-	  empty-button-width empty-button-height
-	  "none"
+	  default-button-y
+	  default-button-width default-button-height
+	  "jumpy"
 	  (lambda (c)
 	    (button-sound)
 	    (nightjar-about c)))
@@ -123,10 +136,10 @@
       ;;(ctx.drawImage (find-image "crab2.png") 1240 550)
 
       (set! ctx.font "normal 75pt pompiere")
-      (wrap-text ctx "About the wasp game" 0 150 1300 100)
+      (wrap-text ctx "About the wasp game" 0 200 1300 100)
       (set! ctx.font "normal 22pt pompiere")
 
-      (wrap-text-left ctx "Blah blah" 230 230 1200 40)
+      (wrap-text ctx "Blah blah" 0 300 800 40)
       (set! ctx.font "normal 30pt pompiere")
 
       (set! ctx.globalAlpha 0.5)
@@ -136,41 +149,41 @@
 
     (game-modify-buttons
      (list
-      (empty-image-button
+      (rect-button
        "Back"
        default-button-x
-       (+ default-button-y 80)
-       empty-button-width empty-button-height "none"
+       default-button-y
+       default-button-width 
+       default-button-height 
+       "jumpy"
        (lambda (c)
          (button-sound)
-         (nightjar-intro game))
-       c)
-
-      )
+         (nightjar-intro game))))
      c)))
 
 (define (nightjar-game-screen c)
-  (game-modify-render
-   (lambda (ctx)
-     ;;(ctx.drawImage
-     ;; (find-image (photo-filename example)) 0 0)
-     (wrap-text-left ctx "Insert game here..." 230 230 1200 40)
-
-     (entity-list-render (nest-wasps (game-data c)) ctx)
-     
-     )
-   (game-modify-update
-    (lambda (t c)
-      (game-modify-data
-       (lambda (d)
-	 (nest-update (game-data c) (game-delta c)))
-       c))
-    (game-modify-buttons
-     (list
-      ) c))))
+  (game-modify-mouse-hook
+   (lambda (state c)
+     (game-modify-data
+      (lambda (d)
+	(nest-update-mouse (game-data c) state (game-mx c) (game-my c)))
+      c))   
+   (game-modify-render
+    (lambda (ctx)
+      (nest-render (game-data c) ctx))
+    (game-modify-update
+     (lambda (t c)
+       (game-modify-data
+	(lambda (d)
+	  (nest-update (game-data c) (game-delta c)))
+	c))
+     (game-modify-buttons
+      (list
+       ) c)))))
 
 (set! ctx.font "normal 75pt pompiere")
-(centre-text ctx "Loading..." 240)
+(set! ctx.fillStyle "#606353")
+(centre-text ctx "Loading..." 240 240)
 
 ;(load-sounds!
 ; (list
@@ -180,6 +193,11 @@
 (load-images!
  (append 
   (anim->filenames wasp-animation)
-  (list "button-1.png"))
+  (list 
+   "button-1.png"
+   "backgrounds/temperate-city.png"
+   "backgrounds/temperate-forest.png"
+   ))
  (lambda ()
+   (msg "loaded...")
    (start-game canvas ctx)))

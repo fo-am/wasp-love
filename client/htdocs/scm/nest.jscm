@@ -1,12 +1,13 @@
 ;; -*- mode: scheme; -*-
 
-(define (make-nest energy location time-of-year wasps) 
-  (list energy location time-of-year wasps))
+(define (make-nest energy location time-of-year wasps menu) 
+  (list energy location time-of-year wasps menu))
 
 (define (nest-energy n) (list-ref n 0))
 (define (nest-location n) (list-ref n 1))
 (define (nest-time-of-year n) (list-ref n 2))
 (define (nest-wasps n) (list-ref n 3))
+(define (nest-menu n) (list-ref n 4))
 
 (define (nest-wasps-update n delta)
   (map
@@ -14,10 +15,44 @@
      (entity-update wasp delta))
    (nest-wasps n)))
 
+(define (nest-wasps-click n mx my)
+  (foldl
+   (lambda (w r)
+     (if (and (not r) (in-rect? (vx (entity-pos w))
+				(vy (entity-pos w))
+				(vx (entity-sprite-size w))
+				(vy (entity-sprite-size w))
+				mx my))
+	 w r))
+   #f
+   (nest-wasps n)))
+
+(define (nest-update-mouse n state mx my)
+  (let ((wasp (nest-wasps-click n mx my)))
+    (make-nest
+     (nest-energy n)
+     (nest-location n)
+     (nest-time-of-year n)
+     (nest-wasps n)
+     (if (or (not wasp) 
+	     (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
+	 (menu-update-click (nest-menu n) mx my)
+	 (build-menu
+	  (entity-pos wasp)
+	  #t
+	  (wasp-build-menu-options wasp)
+	  #f 
+	  (entity-id wasp))))))
+
 (define (nest-update n delta)
   (make-nest
    (nest-energy n)
    (nest-location n)
    (nest-time-of-year n)
-   (nest-wasps-update n delta)))
+   (nest-wasps-update n delta)
+   (nest-menu n)))
 
+(define (nest-render n ctx)
+  (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)
+  (entity-list-render (nest-wasps n) ctx)
+  (menu-render (nest-menu n)))

@@ -109,6 +109,8 @@
                                      (length images)) 100)) "%") 0 340)
             (when (eq? (length image-lib)
                        (length images))
+		  (msg (length images))
+		  (msg (length image-lib))
                   (finished))))
     (set! image.src (+ "images/" fn))))
 
@@ -128,7 +130,7 @@
 
 (define (inner_find-image fn l)
   (cond
-   ((null? l) #f)
+   ((null? l) (msg "couldn't find")(msg fn) #f)
    ((eq? (car (car l)) fn) (cadr (car l)))
    (else (inner_find-image fn (cdr l)))))
 
@@ -182,9 +184,7 @@
     (ctx.fillText txt (- x (/ m.width 2)) y)))
 
 (define (shadow-text ctx text x y)
-  (set! ctx.fillStyle "#fff")
   (ctx.fillText text (+ x 4) (+ y 4))
-  (set! ctx.fillStyle "#fff")
   (ctx.fillText text x y))
 
 (define (wrap-shadow-text ctx text x y max-width line-height)
@@ -380,15 +380,13 @@
 
 
 (define (button-text-jumpy-render! b t)
-  (set! ctx.font "normal 15pt 'Press Start 2P'")
-  (set! ctx.fillStyle "#fff")
   (let ((m (ctx.measureText (button-name b)))
         (cm (ctx.measureText "w"))
         (pos 0)
         (txt (button-name b)))
     (let ((ta (txt.split ""))
           (x (- (/ (button-w b) 2) (/ m.width 2)))
-          (y (+ (/ (button-h b) 2) 5)))
+          (y (+ (/ (button-h b) 2) 15)))
       (index-for-each
        (lambda (i c)
          (set! cm (ctx.measureText c))
@@ -452,7 +450,7 @@
       (ctx.fillText
        (button-name b)
        (- (/ (button-w b) 2) (/ m.width 2))
-       (+ (/ (button-h b) 2) 5))))))
+       (+ (/ (button-h b) 2) 15))))))
 
 
 (define (rect-button-update! b mx my c)
@@ -487,16 +485,14 @@
         (circle-button-update! b mx my c)))))
 
 (define (rect-button-render! ctx t b)
-  (when #f
-        (ctx.save)
-        (ctx.translate (button-x b) (button-y b))
-        (button-do-jittering b t)
-        (set! ctx.strokeStyle "#fff")
-        (ctx.strokeRect
-         0 0 (button-w b) (button-h b))
-        (ctx.fillText (button-name b) (/ (button-w b) 2) (+ 20 (/ (button-h b) 2)))
-        (ctx.restore)
-        ))
+  (ctx.save)
+  (ctx.translate (button-x b) (button-y b))
+  (set! ctx.fillStyle "#f9e973")
+  (ctx.fillRect 0 0 (button-w b) (button-h b))
+  (set! ctx.fillStyle "#606353")
+  (button-text-render! b t)
+  (button-do-jittering b t)
+  (ctx.restore))
 
 (define (image-button-render! ctx t b)
   (ctx.save)
@@ -507,28 +503,22 @@
         (ctx.drawImage
          (button-drawable b)
          0 0))
-  (ctx.restore)
-  )
+  (ctx.restore))
 
 (define (animated-button-render! ctx t b)
   (ctx.save)
-
   (ctx.translate (button-x b) (button-y b))
-
   (ctx.translate 64 64)
   (ctx.rotate (Math.atan2 (vy (animated-button-dir b))
                           (vx (animated-button-dir b))))
   (ctx.rotate Math.PI/2)
   (ctx.translate -64 -64)
-
   (button-do-jittering b t)
-
   (ctx.drawImage
    (button-drawable b)
    0 0)
   (button-text-render! b t)
   (ctx.restore))
-
 
 (define (circle-button-render! ctx t b)
   (ctx.beginPath)
@@ -569,101 +559,6 @@
      (button-render! ctx t b))
    (reverse b)))
 
-;; ----------------------------------------
-;; particle system
-
-(define (build-particle-system size images)
-  (list
-   size
-   images ;; images
-   ;; positions
-   (build-list size (lambda (_) (list 0 0)))
-   ;; scales
-   (build-list size (lambda (_) (list 1 1)))
-   ;; rotation
-   (build-list size (lambda (_) 0))
-   ;; user
-   (build-list size (lambda (i) 0))
-   ;; image index
-   (build-list size (lambda (_) (random (length images))))
-   ;; update
-   (lambda (p s r u) (list p s r u))
-   ))
-
-(define (particle-system-size p) (list-ref p 0))
-(define (particle-system-modify-size v p) (list-replace p 0 v))
-(define (particle-system-images p) (list-ref p 1))
-(define (particle-system-modify-images v p) (list-replace p 1 v))
-(define (particle-system-positions p) (list-ref p 2))
-(define (particle-system-scales p) (list-ref p 3))
-(define (particle-system-rotations p) (list-ref p 4))
-(define (particle-system-user p) (list-ref p 5))
-(define (particle-system-image-indices p) (list-ref p 6))
-(define (particle-system-update-hook p) (list-ref p 10))
-(define (particle-system-modify-update-hook v p) (list-replace p 10 v))
-
-(define (particle-system-set! l i v)
-  (js "l[i]=v;"))
-
-(define (particle-system-init fn p)
-  (index-for-each
-   (lambda (i user)
-     (let ((state (fn i)))
-       (particle-system-set! (particle-system-positions p) i (list-ref state 0))
-       (particle-system-set! (particle-system-scales p) i (list-ref state 1))
-       (particle-system-set! (particle-system-rotations p) i (list-ref state 2))
-       (particle-system-set! (particle-system-user p) i (list-ref state 3))))
-   (particle-system-user p))
-  p)
-
-(define (particle-system-user-update! fn p)
-  (index-for-each
-   (lambda (i user)
-     (particle-system-set!
-      (particle-system-user p) i
-      (fn user)))
-   (particle-system-user p))
-  p)
-
-
-
-(define (particle-system-update! p)
-  (let ((update (particle-system-update-hook p)))
-    (index-for-each
-     (lambda (i user)
-       (let ((state (update
-                     (list-ref (particle-system-positions p) i)
-                     (list-ref (particle-system-scales p) i)
-                     (list-ref (particle-system-rotations p) i)
-                     user)))
-         (particle-system-set! (particle-system-positions p) i (list-ref state 0))
-         (particle-system-set! (particle-system-scales p) i (list-ref state 1))
-         (particle-system-set! (particle-system-rotations p) i (list-ref state 2))
-         (particle-system-set! (particle-system-user p) i (list-ref state 3))))
-     (particle-system-user p))))
-
-(define (particle-system-render ctx p)
-  (particle-system-update! p)
-  (ctx.save)
-  (set! ctx.globalCompositeOperation "lighter")
-  (index-for-each
-   (lambda (i image-index)
-     ;; use size to restrict rendering
-     (when (< i (particle-system-size p))
-           (ctx.save)
-           (let ((position (list-ref (particle-system-positions p) i))
-                 (scale (list-ref (particle-system-scales p) i))
-                 (rotate (list-ref (particle-system-rotations p) i))
-                 (image (list-ref (particle-system-images p) image-index)))
-             (set! ctx.globalAlpha rotate)
-             (ctx.translate (vx position) (vy position))
-             (ctx.translate (/ image.width 2) (/ image.height 2))
-             (ctx.scale (vx scale) (vy scale))
-             (ctx.translate (/ -image.width 2) (/ -image.height 2))
-             (ctx.drawImage image 0 0))
-           (ctx.restore)))
-     (particle-system-image-indices p))
-   (ctx.restore))
 
 ;; ----------------------------------------
 ;; draw a clock
@@ -825,7 +720,7 @@
         (when (eq? clear-screen 1)
               (ctx.clearRect 0 0 screen-width screen-height))
         (let ((t (- (js "new Date()") load-time)))
-          (set! ctx.fillStyle "#fff");
+          (set! ctx.fillStyle "#606353");
 ;;          (ctx.fillText (+ "Time is: " t) 10 750)
           (top-update-game t game)
 
@@ -932,7 +827,6 @@
 
 (define (nightjar-heading ctx txt)
   (set! ctx.font "normal 75pt open-sans")
-  (set! ctx.fillStyle "#fff")
   (wrap-text ctx txt 0 200 1300 100)
   (set! ctx.font "normal 30pt open-sans"))
 
@@ -962,5 +856,5 @@
 
 (define load-time (js "new Date()"))
 
-(set! ctx.fillStyle "#fff")
+(set! ctx.fillStyle "#606353")
 (set! ctx.strokeStyle "#fff")

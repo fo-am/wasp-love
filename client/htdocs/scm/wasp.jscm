@@ -3,7 +3,13 @@
 (define wasp-animation
   (list
    (make-anim-move "7" "idle" (list "1" "2"))
-   (make-anim-move "7" "walk" (list "1" "2" "3"))))
+   (make-anim-move "7" "walk" (list "1" "2" "3" "2"))
+   (make-anim-move "7" "defend" (list "1" "2" "3" "2"))
+   (make-anim-move "7" "build" (list "1" "2"))
+   (make-anim-move "7" "fly" (list "1" "2" "3" "4" "5"))
+   (make-anim-move "7" "lay" (list "1" "2" "3" "4"))
+   (make-anim-move "7" "tend" (list "1" "2"))
+   ))
 
 (define wasp-animation-idle 0)
 (define wasp-animation-walk 1)
@@ -11,10 +17,26 @@
 (define (make-wasp capabilities) 
   (append 
    (make-entity 
-    "wasp" (list 100 100) 0
-    (dbg (anim-load-frames wasp-animation))
-    0 3)
+    (generate-entity-id!)
+    "wasp" 
+    (vec2 (random 1000) (random 500)) 
+    (vec2 300 300)
+    (choose (list "left" "right"))
+    (rndf)
+    (anim-load-frames wasp-animation)
+    wasp-animation-idle (random 7) 8)
    (list capabilities)))
 
 (define (wasp-capabilities w) (list-ref w (+ entity-size 0)))
 
+(define (wasp-build-menu-options w)
+  (map
+   (lambda (c)
+     (cond
+      ((eq? c 'forage) (build-menu-option c "Forage"))
+      ((eq? c 'lay-egg) (build-menu-option c "Lay Egg"))
+      ((eq? c 'build-cell) (build-menu-option c "Build Cell"))
+      ((eq? c 'tend-brood) (build-menu-option c "Tend brood"))
+      ((eq? c 'defend-nest) (build-menu-option c "Defend Nest"))
+      (else (build-menu-option 'unknown "Unknown option...?"))))
+   (wasp-capabilities w)))

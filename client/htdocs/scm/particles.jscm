@@ -1,0 +1,113 @@
+;; -*- mode: scheme; -*-
+;; Little Canvas Engine Copyright (C) 2013 Dave Griffiths
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;; a simple 2D game engine for making fast html5 canvas games
+
+;; ----------------------------------------
+;; particle system
+
+(define (build-particle-system size images)
+  (list
+   size
+   images ;; images
+   ;; positions
+   (build-list size (lambda (_) (list 0 0)))
+   ;; scales
+   (build-list size (lambda (_) (list 1 1)))
+   ;; rotation
+   (build-list size (lambda (_) 0))
+   ;; user
+   (build-list size (lambda (i) 0))
+   ;; image index
+   (build-list size (lambda (_) (random (length images))))
+   ;; update
+   (lambda (p s r u) (list p s r u))
+   ))
+
+(define (particle-system-size p) (list-ref p 0))
+(define (particle-system-modify-size v p) (list-replace p 0 v))
+(define (particle-system-images p) (list-ref p 1))
+(define (particle-system-modify-images v p) (list-replace p 1 v))
+(define (particle-system-positions p) (list-ref p 2))
+(define (particle-system-scales p) (list-ref p 3))
+(define (particle-system-rotations p) (list-ref p 4))
+(define (particle-system-user p) (list-ref p 5))
+(define (particle-system-image-indices p) (list-ref p 6))
+(define (particle-system-update-hook p) (list-ref p 10))
+(define (particle-system-modify-update-hook v p) (list-replace p 10 v))
+
+(define (particle-system-set! l i v)
+  (js "l[i]=v;"))
+
+(define (particle-system-init fn p)
+  (index-for-each
+   (lambda (i user)
+     (let ((state (fn i)))
+       (particle-system-set! (particle-system-positions p) i (list-ref state 0))
+       (particle-system-set! (particle-system-scales p) i (list-ref state 1))
+       (particle-system-set! (particle-system-rotations p) i (list-ref state 2))
+       (particle-system-set! (particle-system-user p) i (list-ref state 3))))
+   (particle-system-user p))
+  p)
+
+(define (particle-system-user-update! fn p)
+  (index-for-each
+   (lambda (i user)
+     (particle-system-set!
+      (particle-system-user p) i
+      (fn user)))
+   (particle-system-user p))
+  p)
+
+
+
+(define (particle-system-update! p)
+  (let ((update (particle-system-update-hook p)))
+    (index-for-each
+     (lambda (i user)
+       (let ((state (update
+                     (list-ref (particle-system-positions p) i)
+                     (list-ref (particle-system-scales p) i)
+                     (list-ref (particle-system-rotations p) i)
+                     user)))
+         (particle-system-set! (particle-system-positions p) i (list-ref state 0))
+         (particle-system-set! (particle-system-scales p) i (list-ref state 1))
+         (particle-system-set! (particle-system-rotations p) i (list-ref state 2))
+         (particle-system-set! (particle-system-user p) i (list-ref state 3))))
+     (particle-system-user p))))
+
+(define (particle-system-render ctx p)
+  (particle-system-update! p)
+  (ctx.save)
+  (set! ctx.globalCompositeOperation "lighter")
+  (index-for-each
+   (lambda (i image-index)
+     ;; use size to restrict rendering
+     (when (< i (particle-system-size p))
+           (ctx.save)
+           (let ((position (list-ref (particle-system-positions p) i))
+                 (scale (list-ref (particle-system-scales p) i))
+                 (rotate (list-ref (particle-system-rotations p) i))
+                 (image (list-ref (particle-system-images p) image-index)))
+             (set! ctx.globalAlpha rotate)
+             (ctx.translate (vx position) (vy position))
+             (ctx.translate (/ image.width 2) (/ image.height 2))
+             (ctx.scale (vx scale) (vy scale))
+             (ctx.translate (/ -image.width 2) (/ -image.height 2))
+             (ctx.drawImage image 0 0))
+           (ctx.restore)))
+     (particle-system-image-indices p))
+   (ctx.restore))
