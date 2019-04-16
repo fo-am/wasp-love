@@ -66,7 +66,9 @@
      (build-menu-option 'two "Two")
      (build-menu-option 'three "Three")
      (build-menu-option 'four "Four"))
-    #f 0)))
+    #f 0)
+   (generate-cells
+    12 5)))
 
 ;; setup new game
 (define (nightjar-new-game c)
@@ -194,6 +196,7 @@
  (append 
   (anim->filenames wasp-animation)
   (list 
+   "sprites/hex.png"
    "button-1.png"
    "backgrounds/temperate-city.png"
    "backgrounds/temperate-forest.png"

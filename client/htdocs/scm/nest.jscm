@@ -1,48 +1,93 @@
 ;; -*- mode: scheme; -*-
 
-(define (make-nest energy location time-of-year wasps menu) 
-  (list energy location time-of-year wasps menu))
+(define cell-code-unbuilt 0)
+(define cell-code-avail 1)
+(define cell-code-occupied 2)
+
+(define (make-cell pos code) (list pos code))
+(define (cell-pos c) (list-ref c 0))
+(define (cell-code c) (list-ref c 1))
+
+(define (generate-cells w h)
+  (foldl
+   (lambda (c r)
+     (append c r))
+   '()
+   (build-list
+    h (lambda (y)     
+	(build-list
+	 w (lambda (x)
+	     (make-cell 
+	      (vec2 (+ (* x 120) 50)
+		    (+ (* y 150) 50 
+		       (if (zero? (modulo x 2)) 75 0)))
+	      cell-code-unbuilt)))))))
+
+(define (make-nest energy location time-of-year wasps menu cells) 
+  (list energy location time-of-year wasps menu cells))
 
 (define (nest-energy n) (list-ref n 0))
 (define (nest-location n) (list-ref n 1))
 (define (nest-time-of-year n) (list-ref n 2))
 (define (nest-wasps n) (list-ref n 3))
 (define (nest-menu n) (list-ref n 4))
+(define (nest-cells n) (list-ref n 5))
 
 (define (nest-wasps-update n delta)
   (map
    (lambda (wasp)
-     (entity-update wasp delta))
+     (entity-update (wasp-update-state wasp delta) delta))
    (nest-wasps n)))
 
 (define (nest-wasps-click n mx my)
   (foldl
    (lambda (w r)
-     (if (and (not r) (in-rect? (vx (entity-pos w))
-				(vy (entity-pos w))
-				(vx (entity-sprite-size w))
-				(vy (entity-sprite-size w))
-				mx my))
+     (if (and (not r) 
+	      (in-rect? 
+	       (vx (entity-pos w))
+	       (vy (entity-pos w))
+	       (vx (entity-sprite-size w))
+	       (vy (entity-sprite-size w))
+	       mx my))
 	 w r))
    #f
    (nest-wasps n)))
 
+(define (nest-find-unbuilt-cell n)
+  (choose (nest-cells n)))
+
+(define (nest-update-wasps-from-menu n menu) 
+  ;; don't take menu from nest, as this is the updated one
+  (map
+   (lambda (wasp)
+     (if (eq? (entity-id wasp) (menu-entity-id menu))
+	 ;; need to pass in nest for cell information
+	 (wasp-update-action wasp (menu-selection menu) n)
+	 wasp))
+   (nest-wasps n)))
+
 (define (nest-update-mouse n state mx my)
   (let ((wasp (nest-wasps-click n mx my)))
+    (let ((menu
+	   (if (or (not wasp) 
+		   (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
+	       (menu-update-click (nest-menu n) mx my)
+	       (build-menu
+		(entity-pos wasp)
+		#t
+		(wasp-build-menu-options wasp)
+		#f 
+		(entity-id wasp)))))
+
     (make-nest
      (nest-energy n)
      (nest-location n)
      (nest-time-of-year n)
-     (nest-wasps n)
-     (if (or (not wasp) 
-	     (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
-	 (menu-update-click (nest-menu n) mx my)
-	 (build-menu
-	  (entity-pos wasp)
-	  #t
-	  (wasp-build-menu-options wasp)
-	  #f 
-	  (entity-id wasp))))))
+     (if (menu-selection menu)
+	 (nest-update-wasps-from-menu n menu) 
+	 (nest-wasps n))
+     menu
+     (nest-cells n)))))
 
 (define (nest-update n delta)
   (make-nest
@@ -50,9 +95,17 @@
    (nest-location n)
    (nest-time-of-year n)
    (nest-wasps-update n delta)
-   (nest-menu n)))
+   (nest-menu n)
+   (nest-cells n)))
 
 (define (nest-render n ctx)
   (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)
+  (for-each
+   (lambda (cell)
+     (when (not (eq? (cell-code cell) cell-code-unbuilt))
+	   (ctx.drawImage (find-image "sprites/hex.png") 
+			  (vx (cell-pos cell))
+			  (vy (cell-pos cell)))))
+   (nest-cells n))
   (entity-list-render (nest-wasps n) ctx)
   (menu-render (nest-menu n)))

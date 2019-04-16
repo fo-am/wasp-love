@@ -13,6 +13,7 @@
 (define (entity-id e) (list-ref e 0))
 (define (entity-type e) (list-ref e 1))
 (define (entity-pos e) (list-ref e 2))
+(define (entity-modify-pos e p) (list-replace e 2 p))
 (define (entity-sprite-size e) (list-ref e 3))
 (define (entity-facing e) (list-ref e 4))
 (define (entity-t e) (list-ref e 5))

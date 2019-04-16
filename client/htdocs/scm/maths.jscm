@@ -85,3 +85,8 @@
 
 (define (v2mul2 a b)
   (vec2 (* (vx a) (vx b)) (* (vy a) (vy b))))
+
+(define (v2lerp a b t)
+  (vec2
+   (+ (* (vx a) (- 1 t)) (* (vx b) t))   
+   (+ (* (vy a) (- 1 t)) (* (vy b) t))))
