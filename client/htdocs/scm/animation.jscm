@@ -30,10 +30,15 @@
    (lambda (move r)
      (foldl
       (lambda (frame r)
-	(append
-	 (list (anim-build-path "left" move frame)
-	       (anim-build-path "right" move frame))
-	 r))
+	;; temporary hack to get demo out (common excuse)
+	(if (eq? (anim-move-id move) "pupae")
+	    (append
+	     (list (anim-build-path "left" move frame))
+	     r)		   
+	    (append
+	     (list (anim-build-path "left" move frame)
+		   (anim-build-path "right" move frame))
+	     r)))
       r
       (anim-move-frames move)))
    '()

@@ -190,12 +190,12 @@
 ;  "found.wav"
 ;  ))
 
+
 (load-images!
  (append 
   (anim->filenames wasp-animation)
   (list 
    "sprites/hex.png"
-   "button-1.png"
    "backgrounds/temperate-city.png"
    "backgrounds/temperate-forest.png"
    ))
