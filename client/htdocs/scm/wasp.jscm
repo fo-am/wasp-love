@@ -15,8 +15,8 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (define wasp-speed 1)
-(define wasp-build-time 10)
-(define wasp-laying-time 10)
+(define wasp-build-time 3)
+(define wasp-laying-time 3)
 (define wasp-pupa-time 50)
 
 (define wasp-animation
