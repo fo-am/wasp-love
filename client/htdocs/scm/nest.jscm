@@ -14,39 +14,8 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define cell-code-unbuilt 0)
-(define cell-code-empty 1)
-(define cell-code-occupied 2)
-
-(define cell-size-x 12)
-(define cell-size-y 5)
-
-(define (make-cell pos logical code) (list pos logical code))
-(define (cell-pos c) (list-ref c 0))
-(define (cell-logical c) (list-ref c 1))
-(define (cell-code c) (list-ref c 2))
-(define (cell-modify-code c v) (list-replace c 2 v))
-
-(define (generate-cells w h)
-  (foldl
-   (lambda (c r)
-     (append c r))
-   '()
-   (build-list
-    h (lambda (y)     
-	(build-list
-	 w (lambda (x)
-	     (make-cell 
-	      (vec2 (+ (* x 120) 50)
-		    (+ (* y 150) 50 
-		       (if (zero? (modulo x 2)) 75 0)))
-	      (vec2 x y)
-	      (if (and (eq? x 6) (eq? y 2))
-		  cell-code-empty
-		  cell-code-unbuilt))))))))
-
-(define (make-nest energy location time-of-year wasps menu cells) 
-  (list energy location time-of-year wasps menu cells))
+(define (make-nest energy location time-of-year wasps menu cells window-stack) 
+  (list energy location time-of-year wasps menu cells window-stack))
 
 (define (nest-energy n) (list-ref n 0))
 (define (nest-location n) (list-ref n 1))
@@ -54,6 +23,7 @@
 (define (nest-wasps n) (list-ref n 3))
 (define (nest-menu n) (list-ref n 4))
 (define (nest-cells n) (list-ref n 5))
+(define (nest-window-stack n) (list-ref n 6))
 
 (define (nest-wasps-update n delta)
   (map
@@ -173,7 +143,8 @@
      (if (menu-selection menu)
 	 (menu-clear menu)
 	 menu)
-     (nest-cells n)))))
+     (nest-cells n)
+     (nest-window-stack n)))))
 
 (define (nest-update n delta)
   (make-nest
@@ -183,7 +154,8 @@
    (nest-wasps-update-wasps
     (nest-wasps-update n delta))
    (nest-menu n)
-   (nest-wasps-update-cells n)))
+   (nest-wasps-update-cells n)
+   (window-stack-update (nest-window-stack n) delta)))
 
 (define (nest-render n ctx)
   (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)
@@ -196,4 +168,5 @@
 			    (- (vy (cell-pos cell)) (/ hex.height 2)))))
      (nest-cells n)))
   (entity-list-render (nest-wasps n) ctx)
+  (window-stack-render (nest-window-stack n) ctx)
   (menu-render (nest-menu n)))

@@ -1,0 +1,86 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;; little windows of foraging wasps
+
+(define (make-cloud pos) (list pos))
+(define (cloud-pos c) (list-ref c 0))
+(define (cloud-render c ctx pos)
+  (let ((pos (vadd pos (cloud-pos c))))
+    (ctx.drawImage (find-image "sprites/cloud.png") (vx pos) (vy pos))))
+
+(define (make-window wasp env clouds w h)
+  (list wasp env clouds))
+(define (window-wasp w) (list-ref w 0))
+(define (window-env w) (list-ref w 1))
+(define (window-clouds w) (list-ref w 2))
+(define (window-w w) (list-ref w 3))
+(define (window-h w) (list-ref w 4))
+
+(define (window-update w delta)
+  (make-window
+   (window-wasp w)
+   (window-env w)
+   (map 
+    (lambda (cloud)
+      (cloud-update w delta))
+    (window-clouds))
+   (window-w w)
+   (window-h w)))
+
+(define (window-render w ctx pos)
+  ;; set up clipping
+  (ctx.save)
+  (ctx.beginPath)
+  (ctx.rect (vx pos) (vy pos) (window-w w) (window-h w))
+  (ctx.clip)
+
+  (for-each 
+   (lambda (c)
+     (cloud-render c ctx pos))
+   (window-clouds f))
+
+  ;; position wasp properly
+  (entity-render (entity-modify-pos wasp (vadd pos (vec2 10 10))) ctx)
+
+  (ctx.restore)
+
+  ;; draw window box
+  (ctx.strokeRect (vx pos) (vy pos) (window-w w) (window-h w))  
+  )
+
+(define (make-window-stack windows)
+  (list windows))
+
+(define (window-stack-windows s) (list-ref s 0))
+
+(define (window-stack-update s delta)
+  (make-window-stack
+   (map
+    (lambda (window)
+      (window-update window delta))
+    (window-stack-windows s))))
+
+(define (window-stack-render s ctx)
+  (index-for-each
+   (lambda (i window)
+     (window-render window ctx (vec2 400 (* i 200))))
+   (window-stack-windows s)))
+
+
+
+
+

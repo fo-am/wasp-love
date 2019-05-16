@@ -20,7 +20,9 @@
 (load "scm/animation.jscm")
 (load "scm/entity.jscm")
 (load "scm/entity-list.jscm")
+(load "scm/windows.jscm")
 (load "scm/wasp.jscm")
+(load "scm/cell.jscm")
 (load "scm/nest.jscm")
 (load "scm/menu.jscm")
 
@@ -66,7 +68,8 @@
      (build-menu-option 'three "Three")
      (build-menu-option 'four "Four"))
     #f 0)
-   (generate-cells cell-size-x cell-size-y)))
+   (generate-cells cell-size-x cell-size-y)
+   (make-window-stack '())))
 
 ;; setup new game
 (define (nightjar-new-game c)
@@ -195,6 +198,7 @@
   (anim->filenames wasp-animation)
   (list 
    "sprites/hex.png"
+   "sprites/cloud.png"
    "button-1.png"
    "backgrounds/temperate-city.png"
    "backgrounds/temperate-forest.png"

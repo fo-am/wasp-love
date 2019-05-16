@@ -1,0 +1,46 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define cell-code-unbuilt 0)
+(define cell-code-empty 1)
+(define cell-code-occupied 2)
+
+(define cell-size-x 12)
+(define cell-size-y 5)
+
+(define (make-cell pos logical code) (list pos logical code))
+(define (cell-pos c) (list-ref c 0))
+(define (cell-logical c) (list-ref c 1))
+(define (cell-code c) (list-ref c 2))
+(define (cell-modify-code c v) (list-replace c 2 v))
+
+(define (generate-cells w h)
+  (foldl
+   (lambda (c r)
+     (append c r))
+   '()
+   (build-list
+    h (lambda (y)     
+	(build-list
+	 w (lambda (x)
+	     (make-cell 
+	      (vec2 (+ (* x 120) 50)
+		    (+ (* y 150) 50 
+		       (if (zero? (modulo x 2)) 75 0)))
+	      (vec2 x y)
+	      (if (and (eq? x 6) (eq? y 2))
+		  cell-code-empty
+		  cell-code-unbuilt))))))))
