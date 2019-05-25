@@ -16,30 +16,53 @@
 
 ;; little windows of foraging wasps
 
-(define (make-cloud pos) (list pos))
+(define (make-cloud pos speed) (list pos speed))
 (define (cloud-pos c) (list-ref c 0))
-(define (cloud-render c ctx pos)
-  (let ((pos (vadd pos (cloud-pos c))))
-    (ctx.drawImage (find-image "sprites/cloud.png") (vx pos) (vy pos))))
+(define (cloud-speed c) (list-ref c 1))
 
-(define (make-window wasp env clouds w h)
-  (list wasp env clouds))
+(define (cloud-render c ctx pos)
+  (let ((pos (v2add pos (cloud-pos c))))
+    (ctx.drawImage (find-image "sprites/cloud.png") (- (vx pos) 200) (vy pos))))
+
+(define (cloud-update c delta dir)
+  (make-cloud
+   (vec2
+    (modulo (+ (vx (cloud-pos c)) (* (cloud-speed c) delta 
+				     (if (eq? dir 'out) 1 -1))) 500)
+    (vy (cloud-pos c)))
+   (cloud-speed c)))
+
+(define (make-window wasp env clouds w h dir)
+  (list wasp env clouds w h dir))
 (define (window-wasp w) (list-ref w 0))
+(define (window-modify-wasp w s) (list-replace w 0 s))
 (define (window-env w) (list-ref w 1))
 (define (window-clouds w) (list-ref w 2))
 (define (window-w w) (list-ref w 3))
 (define (window-h w) (list-ref w 4))
+(define (window-dir w) (list-ref w 5))
+(define (window-modify-dir w s) (list-replace w 5 s))
 
-(define (window-update w delta)
+(define (build-window wasp)
   (make-window
-   (window-wasp w)
-   (window-env w)
+   wasp
+   "temperate-city" 
+   (list (make-cloud (vec2 (random 200) (random 100)) (- (+ 50 (random 50))))
+	 (make-cloud (vec2 (random 200) (random 100)) (- (+ 50 (random 50)))))
+   300 200 'out))
+
+(define (window-update w delta nest)
+  (msg (window-dir w))
+  (make-window
+   (entity-update (wasp-update (window-wasp w) delta nest) delta)
+   (window-env w)   
    (map 
     (lambda (cloud)
-      (cloud-update w delta))
-    (window-clouds))
+      (cloud-update cloud delta (window-dir w)))
+    (window-clouds w))
    (window-w w)
-   (window-h w)))
+   (window-h w)
+   (window-dir w)))
 
 (define (window-render w ctx pos)
   ;; set up clipping
@@ -47,18 +70,22 @@
   (ctx.beginPath)
   (ctx.rect (vx pos) (vy pos) (window-w w) (window-h w))
   (ctx.clip)
+  
+  (set! ctx.fillStyle "#f5f5f5")
+  (ctx.fillRect (vx pos) (vy pos) (window-w w) (window-h w))
 
   (for-each 
    (lambda (c)
      (cloud-render c ctx pos))
-   (window-clouds f))
+   (window-clouds w))
 
   ;; position wasp properly
-  (entity-render (entity-modify-pos wasp (vadd pos (vec2 10 10))) ctx)
+  (entity-render (entity-modify-pos (window-wasp w) (vadd pos (vec2 150 80))) ctx)
 
   (ctx.restore)
 
   ;; draw window box
+  (set! ctx.strokeStyle "#000")
   (ctx.strokeRect (vx pos) (vy pos) (window-w w) (window-h w))  
   )
 
@@ -67,17 +94,38 @@
 
 (define (window-stack-windows s) (list-ref s 0))
 
-(define (window-stack-update s delta)
+(define (window-stack-return s wasp)
+  s)
+
+(define (window-stack-remove s wasp)
+  (filter
+   (lambda (w)
+     (not (entity-eq? wasp (window-wasp w))))
+   s))
+
+(define (window-stack-return s wasp)
+  (map
+   (lambda (w)
+     (if (and (eq? (window-dir w) 'out) 
+	      (entity-eq? wasp (window-wasp w)))
+	 (window-modify-dir 
+	  (window-modify-wasp 
+	   w (entity-modify-facing (window-wasp w) 'left)) 
+	  'return)
+	 w))
+   s))
+
+(define (window-stack-update s delta nest)
   (make-window-stack
    (map
     (lambda (window)
-      (window-update window delta))
+      (window-update window delta nest))
     (window-stack-windows s))))
 
 (define (window-stack-render s ctx)
   (index-for-each
    (lambda (i window)
-     (window-render window ctx (vec2 400 (* i 200))))
+     (window-render window ctx (vec2 1300 (* i 200))))
    (window-stack-windows s)))
 
 

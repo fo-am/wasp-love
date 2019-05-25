@@ -69,7 +69,7 @@
      (build-menu-option 'four "Four"))
     #f 0)
    (generate-cells cell-size-x cell-size-y)
-   (make-window-stack '())))
+   (make-window-stack (list))))
 
 ;; setup new game
 (define (nightjar-new-game c)

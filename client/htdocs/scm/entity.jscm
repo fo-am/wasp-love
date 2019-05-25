@@ -39,6 +39,9 @@
 (define (entity-modify-clip e v) (list-replace e 8 v))
 (define (entity-anim-speed e) (list-ref e 9))
 
+(define (entity-eq? a b)
+  (eq? (entity-id a) (entity-id b)))
+
 (define (entity-render e ctx)
   (let ((clip (list-ref (entity-sprite-list e) (entity-clip e))))
     (let ((image 

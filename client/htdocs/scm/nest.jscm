@@ -118,7 +118,7 @@
 	 (wasp-update-action wasp (menu-selection menu) n)
 	 wasp))
    (nest-wasps n)))
-
+  
 (define (nest-update-mouse n state mx my)
   (let ((wasp (nest-wasps-click n mx my)))
     (let ((menu
@@ -146,6 +146,25 @@
      (nest-cells n)
      (nest-window-stack n)))))
 
+
+;; update just the window stack, and add new ones if required
+(define (nest-update-window-stack nest delta)
+  (window-stack-update
+   (make-window-stack
+    (foldl 
+     (lambda (wasp r)
+       (cond 
+	((eq? (wasp-state wasp) 'state-forage-start)
+	 (append r (list (build-window wasp))))
+	((eq? (wasp-state wasp) 'state-forage-return)
+	 (window-stack-return r wasp))
+	((eq? (wasp-state wasp) 'state-forage-end)
+	 (window-stack-remove r wasp))
+	(else r)))
+     (window-stack-windows (nest-window-stack nest))
+     (nest-wasps nest)))
+   delta nest))
+
 (define (nest-update n delta)
   (make-nest
    (nest-energy n)
@@ -155,7 +174,7 @@
     (nest-wasps-update n delta))
    (nest-menu n)
    (nest-wasps-update-cells n)
-   (window-stack-update (nest-window-stack n) delta)))
+   (nest-update-window-stack n delta)))
 
 (define (nest-render n ctx)
   (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)
