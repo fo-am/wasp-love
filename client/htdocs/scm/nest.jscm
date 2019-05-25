@@ -14,12 +14,23 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+(define year-length 60)
+
+(define (time->season time)
+  (cond
+   ((< time (/ year-length 4)) 'spring)
+   ((and (> time (/ year-length 4)) (< time (* (/ year-length 4) 2))) 'summer)
+   ((and (> time (* (/ year-length 4) 2)) (< time (* (/ year-length 4) 3))) 'autumn)
+   (else 'winter)))
+
 (define (make-nest energy location time-of-year wasps menu cells window-stack) 
   (list energy location time-of-year wasps menu cells window-stack))
 
 (define (nest-energy n) (list-ref n 0))
+(define (nest-modify-energy n s) (list-replace n 0 s))
 (define (nest-location n) (list-ref n 1))
 (define (nest-time-of-year n) (list-ref n 2))
+(define (nest-modify-time-of-year n s) (list-replace n 2 s))
 (define (nest-wasps n) (list-ref n 3))
 (define (nest-menu n) (list-ref n 4))
 (define (nest-cells n) (list-ref n 5))
@@ -120,31 +131,31 @@
    (nest-wasps n)))
   
 (define (nest-update-mouse n state mx my)
-  (let ((wasp (nest-wasps-click n mx my)))
-    (let ((menu
-	   (if (or (not wasp) 
-		   (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
-	       (menu-update-click (nest-menu n) mx my)
-	       (build-menu
-		(v2add (entity-pos wasp) (vec2 -100 -300))
-		#t
-		(wasp-build-menu-options wasp)
-		#f 
-		(entity-id wasp)))))
-
-    (make-nest
-     (nest-energy n)
-     (nest-location n)
-     (nest-time-of-year n)
-     (if (menu-selection menu)
-	 (nest-update-wasps-from-menu n menu) 
-	 (nest-wasps n))
-     ;; need to clear the menu to stop it retriggering
-     (if (menu-selection menu)
-	 (menu-clear menu)
-	 menu)
-     (nest-cells n)
-     (nest-window-stack n)))))
+  (let ((menu (menu-update-click (nest-menu n) mx my)))
+    (let ((wasp (if (menu-selection menu)
+		    #f
+		    (nest-wasps-click n mx my))))
+      (make-nest
+       (nest-energy n)
+       (nest-location n)
+       (nest-time-of-year n)
+       (if (menu-selection menu)
+	   (nest-update-wasps-from-menu n menu) 
+	   (nest-wasps n))
+       ;; if there is a wasp clicked on, and it's not the current one
+       (if (and wasp (not (eq? (entity-id wasp) (menu-entity-id (nest-menu n)))))
+	   (build-menu
+	    (v2add (entity-pos wasp) (vec2 -100 -300))
+	    #t
+	    (wasp-build-menu-options wasp)
+	    #f 
+	    (entity-id wasp))
+	   ;; need to clear the menu to stop it retriggering
+	   (if (menu-selection menu)
+	       (menu-clear menu)
+	       menu))
+       (nest-cells n)
+       (nest-window-stack n)))))
 
 
 ;; update just the window stack, and add new ones if required
@@ -169,7 +180,7 @@
   (make-nest
    (nest-energy n)
    (nest-location n)
-   (nest-time-of-year n)
+   (+ (nest-time-of-year n) delta)
    (nest-wasps-update-wasps
     (nest-wasps-update n delta))
    (nest-menu n)
@@ -188,4 +199,18 @@
      (nest-cells n)))
   (entity-list-render (nest-wasps n) ctx)
   (window-stack-render (nest-window-stack n) ctx)
-  (menu-render (nest-menu n)))
+  (menu-render (nest-menu n))
+  (set! ctx.font "normal 25pt pompiere")
+  (set! ctx.fillStyle "#fff")
+  (set! ctx.globalAlpha 0.5)
+  (ctx.fillRect 90 60 200 500)
+  (set! ctx.globalAlpha 1.0)
+  (set! ctx.fillStyle "#000")
+  (ctx.fillText (string-append "energy: " (nest-energy n)) 100 100)
+  (ctx.fillText (string-append "time of year: " (Math.floor (nest-time-of-year n))) 100 150)
+  (ctx.fillText (string-append "season: " (time->season (nest-time-of-year n))) 100 200)
+  (ctx.fillText (string-append "wasps: " (length (nest-wasps n))) 100 250)
+  (ctx.fillText (string-append "cells: " (length (nest-cells n))) 100 300)
+  
+
+  )

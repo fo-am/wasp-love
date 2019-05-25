@@ -90,7 +90,6 @@
        (set! window.location "/"))
      (game-modify-data
       (lambda (d)
-	(msg "making new game")
 	(empty-nightjar-data))
       (game-modify-render
        (lambda (ctx)
@@ -176,13 +175,55 @@
       (nest-render (game-data c) ctx))
     (game-modify-update
      (lambda (t c)
+       (msg (nest-time-of-year (game-data c)))
        (game-modify-data
 	(lambda (d)
 	  (nest-update (game-data c) (game-delta c)))
-	c))
+	(if (> (nest-time-of-year (game-data c)) year-length)	    
+	    (nightjar-end c)
+	    c)))
      (game-modify-buttons
       (list
        ) c)))))
+
+(define (nightjar-end c)
+   (game-modify-render
+    (lambda (ctx)
+      (set! ctx.fillStyle "#000")      
+      (set! ctx.font "normal 75pt pompiere")
+      (wrap-text ctx "Game Over" 0 200 1300 100)
+      (set! ctx.font "normal 30pt pompiere")
+      
+      (let ((n (game-data c)))
+	(ctx.fillText (string-append "energy: " (nest-energy n)) 500 300)
+	(ctx.fillText (string-append "time of year: " (Math.floor (nest-time-of-year n))) 500 350)
+	(ctx.fillText (string-append "season: " (time->season (nest-time-of-year n))) 500 400)
+	(ctx.fillText (string-append "wasps: " (length (nest-wasps n))) 500 450)
+	(ctx.fillText (string-append "cells: " (length (nest-cells n))) 500 500))
+
+
+      (set! ctx.globalAlpha 0.5)
+      ;;(ctx.drawImage (find-image "foam-logo.png") (- (+ default-button-x 200) 50) 790)
+      (set! ctx.globalAlpha 1.0)      
+      )
+    (game-modify-update
+     (lambda (t c)
+       c)
+     (game-modify-buttons
+      (list
+       (rect-button
+	"Back"
+	default-button-x
+	default-button-y
+	default-button-width 
+	default-button-height 
+	"jumpy"
+	(lambda (c)
+	  (button-sound)
+	  (nightjar-intro game))))
+      c))))
+
+
 
 (set! ctx.font "normal 75pt pompiere")
 (set! ctx.fillStyle "#606353")
