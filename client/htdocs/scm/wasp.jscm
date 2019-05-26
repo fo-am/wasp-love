@@ -14,14 +14,18 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+(define default-capabilities (list 'forage 'lay-egg 'tend-brood 'build-cell))
+
 (define wasp-speed (local-get-param "wasp-game" "wasp-speed"))
 (define wasp-build-time (local-get-param "wasp-game" "wasp-build-time"))
 (define wasp-laying-time (local-get-param "wasp-game" "wasp-laying-time"))
+(define wasp-tending-time (local-get-param "wasp-game" "wasp-tending-time"))
 (define wasp-pupa-time (local-get-param "wasp-game" "wasp-pupa-time"))
 (define wasp-forage-time (local-get-param "wasp-game" "wasp-forage-time"))
 
 (define wasp-animation
   (list
+   (make-anim-move "pupae" "pupa1" (list "1"))
    (make-anim-move "pupae" "pupa1" (list "1" "2" "3" "4"))
    (make-anim-move "wasp-7" "7-idle" (list "1" "2"))
    (make-anim-move "wasp-7" "7-walk" (list "1" "2" "3" "2"))
@@ -33,13 +37,14 @@
    ))
 
 (define wasp-animation-pupa 0)
-(define wasp-animation-idle 1)
-(define wasp-animation-walk 2)
-(define wasp-animation-defend 3)
-(define wasp-animation-build 4)
-(define wasp-animation-fly 5)
-(define wasp-animation-lay 6)
-(define wasp-animation-tend 7)
+(define wasp-animation-pupa-tended 1)
+(define wasp-animation-idle 2)
+(define wasp-animation-walk 3)
+(define wasp-animation-defend 4)
+(define wasp-animation-build 5)
+(define wasp-animation-fly 6)
+(define wasp-animation-lay 7)
+(define wasp-animation-tend 8)
 
 (define (make-wasp capabilities) 
   (let ((pos (vec2 (random 1000) (random 500))))
@@ -54,7 +59,7 @@
       (anim-load-frames wasp-animation)
       0 wasp-animation-idle 8)
      (list capabilities)
-     'idle pos #f 0 0)))
+     'idle pos #f 0 0 #f)))
 
 (define (make-pupa pos capabilities) 
   (append 
@@ -67,7 +72,7 @@
     (rndf)
     (anim-load-frames wasp-animation)
     0 wasp-animation-pupa 8)
-   (list capabilities 'state-pupa pos pos 0 0)))
+   (list capabilities 'state-pupa pos pos 0 0 #f)))
 
 (define (wasp-capabilities w) (list-ref w (+ entity-size 0)))
 (define (wasp-modify-capabilities w v) (list-replace w (+ entity-size 0) v))
@@ -81,31 +86,43 @@
 (define (wasp-modify-walk-time w s) (list-replace w (+ entity-size 4) s))
 (define (wasp-timer w) (list-ref w (+ entity-size 5)))
 (define (wasp-modify-timer w s) (list-replace w (+ entity-size 5) s))
+(define (wasp-tending-id w) (list-ref w (+ entity-size 6)))
+(define (wasp-modify-tending-id w s) (list-replace w (+ entity-size 6) s))
 
 ;; capabilities -> menu options
 (define (wasp-build-menu-options w n)
-  (map
-   (lambda (c)
+  (foldl
+   (lambda (c r)
      (cond
-      ((eq? c 'forage) (build-menu-option c "Forage"))
-      ((eq? c 'lay-egg) (build-menu-option c "Lay Egg"))
-      ((eq? c 'build-cell) (build-menu-option c "Build Cell"))
-      ((eq? c 'tend-brood) (build-menu-option c "Tend brood"))
-      ((eq? c 'defend-nest) (build-menu-option c "Defend Nest"))
-      (else (build-menu-option 'unknown "Unknown option...?"))))
-   (wasp-capabilities w n)))
+      ((eq? c 'forage) 
+       (cons (build-menu-option c "Forage") r))
+      ((and (eq? c 'lay-egg) (nest-find-empty-cell n)) 
+       (cons (build-menu-option c "Lay Egg") r))
+      ((eq? c 'build-cell) 
+       (cons (build-menu-option c "Build Cell") r))
+      ((and (eq? c 'tend-brood) 
+	    (nest-find-wasp-in-state n 'state-pupa)) 
+       (cons (build-menu-option c "Tend brood") r))
+      ((eq? c 'defend-nest) 
+       (cons (build-menu-option c "Defend Nest") r))
+      (else r)))
+   '()
+   (wasp-capabilities w)))
 
 ;; set up a wasp to walk to a destination cell
 (define (wasp-walk-to-cell w dest-cell)
+  (wasp-walk-to-pos w (cell-pos dest-cell)))
+
+(define (wasp-walk-to-pos w pos)
   (wasp-modify-walk-time 
    (wasp-modify-walk-to
     (wasp-modify-walk-from 
      ;; face the right direction
-     (if (< (vx (entity-pos w)) (vx (cell-pos dest-cell)))
+     (if (< (vx (entity-pos w)) (vx pos))
 	 (entity-modify-facing w 'right)
 	 (entity-modify-facing w 'left))
      (entity-pos w))
-    (cell-pos dest-cell))
+    pos)
    0))
 
 (define (wasp-fly-to-forage w nest)
@@ -140,6 +157,16 @@
 	   (wasp-walk-to-cell w dest-cell) 
 	   'state-walking-to-lay)
 	  w)))
+   ((eq? menu-code 'tend-brood) 
+    (let ((dest-pupa (nest-find-wasp-in-state nest 'state-pupa)))
+      ;; it's possible we coundn't find any pupa
+      (if dest-pupa
+	  (wasp-modify-state
+	   (wasp-walk-to-pos 
+	    (wasp-modify-tending-id w (entity-id dest-pupa)) 
+	    (entity-pos dest-pupa)) 
+	   'state-walking-to-tend)
+	  w)))
    (else w)))
 
 (define (wasp-walk w delta)
@@ -157,6 +184,10 @@
      (cond
       ((eq? state 'state-pupa)
        (if (> (wasp-timer w) wasp-pupa-time)
+	   (wasp-modify-state w 'state-died)
+	   w))
+      ((eq? state 'state-tended-pupa)
+       (if (> (wasp-timer w) wasp-pupa-time)
 	   (wasp-modify-capabilities
 	    (wasp-modify-state w 'state-hatched)
 	    (list 'forage 'lay-egg 'build-cell))
@@ -165,11 +196,14 @@
        (wasp-modify-state
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-wander))
+
       ((eq? state 'state-idle) w)
+
       ((eq? state 'state-walking-to-cell)
        (if (>= (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-building-cell) 0)
 	   (wasp-walk w delta)))
+
       ((eq? state 'state-building-cell) 
        (if (> (wasp-timer w) wasp-build-time)
 	   (wasp-modify-state w 'state-built-cell)
@@ -178,6 +212,7 @@
        (wasp-modify-state
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-wander))
+
       ((eq? state 'state-walking-to-lay)
        (if (>= (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-laying-egg) 0)
@@ -190,6 +225,7 @@
        (wasp-modify-state
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-wander))
+
       ((eq? state 'state-wander)
        (if (>= (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-idle) 0)
@@ -217,6 +253,20 @@
        (if (>= (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-idle) 0)
 	   (wasp-walk w delta)))
+
+      ((eq? state 'state-walking-to-tend)
+       (if (>= (wasp-walk-time w) 1)
+	   (wasp-modify-timer (wasp-modify-state w 'state-tending-egg) 0)
+	   (wasp-walk w delta)))
+      ((eq? state 'state-tending-egg) 
+       (if (> (wasp-timer w) wasp-tending-time)
+	   (wasp-modify-state w 'state-tended-egg)
+	   w))
+      ((eq? state 'state-tended-egg) 
+       (wasp-modify-state
+	(wasp-walk-to-cell w (nest-find-any-cell nest))
+	'state-wander))
+
       (else w)))
    delta))
 
@@ -226,8 +276,10 @@
     (entity-modify-clip 
      (wasp-modify-timer w (+ (wasp-timer w) delta))
      (cond
+      ((eq? state 'state-tended-pupa) wasp-animation-pupa-tended)
       ((eq? state 'state-idle) wasp-animation-idle)
       ((eq? state 'state-walking-to-cell) wasp-animation-walk)
+      ((eq? state 'state-walking-to-tend) wasp-animation-walk)
       ((eq? state 'state-building-cell) wasp-animation-build)
       ((eq? state 'state-walking-to-lay) wasp-animation-walk)
       ((eq? state 'state-laying-egg) wasp-animation-lay)
@@ -235,6 +287,7 @@
       ((eq? state 'state-take-off) wasp-animation-fly)
       ((eq? state 'state-forage-start) wasp-animation-fly)
       ((eq? state 'state-forage) wasp-animation-fly)
+      ((eq? state 'state-tending-egg) wasp-animation-tend)
       (else (entity-clip w))))))
 
 (define (update-cell pos cells code)
@@ -255,6 +308,8 @@
     (update-cell (wasp-walk-to wasp) cells cell-code-occupied))
    ((eq? (wasp-state wasp) 'state-hatched)
     (update-cell (wasp-walk-to wasp) cells cell-code-empty))
+   ((eq? (wasp-state wasp) 'state-died)
+    (update-cell (wasp-walk-to wasp) cells cell-code-empty))
    (else cells)))
 
 ;; update new wasps mainly - could be much simpler
@@ -265,4 +320,12 @@
      (make-pupa (wasp-walk-to wasp)
 		(list))
      wasps))
+   ((eq? (wasp-state wasp) 'state-tended-egg)
+    (entity-list-modify 
+     wasps (wasp-tending-id wasp)
+     (lambda (other)
+       ;; switch the pupa to tended state...
+       (if (eq? (wasp-state other) 'state-pupa)
+	   (wasp-modify-state other 'state-tended-pupa)
+	   other))))
    (else wasps)))

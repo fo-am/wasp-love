@@ -40,6 +40,7 @@
 (define (nest-time-of-year n) (list-ref n 2))
 (define (nest-modify-time-of-year n s) (list-replace n 2 s))
 (define (nest-wasps n) (list-ref n 3))
+(define (nest-modify-wasps n s) (list-replace n 3 s))
 (define (nest-menu n) (list-ref n 4))
 (define (nest-cells n) (list-ref n 5))
 (define (nest-window-stack n) (list-ref n 6))
@@ -82,6 +83,14 @@
 
 (define (nest-find-any-cell n)
   (choose (nest-cells n)))
+
+(define (nest-find-wasp-in-state n state)
+  (foldl
+   (lambda (w r)
+     (if (and (not r) (eq? (wasp-state w) state))
+	 w r))
+   #f
+   (shuffle (nest-wasps n))))
 
 (define (cell-pos->index pos)
   (+ (min (- cell-size-x 1) (vx pos))
@@ -144,6 +153,8 @@
      (cond
       ((eq? (wasp-state wasp) 'state-forage-end)
        (nest-modify-energy n (+ (nest-energy n) nest-forage-benefit)))
+      ((eq? (wasp-state wasp) 'state-died)
+       (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
       (else r)))
    n
    (nest-wasps n)))
@@ -172,7 +183,10 @@
 	    (nest-update-wasps-from-menu n menu) 
 	    (nest-wasps n))
 	;; if there is a wasp clicked on, and it's not the current one
-	(if (and wasp (not (eq? (entity-id wasp) (menu-entity-id (nest-menu n)))))
+	(if (and wasp
+		 (not (eq? (wasp-state wasp) 'state-pupa))
+		 ;;(not (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
+		 )
 	    (build-menu
 	     (v2add (entity-pos wasp) (vec2 -100 -300)) #t
 	     (wasp-build-menu-options wasp n) #f 

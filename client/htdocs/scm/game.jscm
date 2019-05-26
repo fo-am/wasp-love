@@ -18,6 +18,27 @@
 (load "scm/random.jscm")
 (load "scm/nightjar.jscm")
 (load "scm/local-storage.jscm")
+
+(local-setup-params 
+ "wasp-game" 
+ (list
+  (list "wasp-speed" 1)
+  (list "wasp-build-time" 3)
+  (list "wasp-laying-time" 3)
+  (list "wasp-pupa-time" 20)
+  (list "wasp-tending-time" 10)
+  (list "wasp-forage-time" 20)
+  (list "nest-year-length" (* 60 5))
+  (list "nest-forage-cost" -5)
+  (list "nest-build-cell-cost" -10)
+  (list "nest-lay-egg-cost" -10)
+  (list "nest-tend-brood-cost" -10)
+  (list "nest-defend-nest-cost" -10)
+  (list "nest-forage-benefit" 20)
+  (list "nest-start-energy" 100)
+  (list "nest-start-wasps" 2)
+  ))
+
 (load "scm/animation.jscm")
 (load "scm/entity.jscm")
 (load "scm/entity-list.jscm")
@@ -61,7 +82,7 @@
    (build-list
     (string->number (local-get-param "wasp-game" "nest-start-wasps"))
     (lambda (_)
-      (make-wasp (list 'forage 'lay-egg 'build-cell))))
+      (make-wasp default-capabilities)))
    (build-menu 
     (vec2 100 100) #f 
     (list
@@ -249,23 +270,4 @@
  (lambda ()
    (msg "loaded...")
    (start-game canvas ctx)))
-
-(local-setup-params 
- "wasp-game" 
- (list
-  (list "wasp-speed" 1)
-  (list "wasp-build-time" 3)
-  (list "wasp-laying-time" 3)
-  (list "wasp-pupa-time" 20)
-  (list "wasp-forage-time" 20)
-  (list "nest-year-length" (* 60 5))
-  (list "nest-forage-cost" -5)
-  (list "nest-build-cell-cost" -10)
-  (list "nest-lay-egg-cost" -10)
-  (list "nest-tend-brood-cost" -10)
-  (list "nest-defend-nest-cost" -10)
-  (list "nest-forage-benefit" 20)
-  (list "nest-start-energy" 100)
-  (list "nest-start-wasps" 2)
-  ))
 
