@@ -37,8 +37,8 @@
 	(build-list
 	 w (lambda (x)
 	     (make-cell 
-	      (vec2 (+ (* x 120) 50)
-		    (+ (* y 150) 50 
+	      (vec2 (+ (* x 120) 150)
+		    (+ (* y 150) 150 
 		       (if (zero? (modulo x 2)) 75 0)))
 	      (vec2 x y)
 	      (if (and (eq? x 6) (eq? y 2))

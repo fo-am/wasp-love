@@ -52,7 +52,6 @@
    300 200 'out))
 
 (define (window-update w delta nest)
-  (msg (window-dir w))
   (make-window
    (entity-update (wasp-update (window-wasp w) delta nest) delta)
    (window-env w)   

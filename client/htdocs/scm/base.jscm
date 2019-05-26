@@ -18,12 +18,35 @@
 
 (define display (lambda (str) (console.log str)))
 (define newline (lambda () (console.log "\n")))
-(define (msg a) (display a))
-(define (dbg a) (msg a) a)
 
-(define zero?
-  (lambda (n)
-    (= n 0)))
+(define (ditto-print-list a)
+  (let ((str ""))
+    (set! str (+ str "["))
+    (js "for (var i=0; i<a.length; i++) {")
+    (set! str (+ str (ditto-pretty-print (list-ref a i))))
+    (when (not (eq? i (- a.length 1))) (set! str (+ str " ")))
+    (js "}")
+    (set! str (+ str "]"))
+    str))
+
+(define (ditto-pretty-print a)
+  (cond
+   ((list? a) (ditto-print-list a))
+   (else (+ "" a))))
+
+(define (msg a) 
+  (console.log (ditto-pretty-print a)))
+
+(define (dbg a) (msg a) a)
+(define (error a) (msg a))
+
+(define (zero? n) (js "n===0"))
+(define (eqv? a b) (eq? a b))
+(define (equal? a b) (eq? a b))
+(define (floor n) (Math.floor n))
+(define (fmod a b) (js "Number((a - (Math.floor(a / b) * b)).toPrecision(8));"))
+(define (fabs x) (Math.abs x))
+(define (string->number x) (parseFloat x))
 
 (define (random n)
   (Math.floor (* (Math.random) n)))
@@ -36,12 +59,31 @@
 (define (max a b) (if (> a b) a b))
 (define (min a b) (if (< a b) a b))
 
+(define (substring str s e)
+  (js "str.substring(s, e);"))
+
+(define (string-length str)
+  (js "str.length"))
+
+(define (string->list str)
+  (str.split ""))
+
+(define (string-ref str i)
+  (js "str[i]"))
+
 ;; replaced by underlying iterative version
 ;;(define foldl
 ;;  (lambda (fn v l)
 ;;    (cond
 ;;     ((null? l) v)
 ;;     (else (foldl fn (fn (car l) v) (cdr l))))))
+
+;; replaced by underlying iterative version
+;; (define (list-contains? l v)
+;;   (cond
+;;     ((null? l) #f)
+;;     ((eq? (car l) v) #t)
+;;     (else (list-contains? (cdr l) v))))
 
 (define map
   (lambda (fn l)
@@ -62,7 +104,10 @@
     (foldl
      (lambda (i r)
        (if (fn i) (append r (list i)) r))
-     () l)))
+     '() l)))
+
+(define (list-remove l i)
+  (filter (lambda (a) (not (eq? a i))) l))
 
 (define for-each
   (lambda (fn l)
@@ -193,6 +238,14 @@
     (if (= n 0) 1
         (* n (factorial (- n 1))))))
 
+
+(define (symbol->string sym)
+  sym);; (ditto.symbol_string sym))
+
+(define (string->symbol str)
+  ;(ditto.find_symbol str)
+  str)
+
 ;; convert code to text form
 ; (define (scheme-txt v)
 ;  (cond
@@ -218,11 +271,13 @@
 ;          (scheme-txt (car l)))))))
 ;  (string-append "(list " (_ l "") ")"))
 
-
-(define a 0)
+(define (assert condition message) 
+  (when (not condition) 
+	(js "; throw message || 'assertion failed';")))
 
 (define unit-test
   (lambda ()
+    (define a 0)
     (set! a 10)
     (when (not (eq? 4 4)) (display "eq? failed"))
     (when (eq? 2 4) (display "eq?(2) failed"))
@@ -260,7 +315,10 @@
     (when (not (eq? (cond (#t (+ 3 2) (+ 100 1)) (else (+ 4 3))) 101)) (display "cond test failed"))
     (when (not (eq? (when #t (+ 3 2) (+ 100 1)) 101)) (display "when test failed"))
     (when (not (eq? (cadr (assoc 2 (list (list 3 "one") (list 2 "three")))) "three")) (display "assoc test failed"))
-
+    (when (not (eq? (symbol->string 'one) "one")) (display "symbol->string failed"))
+    ;;(when (not (eq? (string->symbol "one") 'one)) (display "string->symbol failed"))
+    ;;(msg (string->symbol "one"))
+    ;;(msg 'one)
     ))
 
 (unit-test)

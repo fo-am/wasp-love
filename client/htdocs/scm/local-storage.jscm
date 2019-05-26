@@ -25,6 +25,9 @@
     def)
    (else (local-load name))))
 
+(define (set-game-param key value)
+  (local-set-param "wasp-game" key value))
+
 (define (param-form key value)
   (string-append
         "<div class='param-row'>
@@ -60,6 +63,7 @@
   (setup-params-interface (local-load (string-append namespace "-params"))))
 
 (define (local-set-param namespace name value)
+  (msg namespace name value)
   (local-save
    (string-append namespace "-params")
    (map

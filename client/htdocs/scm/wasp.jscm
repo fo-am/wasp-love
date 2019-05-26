@@ -83,7 +83,7 @@
 (define (wasp-modify-timer w s) (list-replace w (+ entity-size 5) s))
 
 ;; capabilities -> menu options
-(define (wasp-build-menu-options w)
+(define (wasp-build-menu-options w n)
   (map
    (lambda (c)
      (cond
@@ -93,7 +93,7 @@
       ((eq? c 'tend-brood) (build-menu-option c "Tend brood"))
       ((eq? c 'defend-nest) (build-menu-option c "Defend Nest"))
       (else (build-menu-option 'unknown "Unknown option...?"))))
-   (wasp-capabilities w)))
+   (wasp-capabilities w n)))
 
 ;; set up a wasp to walk to a destination cell
 (define (wasp-walk-to-cell w dest-cell)
@@ -115,7 +115,7 @@
      (wasp-modify-walk-from 
       (entity-modify-facing w 'right)
       (entity-pos w))
-     (vec2 2000 500))
+     (vec2 1800 500))
     0)
    'state-take-off))
 
@@ -144,7 +144,7 @@
 
 (define (wasp-walk w delta)
   (entity-modify-pos 
-   (wasp-modify-walk-time w (+ (wasp-walk-time w) (* wasp-speed delta)))
+   (wasp-modify-walk-time w (min 1 (+ (wasp-walk-time w) (* wasp-speed delta))))
    (v2lerp 
     (wasp-walk-from w)
     (wasp-walk-to w) 
@@ -167,7 +167,7 @@
 	'state-wander))
       ((eq? state 'state-idle) w)
       ((eq? state 'state-walking-to-cell)
-       (if (> (wasp-walk-time w) 1)
+       (if (>= (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-building-cell) 0)
 	   (wasp-walk w delta)))
       ((eq? state 'state-building-cell) 
@@ -179,7 +179,7 @@
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-wander))
       ((eq? state 'state-walking-to-lay)
-       (if (> (wasp-walk-time w) 1)
+       (if (>= (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-laying-egg) 0)
 	   (wasp-walk w delta)))
       ((eq? state 'state-laying-egg) 
@@ -191,12 +191,12 @@
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-wander))
       ((eq? state 'state-wander)
-       (if (> (wasp-walk-time w) 1)
+       (if (>= (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-idle) 0)
 	   (wasp-walk w delta)))
 
       ((eq? state 'state-take-off)
-       (if (> (wasp-walk-time w) 1)
+       (if (>= (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-forage-start) 0)
 	   (wasp-walk w delta)))
       ((eq? state 'state-forage-start)
@@ -214,7 +214,7 @@
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-forage-finish))
       ((eq? state 'state-forage-finish)
-       (if (> (wasp-timer w) 1)
+       (if (>= (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-idle) 0)
 	   (wasp-walk w delta)))
       (else w)))

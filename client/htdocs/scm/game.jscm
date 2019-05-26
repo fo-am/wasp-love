@@ -56,9 +56,10 @@
 
 (define (empty-nightjar-data)
   (make-nest 
-   100 'city 0 
+   (string->number (local-get-param "wasp-game" "nest-start-energy"))
+   'city 0 
    (build-list
-    2
+    (string->number (local-get-param "wasp-game" "nest-start-wasps"))
     (lambda (_)
       (make-wasp (list 'forage 'lay-egg 'build-cell))))
    (build-menu 
@@ -265,5 +266,6 @@
   (list "nest-defend-nest-cost" -10)
   (list "nest-forage-benefit" 20)
   (list "nest-start-energy" 100)
+  (list "nest-start-wasps" 2)
   ))
 

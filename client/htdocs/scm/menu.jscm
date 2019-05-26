@@ -21,8 +21,12 @@
 (define (menu-option-key o) (list-ref o 0))
 (define (menu-option-text o) (list-ref o 1))
 
+;; keep menu on screen
+(define (menu-munge-location loc)
+  (if (< (vy loc) 50) (vec2 (vx loc) 50) loc))
+
 (define (build-menu pos visible options selection entity-id)
-  (list pos visible options selection entity-id))
+  (list (menu-munge-location pos) visible options selection entity-id))
 
 (define (menu-pos m) (list-ref m 0))
 (define (menu-visible m) (list-ref m 1))
