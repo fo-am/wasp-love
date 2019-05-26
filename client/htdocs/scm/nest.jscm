@@ -14,13 +14,21 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define year-length 60)
+(define nest-year-length (local-get-param "wasp-game" "nest-year-length"))
+(define nest-forage-cost (local-get-param "wasp-game" "nest-forage-cost"))
+(define nest-build-cell-cost (local-get-param "wasp-game" "nest-build-cell-cost"))
+(define nest-lay-egg-cost (local-get-param "wasp-game" "nest-lay-egg-cost"))
+(define nest-tend-brood-cost (local-get-param "wasp-game" "nest-tend-brood-cost"))
+(define nest-defend-nest-cost (local-get-param "wasp-game" "nest-defend-nest-cost"))
+(define nest-forage-benefit (local-get-param "wasp-game" "nest-forage-benefit"))
 
 (define (time->season time)
   (cond
-   ((< time (/ year-length 4)) 'spring)
-   ((and (> time (/ year-length 4)) (< time (* (/ year-length 4) 2))) 'summer)
-   ((and (> time (* (/ year-length 4) 2)) (< time (* (/ year-length 4) 3))) 'autumn)
+   ((< time (/ nest-year-length 4)) 'spring)
+   ((and (> time (/ nest-year-length 4)) 
+	 (< time (* (/ nest-year-length 4) 2))) 'summer)
+   ((and (> time (* (/ nest-year-length 4) 2)) 
+	 (< time (* (/ nest-year-length 4) 3))) 'autumn)
    (else 'winter)))
 
 (define (make-nest energy location time-of-year wasps menu cells window-stack) 
@@ -129,33 +137,53 @@
 	 (wasp-update-action wasp (menu-selection menu) n)
 	 wasp))
    (nest-wasps n)))
-  
+
+(define (nest-update-from-wasps n)
+  (foldl
+   (lambda (wasp r)
+     (cond
+      ((eq? (wasp-state wasp) 'state-forage-end)
+       (nest-modify-energy n (+ (nest-energy n) nest-forage-benefit)))
+      (else r)))
+   n
+   (nest-wasps n)))
+       
+(define (nest-update-from-action n action)
+  (cond
+   ((eq? action 'forage) (nest-modify-energy n (+ (nest-energy n) nest-forage-cost)))
+   ((eq? action 'build-cell) (nest-modify-energy n (+ (nest-energy n) nest-build-cell-cost)))
+   ((eq? action 'lay-egg) (nest-modify-energy n (+ (nest-energy n) nest-lay-egg-cost)))
+   ((eq? action 'tend-brood) (nest-modify-energy n (+ (nest-energy n) nest-tend-brood-cost)))
+   ((eq? action 'defend-nest) (nest-modify-energy n (+ (nest-energy n) nest-defend-nest-cost)))
+   (else n)))
+
+
 (define (nest-update-mouse n state mx my)
   (let ((menu (menu-update-click (nest-menu n) mx my)))
     (let ((wasp (if (menu-selection menu)
 		    #f
 		    (nest-wasps-click n mx my))))
-      (make-nest
-       (nest-energy n)
-       (nest-location n)
-       (nest-time-of-year n)
-       (if (menu-selection menu)
-	   (nest-update-wasps-from-menu n menu) 
-	   (nest-wasps n))
-       ;; if there is a wasp clicked on, and it's not the current one
-       (if (and wasp (not (eq? (entity-id wasp) (menu-entity-id (nest-menu n)))))
-	   (build-menu
-	    (v2add (entity-pos wasp) (vec2 -100 -300))
-	    #t
-	    (wasp-build-menu-options wasp)
-	    #f 
-	    (entity-id wasp))
-	   ;; need to clear the menu to stop it retriggering
-	   (if (menu-selection menu)
-	       (menu-clear menu)
-	       menu))
-       (nest-cells n)
-       (nest-window-stack n)))))
+      (nest-update-from-action
+       (make-nest
+	(nest-energy n)
+	(nest-location n)
+	(nest-time-of-year n)
+	(if (menu-selection menu)
+	    (nest-update-wasps-from-menu n menu) 
+	    (nest-wasps n))
+	;; if there is a wasp clicked on, and it's not the current one
+	(if (and wasp (not (eq? (entity-id wasp) (menu-entity-id (nest-menu n)))))
+	    (build-menu
+	     (v2add (entity-pos wasp) (vec2 -100 -300)) #t
+	     (wasp-build-menu-options wasp n) #f 
+	     (entity-id wasp))
+	    ;; need to clear the menu to stop it retriggering
+	    (if (menu-selection menu)
+		(menu-clear menu)
+		menu))
+	(nest-cells n)
+	(nest-window-stack n))
+       (menu-selection menu)))))
 
 
 ;; update just the window stack, and add new ones if required
@@ -177,15 +205,16 @@
    delta nest))
 
 (define (nest-update n delta)
-  (make-nest
-   (nest-energy n)
-   (nest-location n)
-   (+ (nest-time-of-year n) delta)
-   (nest-wasps-update-wasps
-    (nest-wasps-update n delta))
-   (nest-menu n)
-   (nest-wasps-update-cells n)
-   (nest-update-window-stack n delta)))
+  (nest-update-from-wasps
+   (make-nest
+    (nest-energy n)
+    (nest-location n)
+    (+ (nest-time-of-year n) delta)
+    (nest-wasps-update-wasps
+     (nest-wasps-update n delta))
+    (nest-menu n)
+    (nest-wasps-update-cells n)
+    (nest-update-window-stack n delta))))
 
 (define (nest-render n ctx)
   (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)

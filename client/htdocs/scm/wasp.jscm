@@ -14,11 +14,11 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define wasp-speed 1)
-(define wasp-build-time 3)
-(define wasp-laying-time 3)
-(define wasp-pupa-time 50)
-(define wasp-forage-time 10)
+(define wasp-speed (local-get-param "wasp-game" "wasp-speed"))
+(define wasp-build-time (local-get-param "wasp-game" "wasp-build-time"))
+(define wasp-laying-time (local-get-param "wasp-game" "wasp-laying-time"))
+(define wasp-pupa-time (local-get-param "wasp-game" "wasp-pupa-time"))
+(define wasp-forage-time (local-get-param "wasp-game" "wasp-forage-time"))
 
 (define wasp-animation
   (list

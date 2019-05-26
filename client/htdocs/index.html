@@ -8,12 +8,21 @@
         <center>
           <canvas id="canvas" width="1600" height="900"></canvas>
         </center>
-
+	<div id="params">
+	  <b><i>Super secret waspy game params</i></b></br>
+	  <p><div class="param-list"></div></p>
+	  <p>Params are saved to your browser: reload page to try new params in game.<p>
+	  <button onclick="local_nuke()">Factory defaults</button>
+	  <button onclick="$('#params').hide();">Hide me</button></br>
+	</div>
+	<button onclick="$('#params').show();">Edit game params</button>
+	
         <div style="display:none;">
           <pre><div id="output"></div></pre>
           <pre><div id="compiled"></div></pre>
         </div>
       </div>
+      
     </body>
     <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
     <script type="text/javascript" src="js/ditto.js"></script>

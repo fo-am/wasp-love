@@ -19,3 +19,30 @@ html, body {
     min-width: 800px;
     /*background: url(../images/bg.png);*/
 }
+
+#params {
+    font-family: 'sans';
+    display: none; 
+    position: absolute; 
+    top: 0;
+    background: #fff;
+    padding: 1em;
+    width: 350px;    
+}
+
+.param-row {
+    border: 1px solid white;
+    background: #f9e973;
+}
+
+.param-key {
+    float: left;
+    width: 70%;
+}
+
+.param-value {
+    font-family: 'sans';
+    width: 5em;
+    border: none;
+    background: none;
+}

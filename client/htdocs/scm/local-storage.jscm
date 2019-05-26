@@ -1,0 +1,127 @@
+;; -*- mode: scheme; -*-
+
+;; use browser local storage for stuff
+;; hopefully removing the need for a server in certain situations
+
+(define (local-save name o)
+  (localStorage.setItem name (JSON.stringify o)))
+
+(define (local-load name)
+  (JSON.parse (localStorage.getItem name)))
+
+(define (local-delete name)
+  (localStorage.removeItem name))
+
+(define (local-nuke)
+  (localStorage.clear))
+
+(define (local-exists? name)
+  (localStorage.getItem name))
+
+(define (local-load-or-create name def)
+  (cond 
+   ((not (local-exists? name))
+    (local-save name def)
+    def)
+   (else (local-load name))))
+
+(define (param-form key value)
+  (string-append
+        "<div class='param-row'>
+           <div class='param-key'>" key "</div>
+           <input class='param-value' onChange='set_game_param(this.name,this.value);' type='text' name='" key "' value='" value "'></br>
+	</div>"))
+
+(define (setup-params-interface params)
+  (let ((c ($ ".param-list") ))
+    (for-each
+     (lambda (m)
+       (c.append (param-form (car m) (cadr m))))
+     params)))
+
+(define (check-and-add-params! namespace new-params)
+  ;; fold over current params, adding new ones if they don't exist
+  (local-save 
+   (string-append namespace "-params")
+   (foldl
+    (lambda (param r)
+      (if (not (local-param-exists? namespace (car param)))
+	  (begin
+	    (msg (string-append "Adding " (car param) " to existing params"))
+	    (append r (list param)))
+	  r))
+    (local-load (string-append namespace "-params"))
+    new-params)))
+
+(define (local-setup-params namespace params)
+  (when (not (local-exists? (string-append namespace "-params")))
+	(local-save (string-append namespace "-params") params))
+  (check-and-add-params! namespace params)
+  (setup-params-interface (local-load (string-append namespace "-params"))))
+
+(define (local-set-param namespace name value)
+  (local-save
+   (string-append namespace "-params")
+   (map
+    (lambda (kv)
+      (if (eq? (car kv) name)
+	  (list name value)
+	  kv))
+    (local-load (string-append namespace "-params")))))
+
+(define (local-get-param namespace name) 
+  (foldl
+   (lambda (kv r)
+     (if (eq? (car kv) name)
+	 (cadr kv) r))
+   #f
+   (local-load (string-append namespace "-params"))))
+
+(define (local-param-exists? namespace name) 
+  (foldl
+   (lambda (kv r)
+     (if (eq? (car kv) name)
+	 #t r))
+   #f
+   (local-load (string-append namespace "-params"))))
+
+;; used for streaming data, not params
+(define (local-add-item namespace name value)
+  (let ((fullname (string-append namespace "-" name)))
+    (let ((arr (local-load fullname)))
+      (local-save fullname (append (if arr (local-load fullname) '()) (list value))))))
+
+;; utils
+
+(define (unknown->csv l)
+  (cond
+   ((number? l) l)
+   ((string? l) (string-append "'" l "'"))
+   ((list? l) 
+    (car
+     (foldl
+      (lambda (i r)
+	(let ((pos (cadr r)))
+	  (list 
+	   (if (< pos (- (length l) 1)) 
+	       (string-append (car r) (unknown->csv i) (if (list? i) "" ","))
+	       (string-append (car r) (unknown->csv i) (if (list? i) "" "\n")))
+	   (+ pos 1))))
+      (list "" 0) l)))
+   (else (msg "unknown-csv no idea what") (msg l) (msg "is..."))))
+
+(define (local->csv namespace name) 
+  (msg name)
+  (unknown->csv (local-load (string-append namespace "-" name))))
+
+(define (download-data filename text) 
+  (let ((element (document.createElement "a")))
+    (element.setAttribute 
+     "href" 
+     (string-append "data:text/plain;charset=utf-8," 
+		    (encodeURIComponent text))
+     (element.setAttribute "download" filename))
+    (set! element.style.display "none")
+    (document.body.appendChild element)
+    (element.click)
+    (document.body.removeChild element)))
