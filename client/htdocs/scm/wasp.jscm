@@ -190,7 +190,7 @@
        (if (> (wasp-timer w) wasp-pupa-time)
 	   (wasp-modify-capabilities
 	    (wasp-modify-state w 'state-hatched)
-	    (list 'forage 'lay-egg 'build-cell))
+	    default-capabilities)
 	   w))
       ((eq? state 'state-hatched) 
        (wasp-modify-state
