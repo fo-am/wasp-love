@@ -21,6 +21,8 @@
 (define nest-tend-brood-cost (local-get-param "wasp-game" "nest-tend-brood-cost"))
 (define nest-defend-nest-cost (local-get-param "wasp-game" "nest-defend-nest-cost"))
 (define nest-forage-benefit (local-get-param "wasp-game" "nest-forage-benefit"))
+(define event-start-time (local-get-param "wasp-game" "event-start-time"))
+(define event-probability (local-get-param "wasp-game" "event-probability"))
 
 (define (time->season time)
   (cond
@@ -31,8 +33,8 @@
 	 (< time (* (/ nest-year-length 4) 3))) 'autumn)
    (else 'winter)))
 
-(define (make-nest energy location time-of-year wasps menu cells window-stack) 
-  (list energy location time-of-year wasps menu cells window-stack))
+(define (make-nest energy location time-of-year wasps menu cells window-stack event) 
+  (list energy location time-of-year wasps menu cells window-stack event))
 
 (define (nest-energy n) (list-ref n 0))
 (define (nest-modify-energy n s) (list-replace n 0 s))
@@ -44,6 +46,10 @@
 (define (nest-menu n) (list-ref n 4))
 (define (nest-cells n) (list-ref n 5))
 (define (nest-window-stack n) (list-ref n 6))
+(define (nest-event n) (list-ref n 7))
+(define (nest-modify-event n s) (list-replace n 7 s))
+(define (nest-event-time n) (list-ref n 8))
+(define (nest-modify-event-time n s) (list-replace n 8 s))
 
 (define (nest-wasps-update n delta)
   (map
@@ -55,6 +61,8 @@
   (foldl
    (lambda (w r)
      (if (and (not r) 
+	      (not (eq? (wasp-state w) 'state-pupa))
+	      (not (eq? (wasp-state w) 'state-tended-pupa))
 	      (in-rect? 
 	       (- (vx (entity-pos w)) 150)
 	       (- (vy (entity-pos w)) 150)
@@ -65,10 +73,22 @@
    #f
    (nest-wasps n)))
 
+(define (nest-wasp-present? n pos)
+  (foldl
+   (lambda (w r)
+     (if (and (not r) 
+	      (not (eq? (wasp-state w) 'state-pupa))
+	      (not (eq? (wasp-state w) 'state-untended-pupa))
+	      (v2eq? (wasp-walk-to w) pos))
+	 #t r))
+   #f
+   (nest-wasps n)))
+
 (define (nest-find-built-cell n)
   (foldl
    (lambda (c r)
-     (if (and (not r) (not (eq? (cell-code c) cell-code-unbuilt)))
+     (if (and (not r) (not (eq? (cell-code c) cell-code-unbuilt))
+	      (not (nest-wasp-present? n (cell-pos c))))
 	 c r))
    #f
    (shuffle (nest-cells n))))
@@ -76,18 +96,41 @@
 (define (nest-find-empty-cell n)
   (foldl
    (lambda (c r)
-     (if (and (not r) (eq? (cell-code c) cell-code-empty))
+     (if (and (not r) (eq? (cell-code c) cell-code-empty)
+	      (not (nest-wasp-present? n (cell-pos c))))
 	 c r))
    #f
    (shuffle (nest-cells n))))
 
 (define (nest-find-any-cell n)
-  (choose (nest-cells n)))
+  (foldl
+   (lambda (c r)
+     (if (and (not r) (not (nest-wasp-present? n (cell-pos c))))
+	 c r))
+   #f
+   (shuffle (nest-cells n))))
+
+(define (in-list? i l)
+  (foldl
+   (lambda (e r)
+     (if (and (not r) (eq? i e))
+	 #t r))
+   #f l))
+
+(define (nest-decimate n p state-list)
+  (nest-modify-wasps
+   n (map
+      (lambda (w)
+	(if (and (< (rndf) p) (in-list? (wasp-state w) state-list))
+	    (wasp-modify-state w 'state-start-dying)
+	    w))
+      (nest-wasps n))))	
 
 (define (nest-find-wasp-in-state n state)
   (foldl
    (lambda (w r)
-     (if (and (not r) (eq? (wasp-state w) state))
+     (if (and (not r) (eq? (wasp-state w) state)
+	      (not (nest-wasp-present? n (wasp-walk-to w))))
 	 w r))
    #f
    (shuffle (nest-wasps n))))
@@ -168,6 +211,30 @@
    ((eq? action 'defend-nest) (nest-modify-energy n (+ (nest-energy n) nest-defend-nest-cost)))
    (else n)))
 
+(define (nest-update-from-event n delta)
+  (let ((e (nest-event n)))
+    (if e 
+	;; update existing event
+	(let ((fn (event-fn e))) 
+	  (fn
+	   (nest-modify-event 
+	    n (if (< (event-time-left e) 0)
+		  #f (event-modify-time-left e (- (event-time-left e) delta))))
+	   delta))
+	;; time for a new event?
+	(if (and (> (nest-time-of-year n) event-start-time)
+		 (< (rndf) (* event-probability delta)))	    
+	    (let ((new-event (choose wasp-game-events)))	      
+	      (let ((fn (event-fn new-event))) 
+		;; time to run the event function on the whole nest
+		;; to do whatever it wants to do...
+		(fn
+		 (nest-modify-event
+		  n (event-modify-time-left
+		     new-event
+		     (event-duration new-event)))
+		 delta))) 
+	    (nest-modify-event n #f)))))
 
 (define (nest-update-mouse n state mx my)
   (let ((menu (menu-update-click (nest-menu n) mx my)))
@@ -196,7 +263,8 @@
 		(menu-clear menu)
 		menu))
 	(nest-cells n)
-	(nest-window-stack n))
+	(nest-window-stack n)
+	(nest-event n))
        (menu-selection menu)))))
 
 
@@ -219,16 +287,19 @@
    delta nest))
 
 (define (nest-update n delta)
-  (nest-update-from-wasps
-   (make-nest
-    (nest-energy n)
-    (nest-location n)
-    (+ (nest-time-of-year n) delta)
-    (nest-wasps-update-wasps
-     (nest-wasps-update n delta))
-    (nest-menu n)
-    (nest-wasps-update-cells n)
-    (nest-update-window-stack n delta))))
+  (nest-update-from-event
+   (nest-update-from-wasps
+    (make-nest
+     (nest-energy n)
+     (nest-location n)
+     (+ (nest-time-of-year n) delta)
+     (nest-wasps-update-wasps
+      (nest-wasps-update n delta))
+     (nest-menu n)
+     (nest-wasps-update-cells n)
+     (nest-update-window-stack n delta)    
+     (nest-event n)))
+   delta))
 
 (define (nest-render n ctx)
   (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)
@@ -254,5 +325,6 @@
   (ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 400 50)
   (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 600 50)
   
-
+  (when (nest-event n)
+	(event-render n ctx))
   )

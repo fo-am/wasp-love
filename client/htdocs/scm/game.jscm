@@ -28,6 +28,7 @@
   (list "wasp-pupa-time" 20)
   (list "wasp-tending-time" 10)
   (list "wasp-forage-time" 20)
+  (list "wasp-dying-time" 5)
   (list "nest-year-length" (* 60 5))
   (list "nest-forage-cost" -5)
   (list "nest-build-cell-cost" -10)
@@ -37,6 +38,8 @@
   (list "nest-forage-benefit" 20)
   (list "nest-start-energy" 100)
   (list "nest-start-wasps" 2)
+  (list "event-start-time" 99999)
+  (list "event-probability" 0)
   ))
 
 (load "scm/animation.jscm")
@@ -45,6 +48,7 @@
 (load "scm/windows.jscm")
 (load "scm/wasp.jscm")
 (load "scm/cell.jscm")
+(load "scm/event.jscm")
 (load "scm/nest.jscm")
 (load "scm/menu.jscm")
 
@@ -85,14 +89,10 @@
       (make-wasp default-capabilities)))
    (build-menu 
     (vec2 100 100) #f 
-    (list
-     (build-menu-option 'one "One")
-     (build-menu-option 'two "Two")
-     (build-menu-option 'three "Three")
-     (build-menu-option 'four "Four"))
+    (list)
     #f 0)
    (generate-cells cell-size-x cell-size-y)
-   (make-window-stack (list))))
+   (make-window-stack (list)) #f))
 
 ;; setup new game
 (define (nightjar-new-game c)
@@ -202,7 +202,8 @@
 	(lambda (d)
 	  (nest-update (game-data c) (game-delta c)))
 	(if (or (> (nest-time-of-year (game-data c)) nest-year-length)
-		(< (nest-energy (game-data c)) 0))	    
+		(< (nest-energy (game-data c)) 0)	    
+		(< (length (nest-wasps (game-data c))) 1))	    
 	    (nightjar-end c)
 	    c)))
      (game-modify-buttons

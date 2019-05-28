@@ -175,6 +175,10 @@
 
 (define (vec2 x y) (list x y))
 
+(define (v2eq? a b)
+  (and (eq? (vx a) (vx b))
+       (eq? (vy a) (vy b))))
+
 (define (v2add a b)
   (vec2 (+ (vx a) (vx b))
           (+ (vy a) (vy b))))

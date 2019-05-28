@@ -22,6 +22,7 @@
 (define wasp-tending-time (local-get-param "wasp-game" "wasp-tending-time"))
 (define wasp-pupa-time (local-get-param "wasp-game" "wasp-pupa-time"))
 (define wasp-forage-time (local-get-param "wasp-game" "wasp-forage-time"))
+(define wasp-dying-time (local-get-param "wasp-game" "wasp-dying-time"))
 
 (define wasp-animation
   (list
@@ -59,7 +60,7 @@
       (anim-load-frames wasp-animation)
       0 wasp-animation-idle 8)
      (list capabilities)
-     'idle pos #f 0 0 #f)))
+     'state-idle pos #f 0 0 #f)))
 
 (define (make-pupa pos capabilities) 
   (append 
@@ -267,6 +268,12 @@
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-wander))
 
+      ((eq? state 'state-start-dying)
+       (wasp-modify-timer (wasp-modify-state w 'state-dying) 0))
+      ((eq? state 'state-dying)      
+       (if (> (wasp-timer w) wasp-dying-time)
+	   (wasp-modify-state w 'state-died)
+	   w))
       (else w)))
    delta))
 
@@ -288,6 +295,7 @@
       ((eq? state 'state-forage-start) wasp-animation-fly)
       ((eq? state 'state-forage) wasp-animation-fly)
       ((eq? state 'state-tending-egg) wasp-animation-tend)
+      ;;((eq? state 'state-dying) wasp-animation-pupa-tended)
       (else (entity-clip w))))))
 
 (define (update-cell pos cells code)
