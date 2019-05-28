@@ -30,6 +30,11 @@ html, body {
     width: 350px;    
 }
 
+#edit-button {
+    position: absolute; 
+    top: 0;
+}
+
 .param-row {
     border: 1px solid white;
     background: #f9e973;
@@ -45,4 +50,9 @@ html, body {
     width: 5em;
     border: none;
     background: none;
+}
+
+button {
+    background: #f9e973;
+    border: none;
 }

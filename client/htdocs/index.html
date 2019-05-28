@@ -5,6 +5,7 @@
     <link href="css/style.css" rel="stylesheet" type="text/css">
     <body bgcolor="#fff">
       <div>
+	<button id="edit-button" onclick="$('#params').show();">Secret wasp admin</button>
         <center>
           <canvas id="canvas" width="1600" height="900"></canvas>
         </center>
@@ -15,7 +16,6 @@
 	  <button onclick="local_nuke()">Factory defaults</button>
 	  <button onclick="$('#params').hide();">Hide me</button></br>
 	</div>
-	<button onclick="$('#params').show();">Edit game params</button>
 	
         <div style="display:none;">
           <pre><div id="output"></div></pre>
