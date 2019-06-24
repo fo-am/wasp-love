@@ -264,7 +264,17 @@
   (anim->filenames wasp-animation)
   (list 
    "sprites/hex.png"
-   "sprites/cloud.png"
+   "sprites/cloud-1.png"
+   "sprites/cloud-2.png"
+   "sprites/cloud-3.png"
+   "sprites/cloud-4.png"
+   "sprites/cloud-5.png"
+   "sprites/cloud-6.png"
+   "sprites/hex-1.png"
+   "sprites/hex-2.png"
+   "sprites/hex-3.png"
+   "sprites/hex-4.png"
+   "sprites/hex-drop.png"
    "backgrounds/temperate-city.png"
    "backgrounds/temperate-forest.png"
    ))

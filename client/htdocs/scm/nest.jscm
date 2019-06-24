@@ -135,28 +135,6 @@
    #f
    (shuffle (nest-wasps n))))
 
-(define (cell-pos->index pos)
-  (+ (min (- cell-size-x 1) (vx pos))
-     (* (min (- cell-size-y 1) (vy pos)) 12)))
-
-(define (cell-nindexes cell)
-  (let ((x (vx (cell-logical cell)))
-	(y (vy (cell-logical cell))))
-    ;; bloomin hexagons...
-    (append
-     (list
-      (cell-pos->index (vec2 x (+ y 1)))
-      (cell-pos->index (vec2 x (- y 1)))
-      (cell-pos->index (vec2 (+ x 1) y))
-      (cell-pos->index (vec2 (- x 1) y)))
-     (if (zero? (modulo x 2))
-	 (list
-	  (cell-pos->index (vec2 (+ x 1) (- y 1)))
-	  (cell-pos->index (vec2 (- x 1) (- y 1))))
-	 (list
-	  (cell-pos->index (vec2 (+ x 1) (+ y 1)))
-	  (cell-pos->index (vec2 (- x 1) (+ y 1))))))))
-
 (define (nest-find-unbuilt-cell n timeout)
   (if (> timeout 100) 
       #f
@@ -302,15 +280,27 @@
    delta))
 
 (define (nest-render n ctx)
-  (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)
-  (let ((hex (find-image "sprites/hex.png")))
-    (for-each
-     (lambda (cell)
-       (when (not (eq? (cell-code cell) cell-code-unbuilt))
-	     (ctx.drawImage hex
-			    (- (vx (cell-pos cell)) (/ hex.width 2))
-			    (- (vy (cell-pos cell)) (/ hex.height 2)))))
-     (nest-cells n)))
+  (ctx.drawImage (find-image "backgrounds/temperate-forest.png") 0 0)
+  
+  (for-each
+   (lambda (cell)
+     (when (not (eq? (cell-code cell) cell-code-unbuilt))
+	   (let ((img (cell-img cell)))
+	     (ctx.drawImage
+	      (find-image "sprites/hex-drop.png")
+	      (- (vx (cell-pos cell)) (/ img.width 2))
+	      (- (vy (cell-pos cell)) (/ img.height 2))))))
+   (nest-cells n))
+
+  (for-each
+   (lambda (cell)
+     (when (not (eq? (cell-code cell) cell-code-unbuilt))
+	   (let ((img (cell-img cell)))
+	     (ctx.drawImage
+	      img
+	      (- (vx (cell-pos cell)) (/ img.width 2))
+	      (- (vy (cell-pos cell)) (/ img.height 2))))))
+   (nest-cells n))
   (entity-list-render (nest-wasps n) ctx)
   (window-stack-render (nest-window-stack n) ctx)
   (menu-render (nest-menu n))

@@ -18,14 +18,15 @@
 (define cell-code-empty 1)
 (define cell-code-occupied 2)
 
-(define cell-size-x 12)
-(define cell-size-y 5)
+(define cell-size-x 18)
+(define cell-size-y 9)
 
-(define (make-cell pos logical code) (list pos logical code))
+(define (make-cell pos logical code img) (list pos logical code img))
 (define (cell-pos c) (list-ref c 0))
 (define (cell-logical c) (list-ref c 1))
 (define (cell-code c) (list-ref c 2))
 (define (cell-modify-code c v) (list-replace c 2 v))
+(define (cell-img c) (list-ref c 3))
 
 (define (generate-cells w h)
   (foldl
@@ -37,10 +38,39 @@
 	(build-list
 	 w (lambda (x)
 	     (make-cell 
-	      (vec2 (+ (* x 120) 150)
-		    (+ (* y 150) 150 
-		       (if (zero? (modulo x 2)) 75 0)))
+	      (vec2 (+ (* x 60) 100)
+		    (+ (* y 75) 150 
+		       (if (zero? (modulo x 2)) 37 0)))
 	      (vec2 x y)
-	      (if (and (eq? x 6) (eq? y 2))
+	      (if (and (eq? x 9) (eq? y 3))
 		  cell-code-empty
-		  cell-code-unbuilt))))))))
+		  cell-code-unbuilt)
+	      (choose
+	       (list
+		(find-image "sprites/hex-1.png")
+		(find-image "sprites/hex-2.png")
+		(find-image "sprites/hex-3.png")
+		(find-image "sprites/hex-4.png")
+		)))))))))
+
+(define (cell-pos->index pos)
+  (+ (min (- cell-size-x 1) (vx pos))
+     (* (min (- cell-size-y 1) (vy pos)) cell-size-x)))
+
+(define (cell-nindexes cell)
+  (let ((x (vx (cell-logical cell)))
+	(y (vy (cell-logical cell))))
+    ;; bloomin hexagons...
+    (append
+     (list
+      (cell-pos->index (vec2 x (+ y 1)))
+      (cell-pos->index (vec2 x (- y 1)))
+      (cell-pos->index (vec2 (+ x 1) y))
+      (cell-pos->index (vec2 (- x 1) y)))
+     (if (zero? (modulo x 2))
+	 (list
+	  (cell-pos->index (vec2 (+ x 1) (- y 1)))
+	  (cell-pos->index (vec2 (- x 1) (- y 1))))
+	 (list
+	  (cell-pos->index (vec2 (+ x 1) (+ y 1)))
+	  (cell-pos->index (vec2 (- x 1) (+ y 1))))))))
