@@ -21,6 +21,9 @@
 
 (js "$.ajaxSetup ({ cache: false })")
 
+(define highlight-col "#f9e973")
+(define text-col "#606353")
+
   ;; hack together a js object to send
 (define (build-url-args args)
   (foldl
@@ -487,9 +490,9 @@
 (define (rect-button-render! ctx t b)
   (ctx.save)
   (ctx.translate (button-x b) (button-y b))
-  (set! ctx.fillStyle "#f9e973")
+  (set! ctx.fillStyle highlight-col)
   (ctx.fillRect 0 0 (button-w b) (button-h b))
-  (set! ctx.fillStyle "#606353")
+  (set! ctx.fillStyle text-col)
   (button-text-render! b t)
   (button-do-jittering b t)
   (ctx.restore))
@@ -720,7 +723,7 @@
         (when (eq? clear-screen 1)
               (ctx.clearRect 0 0 screen-width screen-height))
         (let ((t (- (js "new Date()") load-time)))
-          (set! ctx.fillStyle "#606353");
+          (set! ctx.fillStyle text-col);
 ;;          (ctx.fillText (+ "Time is: " t) 10 750)
           (top-update-game t game)
 
@@ -856,5 +859,5 @@
 
 (define load-time (js "new Date()"))
 
-(set! ctx.fillStyle "#606353")
+(set! ctx.fillStyle text-col)
 (set! ctx.strokeStyle "#fff")

@@ -122,9 +122,15 @@
     (window-stack-windows s))))
 
 (define (window-stack-render s ctx)
+  (set! ctx.fillStyle highlight-col)
+  (ctx.fillRect 1265 0 400 screen-height)
+  (set! ctx.fillStyle text-col)
+  (set! ctx.font "normal 35pt pompiere")
+  (ctx.fillText "FORAGERS" 1355 50)
+  
   (index-for-each
    (lambda (i window)
-     (window-render window ctx (vec2 1300 (* i 200))))
+     (window-render window ctx (vec2 1285 (+ (* i 210) 60))))
    (window-stack-windows s)))
 
 
