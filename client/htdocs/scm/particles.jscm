@@ -34,7 +34,7 @@
    ;; image index
    (build-list size (lambda (_) (random (length images))))
    ;; update
-   (lambda (p s r u) (list p s r u))
+   (lambda (context p s r u) (list p s r u))
    ))
 
 (define (particle-system-size p) (list-ref p 0))
@@ -46,8 +46,8 @@
 (define (particle-system-rotations p) (list-ref p 4))
 (define (particle-system-user p) (list-ref p 5))
 (define (particle-system-image-indices p) (list-ref p 6))
-(define (particle-system-update-hook p) (list-ref p 10))
-(define (particle-system-modify-update-hook v p) (list-replace p 10 v))
+(define (particle-system-update-hook p) (list-ref p 7))
+(define (particle-system-modify-update-hook v p) (list-replace p 7 v))
 
 (define (particle-system-set! l i v)
   (js "l[i]=v;"))
@@ -63,22 +63,21 @@
    (particle-system-user p))
   p)
 
-(define (particle-system-user-update! fn p)
-  (index-for-each
-   (lambda (i user)
-     (particle-system-set!
-      (particle-system-user p) i
-      (fn user)))
-   (particle-system-user p))
-  p)
+;; (define (particle-system-user-update! fn p)
+;;   (index-for-each
+;;    (lambda (i user)
+;;      (particle-system-set!
+;;       (particle-system-user p) i
+;;       (fn user)))
+;;    (particle-system-user p))
+;;   p)
 
-
-
-(define (particle-system-update! p)
+(define (particle-system-update! p context)
   (let ((update (particle-system-update-hook p)))
     (index-for-each
      (lambda (i user)
        (let ((state (update
+		     context
                      (list-ref (particle-system-positions p) i)
                      (list-ref (particle-system-scales p) i)
                      (list-ref (particle-system-rotations p) i)
@@ -89,24 +88,25 @@
          (particle-system-set! (particle-system-user p) i (list-ref state 3))))
      (particle-system-user p))))
 
-(define (particle-system-render ctx p)
-  (particle-system-update! p)
+(define (particle-system-render ctx p context)
+  (particle-system-update! p context)
   (ctx.save)
-  (set! ctx.globalCompositeOperation "lighter")
+  ;;(set! ctx.globalCompositeOperation "darker")
   (index-for-each
    (lambda (i image-index)
      ;; use size to restrict rendering
      (when (< i (particle-system-size p))
            (ctx.save)
            (let ((position (list-ref (particle-system-positions p) i))
-                 (scale (list-ref (particle-system-scales p) i))
-                 (rotate (list-ref (particle-system-rotations p) i))
+                 ;;(scale (list-ref (particle-system-scales p) i))
+                 ;;(rotate (list-ref (particle-system-rotations p) i))
                  (image (list-ref (particle-system-images p) image-index)))
-             (set! ctx.globalAlpha rotate)
+             ;;(set! ctx.globalAlpha rotate)
              (ctx.translate (vx position) (vy position))
-             (ctx.translate (/ image.width 2) (/ image.height 2))
-             (ctx.scale (vx scale) (vy scale))
-             (ctx.translate (/ -image.width 2) (/ -image.height 2))
+	     ;;(msg position)
+             ;;(ctx.translate (/ image.width 2) (/ image.height 2))
+             ;;(ctx.scale (vx scale) (vy scale))
+             ;;(ctx.translate (/ -image.width 2) (/ -image.height 2))
              (ctx.drawImage image 0 0))
            (ctx.restore)))
      (particle-system-image-indices p))

@@ -14,46 +14,127 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (make-event type probability time fn) 
-  (list type probability time fn time))
+(define (make-event type probability time data fn) 
+  (list type probability time time data fn))
 
 (define (event-type e) (list-ref e 0))
 (define (event-probability e) (list-ref e 1))
 (define (event-duration e) (list-ref e 2))
-(define (event-fn e) (list-ref e 3))
-(define (event-time-left e) (list-ref e 4))
-(define (event-modify-time-left e s) (list-replace e 4 s)) 
+(define (event-time-left e) (list-ref e 3))
+(define (event-modify-time-left e s) (list-replace e 3 s))
+(define (event-data e) (list-ref e 4))
+(define (event-modify-data e s) (list-replace e 4 s))
+(define (event-fn e) (list-ref e 5))
+
+(define (event-data-attack pos psys) (list pos psys))
+(define (event-data-attack-pos e) (list-ref (event-data e) 0))
+(define (event-data-attack-psys e) (list-ref (event-data e) 1))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define spray-can-start-pos (vec2 200 300))
+
+(define (event-update event delta)
+  (event-modify-time-left
+    (cond
+     ((eq? (event-type event) 'attack)
+      (event-modify-data
+       event
+       (event-data-attack
+	;; update can position
+	(v2add (event-data-attack-pos event)
+	       (vec2
+		(* (cos (* (event-time-left event) 2)) 3)
+		(* (sin (* (event-time-left event) 2)) 3)
+		))
+	(event-data-attack-psys event))))
+     (else event))
+    (- (event-time-left event) delta)))
+
 (define (event-render nest ctx)
   (let ((event (nest-event nest)))
+
+    ;; event specific background animation
+    (cond
+     ((eq? (event-type event) 'attack)
+      (let ((pos (event-data-attack-pos event)))
+	(ctx.drawImage (find-image "sprites/spray-can.png") (- (vx pos) 95) (- (vy pos) 10))
+	(particle-system-render
+	 ctx (event-data-attack-psys event)
+	 ;; pass can pos through as context to use below
+	 pos))
+
+      )
+     (else 0))
+
+    ;; explanation text box
     (set! ctx.font "normal 25pt pompiere")
-    (set! ctx.fillStyle "#fff")
+    (set! ctx.fillStyle highlight2-col)
     (set! ctx.globalAlpha 0.8)
-    (ctx.fillRect 450 600 800 300)
+    (ctx.fillRect 250 500 800 300)
     (set! ctx.globalAlpha 1.0)
-    (set! ctx.fillStyle "#000")
+    (set! ctx.fillStyle text-col)
     (set! ctx.font "normal 50pt pompiere")
-    (msg (event-type event))
+    
     (cond
      ((eq? (event-type event) 'storm)
-      (ctx.fillText (string-append "STORM!") 480 680)
+      (wrap-text ctx "OH NO!" -145 580 800 70)
+      (wrap-text ctx "A STORM IS RAGING AND YOUR FORAGERS ARE IN TROUBLE" -145 680 800 70)
       )
      ((eq? (event-type event) 'attack)
-      (ctx.fillText (string-append "ATTACK!") 480 680)
+      (wrap-text ctx "OH NO!" -145 580 800 70)
+      (wrap-text ctx "YOUR NEST IS BEING POISONED BY THE CITY PEST CONTROLLERS" -145 680 800 70)
       )
      (else 0))))
 
-(define wasp-game-events
+(define (build-wasp-game-events)
   (list
-   (make-event 
-    'storm 10 10
-    (lambda (nest delta)
-      (nest-decimate nest (* 0.5 delta) (list 'state-forage 'state-forage-return))))
-   (make-event 
-    'attack 10 10
-    (lambda (nest delta)
-      (nest-decimate nest (* 0.5 delta) (list 'state-idle))))
-   ))
-  
+   
+   ;; storm event
+   (lambda ()
+     (make-event 
+      'storm 10 10 #f
+      (lambda (nest delta state)
+	(cond
+	 ((eq? state 'first) (nest-modify-weather nest 'stormy))
+	 ((eq? state 'last) (nest-modify-weather nest 'calm))
+	 (else (nest-decimate nest (* 0.1 delta) (list 'state-forage 'state-forage-return)))))))
+
+   ;; pest control event
+   (lambda ()
+     (make-event 
+      'attack 10 10
+      (event-data-attack
+       spray-can-start-pos	  
+       (particle-system-modify-update-hook
+   	;; animation
+   	(lambda (context p s r u)
+   	  (let ((root-pos context)
+   		(age (list-ref u 0))
+   		(dir (list-ref u 1)))
+   	    (if (> age 100)
+   		(list root-pos s r (list 0 dir))
+   		(list
+   		 (v2add p (list-ref u 1))
+   		 s r
+   		 (list
+   		  (+ age 1) ;; inc age
+   		  dir)))))
+   	;; setup
+   	(particle-system-init
+   	 (lambda (i)
+   	   (list
+   	    spray-can-start-pos
+   	    (vec2 1 1)
+   	    0
+   	    (list
+   	     (random 100) ;; age
+   	     (v2add (vec2 5 0) (vec2 (crndf) (* (crndf) 0.5))) ;; dir
+   	     )))
+   	 (build-particle-system
+   	  100 (list (find-image "sprites/poison.png"))))))
+      (lambda (nest delta state)
+   	(nest-decimate nest (* 0.1 delta) (list 'state-idle))
+   	))
+     )))
+

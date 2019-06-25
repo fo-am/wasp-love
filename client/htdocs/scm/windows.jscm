@@ -35,8 +35,8 @@
    (cloud-img c)
    ))
 
-(define (make-window wasp env clouds w h dir)
-  (list wasp env clouds w h dir))
+(define (make-window wasp env clouds w h dir weather)
+  (list wasp env clouds w h dir weather))
 (define (window-wasp w) (list-ref w 0))
 (define (window-modify-wasp w s) (list-replace w 0 s))
 (define (window-env w) (list-ref w 1))
@@ -45,6 +45,7 @@
 (define (window-h w) (list-ref w 4))
 (define (window-dir w) (list-ref w 5))
 (define (window-modify-dir w s) (list-replace w 5 s))
+(define (window-weather w) (list-ref w 6))
 
 (define (build-window wasp)
   (make-window
@@ -70,7 +71,7 @@
 			      (find-image "sprites/cloud-5.png")
 			      (find-image "sprites/cloud-6.png")
 			      ))))
-   300 200 'out))
+   300 200 'out 'calm))
 
 (define (window-update w delta nest)
   (make-window
@@ -82,7 +83,9 @@
     (window-clouds w))
    (window-w w)
    (window-h w)
-   (window-dir w)))
+   (window-dir w)
+   ;; get current weather from nest here
+   (nest-weather nest)))
 
 (define (window-render w ctx pos)
   ;; set up clipping
@@ -90,8 +93,12 @@
   (ctx.beginPath)
   (ctx.rect (vx pos) (vy pos) (window-w w) (window-h w))
   (ctx.clip)
-  
-  (set! ctx.fillStyle highlight2-col)
+  (if (eq? (window-weather w) 'calm)
+      (set! ctx.fillStyle highlight2-col)
+      ;; lightning
+      (if (< (rndf) 0.01)
+	  (set! ctx.fillStyle "#fff")
+	  (set! ctx.fillStyle "#000")))
   (ctx.fillRect (vx pos) (vy pos) (window-w w) (window-h w))
   
   (for-each 
@@ -105,8 +112,8 @@
   (ctx.restore)
 
   ;; draw window box
-  (set! ctx.strokeStyle "#000")
-  (ctx.strokeRect (vx pos) (vy pos) (window-w w) (window-h w))  
+  ;;(set! ctx.strokeStyle "#000")
+  ;;(ctx.strokeRect (vx pos) (vy pos) (window-w w) (window-h w))  
   )
 
 (define (make-window-stack windows)

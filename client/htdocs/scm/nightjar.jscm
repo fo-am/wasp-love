@@ -134,7 +134,9 @@
 
 (define (inner_find-image fn l)
   (cond
-   ((null? l) (msg "couldn't find")(msg fn) #f)
+   ((null? l)
+    ;;(msg "couldn't find")(msg fn)
+    #f)
    ((eq? (car (car l)) fn) (cadr (car l)))
    (else (inner_find-image fn (cdr l)))))
 

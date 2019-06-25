@@ -33,8 +33,8 @@
 	 (< time (* (/ nest-year-length 4) 3))) 'autumn)
    (else 'winter)))
 
-(define (make-nest energy location time-of-year wasps menu cells window-stack event) 
-  (list energy location time-of-year wasps menu cells window-stack event))
+(define (make-nest energy location time-of-year wasps menu cells window-stack event events weather) 
+  (list energy location time-of-year wasps menu cells window-stack event events weather))
 
 (define (nest-energy n) (list-ref n 0))
 (define (nest-modify-energy n s) (list-replace n 0 s))
@@ -46,10 +46,12 @@
 (define (nest-menu n) (list-ref n 4))
 (define (nest-cells n) (list-ref n 5))
 (define (nest-window-stack n) (list-ref n 6))
+(define (nest-modify-window-stack n s v) (list-replace n 6 v))
 (define (nest-event n) (list-ref n 7))
 (define (nest-modify-event n s) (list-replace n 7 s))
-(define (nest-event-time n) (list-ref n 8))
-(define (nest-modify-event-time n s) (list-replace n 8 s))
+(define (nest-events n) (list-ref n 8))
+(define (nest-weather n) (list-ref n 9))
+(define (nest-modify-weather n s) (list-replace n 9 s))
 
 (define (nest-wasps-update n delta)
   (map
@@ -192,26 +194,28 @@
 (define (nest-update-from-event n delta)
   (let ((e (nest-event n)))
     (if e 
-	;; update existing event
+	;; check an existing event
 	(let ((fn (event-fn e))) 
 	  (fn
-	   (nest-modify-event 
-	    n (if (< (event-time-left e) 0)
-		  #f (event-modify-time-left e (- (event-time-left e) delta))))
-	   delta))
+	   (nest-modify-event n (if (< (event-time-left e) 0) #f e))
+	   delta
+	   ;; tell function if this is the last event update
+	   (if (< (event-time-left e) 0) 'last 'mid)))
 	;; time for a new event?
 	(if (and (> (nest-time-of-year n) event-start-time)
 		 (< (rndf) (* event-probability delta)))	    
-	    (let ((new-event (choose wasp-game-events)))	      
-	      (let ((fn (event-fn new-event))) 
-		;; time to run the event function on the whole nest
-		;; to do whatever it wants to do...
-		(fn
-		 (nest-modify-event
-		  n (event-modify-time-left
-		     new-event
-		     (event-duration new-event)))
-		 delta))) 
+	    (let ((event-builder (choose (nest-events n))))
+	      (let ((new-event (event-builder)))
+		(let ((fn (event-fn new-event))) 
+		  ;; time to run the event function on the whole nest
+		  ;; to do whatever it wants to do...
+		  (fn
+		   (nest-modify-event
+		    n (event-modify-time-left
+		       new-event
+		       (event-duration new-event)))
+		   delta 'first))))
+	    ;; no event exists
 	    (nest-modify-event n #f)))))
 
 (define (nest-update-mouse n state mx my)
@@ -242,7 +246,9 @@
 		menu))
 	(nest-cells n)
 	(nest-window-stack n)
-	(nest-event n))
+	(nest-event n)
+	(nest-events n)
+	(nest-weather n))
        (menu-selection menu)))))
 
 
@@ -276,7 +282,9 @@
      (nest-menu n)
      (nest-wasps-update-cells n)
      (nest-update-window-stack n delta)    
-     (nest-event n)))
+     (event-update (nest-event n) delta)
+     (nest-events n)
+     (nest-weather n)))
    delta))
 
 (define (nest-render n ctx)

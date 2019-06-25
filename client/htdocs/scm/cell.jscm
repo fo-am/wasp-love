@@ -31,7 +31,7 @@
 (define (generate-cells w h)
   (foldl
    (lambda (c r)
-     (append c r))
+     (append r c))
    '()
    (build-list
     h (lambda (y)     
@@ -63,14 +63,18 @@
     ;; bloomin hexagons...
     (append
      (list
-      (cell-pos->index (vec2 x (+ y 1)))
-      (cell-pos->index (vec2 x (- y 1)))
+      (dbg (cell-pos->index (dbg (vec2 x (+ y 1)))))
+      (dbg (cell-pos->index (dbg (vec2 x (- y 1)))))
       (cell-pos->index (vec2 (+ x 1) y))
-      (cell-pos->index (vec2 (- x 1) y)))
+      (cell-pos->index (vec2 (- x 1) y))
+      )
+
      (if (zero? (modulo x 2))
-	 (list
-	  (cell-pos->index (vec2 (+ x 1) (- y 1)))
-	  (cell-pos->index (vec2 (- x 1) (- y 1))))
-	 (list
-	  (cell-pos->index (vec2 (+ x 1) (+ y 1)))
-	  (cell-pos->index (vec2 (- x 1) (+ y 1))))))))
+     	 (list
+     	  (cell-pos->index (vec2 (+ x 1) (+ y 1)))
+     	  (cell-pos->index (vec2 (- x 1) (+ y 1))))
+     	 (list
+     	  (cell-pos->index (vec2 (+ x 1) (- y 1)))
+     	  (cell-pos->index (vec2 (- x 1) (- y 1)))))
+
+     ))))
