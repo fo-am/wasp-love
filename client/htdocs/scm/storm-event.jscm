@@ -1,0 +1,38 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define (storm-builder)
+  (lambda ()
+    (make-event 
+     'storm 10 10 #f
+     (lambda (nest delta state)
+       (cond
+	((eq? state 'first) (nest-modify-weather nest 'stormy))
+	((eq? state 'last) (nest-modify-weather nest 'calm))
+	(else (nest-decimate
+	       nest (* 0.5 delta)
+	       (list 'state-forage 'state-forage-return))))))))
+	          
+(define (storm-update event delta)
+  event)
+
+(define (storm-render ctx event)
+  0)
+
+(define (storm-render-text ctx event)
+  (wrap-text ctx "OH NO!" -145 580 800 70)
+  (wrap-text ctx "A STORM IS RAGING AND YOUR FORAGERS ARE IN TROUBLE" -145 680 800 70))
+

@@ -105,6 +105,12 @@
    (lambda (c)
      (cloud-render c ctx pos))
    (window-clouds w))
+  
+  (when (eq? (wasp-state (window-wasp w)) 'state-dying)
+	(msg "dying..."))
+
+  (when (eq? (wasp-state (window-wasp w)) 'state-died)
+	(msg "died..."))
 
   ;; position wasp properly
   (entity-render (entity-modify-pos (window-wasp w) (vadd pos (vec2 150 80))) ctx)
@@ -130,6 +136,15 @@
      (not (entity-eq? wasp (window-wasp w))))
    s))
 
+(define (window-stack-death s wasp)
+  (map
+   (lambda (w)
+     (if (entity-eq? wasp (window-wasp w))
+	 (window-modify-wasp
+	  w (wasp-modify-state (window-wasp w) 'state-dying))
+	 w))
+   s))
+
 (define (window-stack-return s wasp)
   (map
    (lambda (w)
@@ -144,9 +159,12 @@
 
 (define (window-stack-update s delta nest)
   (make-window-stack
-   (map
-    (lambda (window)
-      (window-update window delta nest))
+   (foldl
+    (lambda (window r)
+      ;; remove dead wasps at the same time as updating...
+      (if (eq? (wasp-state (window-wasp window)) 'state-died)
+	  r (append r (list (window-update window delta nest)))))
+    '()
     (window-stack-windows s))))
 
 (define (window-stack-render s ctx)

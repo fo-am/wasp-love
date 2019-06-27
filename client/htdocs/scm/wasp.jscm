@@ -270,10 +270,10 @@
 
       ((eq? state 'state-start-dying)
        (wasp-modify-timer (wasp-modify-state w 'state-dying) 0))
-      ((eq? state 'state-dying)      
+      ((eq? state 'state-dying)
        (if (> (wasp-timer w) wasp-dying-time)
 	   (wasp-modify-state w 'state-died)
-	   w))
+	   (entity-modify-pos w (v2add (entity-pos w) (vec2 0 5)))))
       (else w)))
    delta))
 

@@ -1,0 +1,83 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define spray-can-start-pos (vec2 200 300))
+
+(define (event-data-attack pos psys) (list pos psys))
+(define (event-data-attack-pos e) (list-ref (event-data e) 0))
+(define (event-data-attack-psys e) (list-ref (event-data e) 1))
+
+(define (pestcontrol-builder)
+  (lambda ()
+    (make-event 
+     'attack 10 10
+     (event-data-attack
+      spray-can-start-pos	  
+      (particle-system-modify-update-hook
+       ;; animation
+       (lambda (context p s r u)
+	 (let ((root-pos context)
+	       (age (list-ref u 0))
+	       (dir (list-ref u 1)))
+	   (if (> age 100)
+	       (list root-pos s r (list 0 dir))
+	       (list
+		(v2add p (list-ref u 1))
+		s r
+		(list
+		 (+ age 1) ;; inc age
+		 dir)))))
+       ;; setup
+       (particle-system-init
+	(lambda (i)
+	  (list
+	   spray-can-start-pos
+	   (vec2 1 1)
+	   0
+	   (list
+	    (random 100) ;; age
+	    (v2add (vec2 5 0) (vec2 (crndf) (* (crndf) 0.5))) ;; dir
+	    )))
+	(build-particle-system
+	 100 (list (find-image "sprites/poison.png"))))))
+     (lambda (nest delta state)
+       (nest-decimate nest (* 0.025 delta) (list 'state-idle))
+       ))))
+
+(define (pestcontrol-update event delta)
+  (event-modify-data
+   event
+   (event-data-attack
+    ;; update can position
+    (v2add (event-data-attack-pos event)
+	   (vec2
+	    (* (cos (* (event-time-left event) 2)) 3)
+	    (* (sin (* (event-time-left event) 2)) 3)
+	    ))
+    (event-data-attack-psys event))))
+
+(define (pestcontrol-render ctx event)
+  (let ((pos (event-data-attack-pos event)))
+    (ctx.drawImage (find-image "sprites/spray-can.png") (- (vx pos) 95) (- (vy pos) 10))
+    (particle-system-render
+     ctx (event-data-attack-psys event)
+     ;; pass can pos through as context to use below
+     pos)))
+
+(define (pestcontrol-render-text ctx event)
+  (wrap-text ctx "OH NO!" -145 580 800 70)
+  (wrap-text ctx "YOUR NEST IS BEING POISONED BY THE CITY PEST CONTROLLERS" -145 680 800 70))
+

@@ -38,8 +38,9 @@
   (list "nest-forage-benefit" 20)
   (list "nest-start-energy" 100)
   (list "nest-start-wasps" 2)
-  (list "event-start-time" 99999)
-  (list "event-probability" 0)
+  (list "event-start-time" (* 60 2.5))
+  (list "storm-probability" 0.01)
+  (list "pestcontrol-probability" 0.01)
   ))
 
 (load "scm/particles.jscm")
@@ -50,6 +51,8 @@
 (load "scm/wasp.jscm")
 (load "scm/cell.jscm")
 (load "scm/event.jscm")
+(load "scm/storm-event.jscm")
+(load "scm/pestcontrol-event.jscm")
 (load "scm/nest.jscm")
 (load "scm/menu.jscm")
 
