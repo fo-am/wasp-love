@@ -183,9 +183,10 @@
 			(* (rndf) nest-forage-variation))))
 	 (nest-add-info 
 	  (nest-modify-energy n (+ (nest-energy n) energy))
-	  (string-append "FORAGER RETURNED WITH " (floor energy) " ENERGY OF "
-			 (choose (list "SPIDERS" "CATERPILLARS" "ANTS" "BEES"
-				       "FLIES")))
+	  (string-append "FORAGER RETURNED WITH A " 
+			 (choose (list "SPIDER" "CATERPILLAR"
+				       "ANT" "FLY"))
+			 " WORTH " (floor energy) " ENERGY POINTS")
 	  'allow-dup time)))
       ((eq? (wasp-state wasp) 'state-died)
        (nest-add-info 

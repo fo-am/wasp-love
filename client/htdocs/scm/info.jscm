@@ -52,17 +52,17 @@
     (info-display-items d))))
 
 (define (info-display-render d ctx)
+  (set! ctx.font "normal 35pt pompiere")
   (let ((pos 0))
     (index-for-each
      (lambda (i item)
        (let ((height
 	      (wrap-text-height
-	       ctx (info-text item) -145 (- 600 (* i 100)) 700 70)))
+	       ctx (info-text item) -145 (- 600 pos) 700 70)))
 	 (set! ctx.fillStyle highlight2-col)
 	 (set! pos (+ pos height 10))
 	 (ctx.fillRect 300 (- 540 pos) 700 height)
 	 (set! ctx.fillStyle text-col)
-	 (set! ctx.font "normal 35pt pompiere")
 	 (wrap-text ctx (info-text item) -145 (- 600 pos) 700 70)))
      (info-display-items d))))
 
