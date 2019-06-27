@@ -1,0 +1,68 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define info-duration 5)
+
+(define (make-info text id time)
+  (list text id time))
+
+(define (info-text i) (list-ref i 0))
+(define (info-id i) (list-ref i 1))
+(define (info-time i) (list-ref i 2))
+
+(define (make-info-display items)
+  (list items))
+
+(define (info-display-items d) (list-ref d 0))
+
+(define (info-display-contains? d id)
+  (cond
+   ((eq? id 'allow-dup) #f)
+   (else 
+    (foldl
+     (lambda (i r)
+       (if (and (not r) (eq? (info-id i) id))
+	   #t r))
+     #f
+     (info-display-items d)))))
+
+(define (info-display-add d i)
+  (if (info-display-contains? d (info-id i))
+      d (make-info-display
+	 (append (info-display-items d) (list i)))))
+
+(define (info-display-update d time)
+  (make-info-display
+   (filter
+    (lambda (i)
+      (< time (+ (info-time i) info-duration)))
+    (info-display-items d))))
+
+(define (info-display-render d ctx)
+  (let ((pos 0))
+    (index-for-each
+     (lambda (i item)
+       (let ((height
+	      (wrap-text-height
+	       ctx (info-text item) -145 (- 600 (* i 100)) 700 70)))
+	 (set! ctx.fillStyle highlight2-col)
+	 (set! pos (+ pos height 10))
+	 (ctx.fillRect 300 (- 540 pos) 700 height)
+	 (set! ctx.fillStyle text-col)
+	 (set! ctx.font "normal 35pt pompiere")
+	 (wrap-text ctx (info-text item) -145 (- 600 pos) 700 70)))
+     (info-display-items d))))
+
