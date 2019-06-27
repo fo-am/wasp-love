@@ -16,27 +16,33 @@
 
 ;; little windows of foraging wasps
 
-(define (make-cloud pos speed img) (list pos speed img))
+;; clouds have storm variation
+(define (make-cloud pos speed img simg) (list pos speed img simg))
 (define (cloud-pos c) (list-ref c 0))
 (define (cloud-speed c) (list-ref c 1))
 (define (cloud-img c) (list-ref c 2))
+(define (cloud-simg c) (list-ref c 3))
 
-(define (cloud-render c ctx pos)
+(define (cloud-render c ctx pos weather)
   (let ((pos (v2add pos (cloud-pos c))))
-    (ctx.drawImage (cloud-img c) (- (vx pos) 200) (vy pos))))
+    (ctx.drawImage
+     (if (eq? weather 'calm) (cloud-img c) (cloud-simg c))
+     (- (vx pos) 200) (vy pos))))
 
 (define (cloud-update c delta dir)
   (make-cloud
    (vec2
-    (modulo (+ (vx (cloud-pos c)) (* (cloud-speed c) delta 
-				     (if (eq? dir 'out) 1 -1))) 500)
+    (modulo (+ (vx (cloud-pos c))
+	       (* (cloud-speed c) delta 
+		  (if (eq? dir 'out) 1 -1))) 500)
     (vy (cloud-pos c)))
    (cloud-speed c)
    (cloud-img c)
+   (cloud-simg c)
    ))
 
-(define (make-window wasp env clouds w h dir weather)
-  (list wasp env clouds w h dir weather))
+(define (make-window wasp env clouds w h dir weather time)
+  (list wasp env clouds w h dir weather time))
 (define (window-wasp w) (list-ref w 0))
 (define (window-modify-wasp w s) (list-replace w 0 s))
 (define (window-env w) (list-ref w 1))
@@ -46,33 +52,26 @@
 (define (window-dir w) (list-ref w 5))
 (define (window-modify-dir w s) (list-replace w 5 s))
 (define (window-weather w) (list-ref w 6))
+(define (window-time w) (list-ref w 7))
 
 (define (build-window wasp)
   (make-window
    wasp
    "temperate-city" 
-   (list (make-cloud (vec2 (random 200) (random 100))
-		     (- (+ 50 (random 50)))
-		     (choose (list
-			      (find-image "sprites/cloud-1.png")
-			      (find-image "sprites/cloud-2.png")
-			      (find-image "sprites/cloud-3.png")
-			      (find-image "sprites/cloud-4.png")
-			      (find-image "sprites/cloud-5.png")
-			      (find-image "sprites/cloud-6.png")
-			      )))
-	 (make-cloud (vec2 (random 200) (random 100))
-		     (- (+ 50 (random 50)))
-		     (choose (list
-			      (find-image "sprites/cloud-1.png")
-			      (find-image "sprites/cloud-2.png")
-			      (find-image "sprites/cloud-3.png")
-			      (find-image "sprites/cloud-4.png")
-			      (find-image "sprites/cloud-5.png")
-			      (find-image "sprites/cloud-6.png")
-			      ))))
-   300 200 'out 'calm))
-
+   (list
+    (let ((v (choose (list 1 2 3 4 5 6))))
+      (make-cloud (vec2 (random 200) (random 100))
+		  (- (+ 50 (random 50)))		 
+		  (find-image (string-append "sprites/cloud-" v ".png"))
+		  (find-image (string-append "sprites/scloud-" v ".png"))))
+    
+    (let ((v (choose (list 1 2 3 4 5 6))))
+      (make-cloud (vec2 (random 200) (random 100))
+		  (- (+ 50 (random 50)))
+		  (find-image (string-append "sprites/cloud-" v ".png"))
+		  (find-image (string-append "sprites/scloud-" v ".png")))))
+   300 200 'out 'calm 0))
+  
 (define (window-update w delta nest)
   (make-window
    (entity-update (wasp-update (window-wasp w) delta nest) delta)
@@ -85,7 +84,8 @@
    (window-h w)
    (window-dir w)
    ;; get current weather from nest here
-   (nest-weather nest)))
+   (nest-weather nest)
+   (+ (window-time w) delta)))
 
 (define (window-render w ctx pos)
   ;; set up clipping
@@ -95,32 +95,64 @@
   (ctx.clip)
   (if (eq? (window-weather w) 'calm)
       (set! ctx.fillStyle highlight2-col)
-      ;; lightning
-      (if (< (rndf) 0.01)
-	  (set! ctx.fillStyle "#fff")
-	  (set! ctx.fillStyle "#000")))
+      (set! ctx.fillStyle "#122748")) ;; inverted highlight2 
   (ctx.fillRect (vx pos) (vy pos) (window-w w) (window-h w))
-  
+
+  (when (and (eq? (window-weather w) 'stormy)
+	     (< (rndf) 0.01))
+	(ctx.drawImage (find-image "sprites/lightning.png") (vx pos) (vy pos)))
+	
   (for-each 
    (lambda (c)
-     (cloud-render c ctx pos))
+     (cloud-render c ctx pos (window-weather w)))
    (window-clouds w))
   
-  (when (eq? (wasp-state (window-wasp w)) 'state-dying)
-	(msg "dying..."))
-
-  (when (eq? (wasp-state (window-wasp w)) 'state-died)
-	(msg "died..."))
-
   ;; position wasp properly
-  (entity-render (entity-modify-pos (window-wasp w) (vadd pos (vec2 150 80))) ctx)
+  (cond
+   ((or (eq? (wasp-state (window-wasp w)) 'state-dying)
+	(eq? (wasp-state (window-wasp w)) 'state-died))
+    (entity-render
+     (entity-modify-pos
+      (window-wasp w)
+      (vadd
+       pos
+       (vec2 150
+	     ;; use the state timer to move drop the
+	     ;; wasp out of the frame as it dies
+	     (+ 80 (* 300 (wasp-timer (window-wasp w))))))) ctx))
+   (else
+    (entity-render
+     (entity-modify-pos
+      (window-wasp w) (vadd pos (vec2 150 80))) ctx)))  
+  
+  ;; draw rain as an animated repeating pattern
+  (when (eq? (window-weather w) 'stormy)
+	(let ((pattern-fill
+	       (ctx.createPattern
+		(find-image "sprites/rain.png") "repeat"))
+	      (offx (* -500 (window-time w)))
+	      (offy (* 750 (window-time w))))
+	  (ctx.save)
+	  (ctx.translate offx offy)
+	  (set! ctx.fillStyle pattern-fill)
+	  (ctx.fillRect
+	   (- (vx pos) offx)
+	   (- (vy pos) offy)
+	   (window-w w) (window-h w)))
+	(ctx.restore)
+	(let ((pattern-fill
+	       (ctx.createPattern
+		(find-image "sprites/rain2.png") "repeat"))
+	      (offx (* -320 (window-time w)))
+	      (offy (* 515 (window-time w))))
+	  (ctx.translate offx offy)
+	  (set! ctx.fillStyle pattern-fill)
+	  (ctx.fillRect
+	   (- (vx pos) offx)
+	   (- (vy pos) offy)
+	   (window-w w) (window-h w))))
 
-  (ctx.restore)
-
-  ;; draw window box
-  ;;(set! ctx.strokeStyle "#000")
-  ;;(ctx.strokeRect (vx pos) (vy pos) (window-w w) (window-h w))  
-  )
+  (ctx.restore))
 
 (define (make-window-stack windows)
   (list windows))
@@ -141,7 +173,9 @@
    (lambda (w)
      (if (entity-eq? wasp (window-wasp w))
 	 (window-modify-wasp
-	  w (wasp-modify-state (window-wasp w) 'state-dying))
+	  w (wasp-modify-timer
+	     (wasp-modify-state (window-wasp w) 'state-dying)
+	     0))
 	 w))
    s))
 

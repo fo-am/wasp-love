@@ -23,7 +23,7 @@
 (define (pestcontrol-builder)
   (lambda ()
     (make-event 
-     'attack 10 10
+     'attack (local-get-param "wasp-game" "pestcontrol-duration")
      (event-data-attack
       spray-can-start-pos	  
       (particle-system-modify-update-hook
@@ -54,7 +54,10 @@
 	(build-particle-system
 	 100 (list (find-image "sprites/poison.png"))))))
      (lambda (nest delta state)
-       (nest-decimate nest (* 0.025 delta) (list 'state-idle))
+       (nest-decimate
+	nest
+	(* (local-get-param "wasp-game" "pestcontrol-deadliness") delta)
+	(list 'state-idle))
        ))))
 
 (define (pestcontrol-update event delta)

@@ -23,12 +23,12 @@
  "wasp-game" 
  (list
   (list "wasp-speed" 1)
-  (list "wasp-build-time" 3)
-  (list "wasp-laying-time" 3)
+  (list "wasp-build-time" 5)
+  (list "wasp-laying-time" 5)
   (list "wasp-pupa-time" 20)
-  (list "wasp-tending-time" 10)
+  (list "wasp-tending-time" 5)
   (list "wasp-forage-time" 20)
-  (list "wasp-dying-time" 5)
+  (list "wasp-dying-time" 3)
   (list "nest-year-length" (* 60 5))
   (list "nest-forage-cost" -5)
   (list "nest-build-cell-cost" -10)
@@ -36,11 +36,17 @@
   (list "nest-tend-brood-cost" -10)
   (list "nest-defend-nest-cost" -10)
   (list "nest-forage-benefit" 20)
+  (list "nest-forage-variation" 5)
   (list "nest-start-energy" 100)
   (list "nest-start-wasps" 2)
+  (list "nest-energy-drain" 0.2)
   (list "event-start-time" (* 60 2.5))
-  (list "storm-probability" 0.01)
-  (list "pestcontrol-probability" 0.01)
+  (list "storm-probability" 0.05)
+  (list "storm-duration" 10)  
+  (list "storm-deadliness" 0.1)
+  (list "pestcontrol-probability" 0.05)
+  (list "pestcontrol-duration" 10)  
+  (list "pestcontrol-deadliness" 0.2)
   ))
 
 (load "scm/particles.jscm")
@@ -55,6 +61,7 @@
 (load "scm/pestcontrol-event.jscm")
 (load "scm/nest.jscm")
 (load "scm/menu.jscm")
+(load "scm/info.jscm")
 
 (define (button-image)
   (find-image (choose (list "button-1.png" "button-2.png" "button-3.png"))))
@@ -83,7 +90,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (empty-nightjar-data)
+(define (empty-nightjar-data time)
   (make-nest 
    (string->number (local-get-param "wasp-game" "nest-start-energy"))
    'city 0 
@@ -99,14 +106,18 @@
    (make-window-stack (list))
    #f
    (build-wasp-game-events)
-   'calm))
+   'calm
+   (make-info-display
+    (list
+     (make-info "WE LOVE WASPS, DO YOU?" 'welcome time)
+     (make-info "WWE LOVE WASPS, DO YOU?EWE LOVE WASPS, DO YOU? WE LOVE WASPS, DO YOU?LOVE WASPS, DO YOU?" 'welcome2 time)))))
 
 ;; setup new game
 (define (nightjar-new-game c)
   (nightjar-game
    (game-modify-data
     (lambda (d)
-      (empty-nightjar-data))
+      (empty-nightjar-data (/ (game-time c) 1000)))
     c)))
 
 (set! randseed (choose (list 7.21 1)))
@@ -120,7 +131,7 @@
        (set! window.location "/"))
      (game-modify-data
       (lambda (d)
-	(empty-nightjar-data))
+	(empty-nightjar-data (/ (game-time c) 1000)))
       (game-modify-render
        (lambda (ctx)
 	 ;;(ctx.drawImage (find-image "crab1.png") 0 (+ crab-offset 355))
@@ -207,9 +218,9 @@
      (lambda (t c)
        (game-modify-data
 	(lambda (d)
-	  (nest-update (game-data c) (game-delta c)))
+	  (nest-update (game-data c) (/ t 1000) (game-delta c)))
 	(if (or (> (nest-time-of-year (game-data c)) nest-year-length)
-		(< (nest-energy (game-data c)) 0)	    
+		;;(< (nest-energy (game-data c)) 0)	    
 		(< (length (nest-wasps (game-data c))) 1))	    
 	    (nightjar-end c)
 	    c)))
@@ -277,6 +288,12 @@
    "sprites/cloud-4.png"
    "sprites/cloud-5.png"
    "sprites/cloud-6.png"
+   "sprites/scloud-1.png"
+   "sprites/scloud-2.png"
+   "sprites/scloud-3.png"
+   "sprites/scloud-4.png"
+   "sprites/scloud-5.png"
+   "sprites/scloud-6.png"
    "sprites/hex-1.png"
    "sprites/hex-2.png"
    "sprites/hex-3.png"
@@ -284,6 +301,9 @@
    "sprites/hex-drop.png"
    "sprites/poison.png"
    "sprites/spray-can.png"
+   "sprites/lightning.png"
+   "sprites/rain.png"
+   "sprites/rain2.png"
    "backgrounds/temperate-city.png"
    "backgrounds/temperate-forest.png"
    ))

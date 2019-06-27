@@ -202,6 +202,26 @@
   (set! ctx.fillStyle "#fff")
   (wrap-text ctx text x y max-width line-height))
 
+(define (wrap-text-height ctx text x y max-width line-height)
+  (define (wrap-text-height-inner words line y r)
+    (cond
+     ((null? words)
+      (+ r line-height))
+     (else
+      (let ((test-line (+ line (car words) " ")))
+        (let ((metrics (ctx.measureText test-line)))
+          (cond ((> metrics.width max-width)
+                 (wrap-text-height-inner (cdr words)
+					 (+ (car words) " ")
+					 (+ y line-height)
+					 (+ r line-height)))
+                (else
+                 (wrap-text-height-inner
+                  (cdr words) test-line y
+		  r))))))))
+  (dbg (wrap-text-height-inner (text.split " ") "" y 0)))
+
+
 (define (wrap-text ctx text x y max-width line-height)
   (define (wrap-text-inner words line y)
     (cond

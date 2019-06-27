@@ -21,6 +21,8 @@
 (define nest-tend-brood-cost (local-get-param "wasp-game" "nest-tend-brood-cost"))
 (define nest-defend-nest-cost (local-get-param "wasp-game" "nest-defend-nest-cost"))
 (define nest-forage-benefit (local-get-param "wasp-game" "nest-forage-benefit"))
+(define nest-forage-variation (local-get-param "wasp-game" "nest-forage-variation"))
+(define nest-energy-drain (local-get-param "wasp-game" "nest-energy-drain"))
 (define event-start-time (local-get-param "wasp-game" "event-start-time"))
 (define event-probability (local-get-param "wasp-game" "event-probability"))
 
@@ -33,8 +35,8 @@
 	 (< time (* (/ nest-year-length 4) 3))) 'autumn)
    (else 'winter)))
 
-(define (make-nest energy location time-of-year wasps menu cells window-stack event events weather) 
-  (list energy location time-of-year wasps menu cells window-stack event events weather))
+(define (make-nest energy location time-of-year wasps menu cells window-stack event events weather info-display) 
+  (list energy location time-of-year wasps menu cells window-stack event events weather info-display))
 
 (define (nest-energy n) (list-ref n 0))
 (define (nest-modify-energy n s) (list-replace n 0 s))
@@ -52,6 +54,8 @@
 (define (nest-events n) (list-ref n 8))
 (define (nest-weather n) (list-ref n 9))
 (define (nest-modify-weather n s) (list-replace n 9 s))
+(define (nest-info-display n) (list-ref n 10))
+(define (nest-modify-info-display n s) (list-replace n 10 s))
 
 (define (nest-wasps-update n delta)
   (map
@@ -170,26 +174,42 @@
 	 wasp))
    (nest-wasps n)))
 
-(define (nest-update-from-wasps n)
+(define (nest-update-from-wasps n time)
   (foldl
    (lambda (wasp r)
      (cond
       ((eq? (wasp-state wasp) 'state-forage-end)
-       (nest-modify-energy n (+ (nest-energy n) nest-forage-benefit)))
+       (let ((energy (* nest-forage-benefit
+			(* (rndf) nest-forage-variation))))
+	 (nest-add-info 
+	  (nest-modify-energy n (+ (nest-energy n) energy))
+	  (string-append "FORAGER RETURNED WITH " (floor energy) " ENERGY OF "
+			 (choose (list "SPIDERS" "CATERPILLARS" "ANTS" "BEES"
+				       "FLIES")))
+	  'allow-dup time)))
       ((eq? (wasp-state wasp) 'state-died)
-       (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
+       (nest-add-info 
+	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
+	(string-append "A WASP HAS DIED, " (length (nest-wasps n)) " WASPS LEFT")
+	'allow-dup time))
       (else r)))
    n
    (nest-wasps n)))
-       
-(define (nest-update-from-action n action)
+
+(define (nest-energy-for-action action)
   (cond
-   ((eq? action 'forage) (nest-modify-energy n (+ (nest-energy n) nest-forage-cost)))
-   ((eq? action 'build-cell) (nest-modify-energy n (+ (nest-energy n) nest-build-cell-cost)))
-   ((eq? action 'lay-egg) (nest-modify-energy n (+ (nest-energy n) nest-lay-egg-cost)))
-   ((eq? action 'tend-brood) (nest-modify-energy n (+ (nest-energy n) nest-tend-brood-cost)))
-   ((eq? action 'defend-nest) (nest-modify-energy n (+ (nest-energy n) nest-defend-nest-cost)))
-   (else n)))
+   ((eq? action 'forage) nest-forage-cost)
+   ((eq? action 'build-cell) nest-build-cell-cost)
+   ((eq? action 'lay-egg) nest-lay-egg-cost)
+   ((eq? action 'tend-brood) nest-tend-brood-cost)
+   ((eq? action 'defend-nest) nest-defend-nest-cost)
+   (else 0)))
+
+(define (nest-can-do-action n action)
+  (>= (nest-energy n) (- (nest-energy-for-action action))))
+
+(define (nest-update-from-action n action)
+  (nest-modify-energy n (+ (nest-energy n) (nest-energy-for-action action))))
 
 (define (nest-update-from-event n delta)
   (let ((e (nest-event n)))
@@ -209,12 +229,7 @@
 		    (let ((fn (event-fn new-event))) 
 		      ;; time to run the event function on the whole nest
 		      ;; to do whatever it wants to do...
-		      (fn
-		       (nest-modify-event
-			n (event-modify-time-left
-			   new-event
-			   (event-duration new-event)))
-		       delta 'first)))
+		      (fn (nest-modify-event n new-event) delta 'first)))
 		  ;; no event created due to probability
 		  (nest-modify-event n #f)))
 	    ;; too early for an event yet
@@ -225,34 +240,36 @@
     (let ((wasp (if (menu-selection menu)
 		    #f
 		    (nest-wasps-click n mx my))))
-      (nest-update-from-action
-       (make-nest
-	(nest-energy n)
-	(nest-location n)
-	(nest-time-of-year n)
-	(if (menu-selection menu)
-	    (nest-update-wasps-from-menu n menu) 
-	    (nest-wasps n))
-	;; if there is a wasp clicked on, and it's not the current one
-	(if (and wasp
-		 (not (eq? (wasp-state wasp) 'state-pupa))
-		 ;;(not (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
-		 )
-	    (build-menu
-	     (v2add (entity-pos wasp) (vec2 -100 -300)) #t
-	     (wasp-build-menu-options wasp n) #f 
-	     (entity-id wasp))
-	    ;; need to clear the menu to stop it retriggering
+      (if (nest-can-do-action n (menu-selection menu)) 
+	  (nest-update-from-action
+	   (make-nest
+	    (nest-energy n)
+	    (nest-location n)
+	    (nest-time-of-year n)
 	    (if (menu-selection menu)
-		(menu-clear menu)
-		menu))
-	(nest-cells n)
-	(nest-window-stack n)
-	(nest-event n)
-	(nest-events n)
-	(nest-weather n))
-       (menu-selection menu)))))
-
+		(nest-update-wasps-from-menu n menu) 
+		(nest-wasps n))
+	    ;; if there is a wasp clicked on, and it's not the current one
+	    (if (and wasp
+		     (not (eq? (wasp-state wasp) 'state-pupa))
+		     ;;(not (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
+		     )
+		(build-menu
+		 (v2add (entity-pos wasp) (vec2 -100 -300)) #t
+		 (wasp-build-menu-options wasp n) #f 
+		 (entity-id wasp))
+		;; need to clear the menu to stop it retriggering
+		(if (menu-selection menu)
+		    (menu-clear menu)
+		    menu))
+	    (nest-cells n)
+	    (nest-window-stack n)
+	    (nest-event n)
+	    (nest-events n)
+	    (nest-weather n)
+	    (nest-info-display n))
+	   (menu-selection menu))
+	  n))))
 
 ;; update just the window stack, and add new ones if required
 (define (nest-update-window-stack nest delta)
@@ -274,11 +291,39 @@
      (nest-wasps nest)))
    delta nest))
 
-(define (nest-update n delta)
+(define (nest-add-info n text id time)
+  (nest-modify-info-display
+   n (info-display-add
+      (nest-info-display n)
+      (make-info text id time))))
+
+(define (nest-update-info-text n time)
+  (info-display-update
+   (cond
+    ((< (length (nest-wasps n)) 2)
+     (info-display-add
+      (nest-info-display n)
+      (make-info "ONLY ONE WASP REMAINS!" 'one-wasp time)))
+    ((<= (nest-energy n) 0)
+     (info-display-add
+      (nest-info-display n)
+      (make-info "YOUR NEST HAS NO ENERGY REMAINING" 'no-energy time)))
+    ((<= (nest-energy n) 20)
+     (info-display-add
+      (nest-info-display n)
+      (make-info "YOUR NEST HAS LOW ENERGY" 'low-energy time)))
+    ((> (nest-time-of-year n) (- nest-year-length 20))
+     (info-display-add
+      (nest-info-display n)
+      (make-info "IT'S NEARLY THE END OF THE WASP YEAR" 'year-end time)))
+    (else (nest-info-display n)))
+   time)))
+
+(define (nest-update n time delta)
   (nest-update-from-event
    (nest-update-from-wasps
     (make-nest
-     (nest-energy n)
+     (- (nest-energy n) (* delta nest-energy-drain)) 
      (nest-location n)
      (+ (nest-time-of-year n) delta)
      (nest-wasps-update-wasps
@@ -288,7 +333,10 @@
      (nest-update-window-stack n delta)    
      (event-update (nest-event n) delta)
      (nest-events n)
-     (nest-weather n)))
+     (nest-weather n)
+     ;; add info text
+     (nest-update-info-text n time))
+    time)
    delta))
 
 (define (nest-render n ctx)
@@ -322,10 +370,12 @@
   (ctx.fillRect 0 0 800 70)
   (set! ctx.globalAlpha 1.0)
   (set! ctx.fillStyle "#000")
-  (ctx.fillText (string-append "Energy: " (nest-energy n)) 10 50)
-  (ctx.fillText (string-append "Game time: " (Math.floor (nest-time-of-year n))) 200 50)
+  (ctx.fillText (string-append "Energy: " (floor (nest-energy n))) 10 50)
+  (ctx.fillText (string-append "Game time: " (floor (nest-time-of-year n))) 200 50)
   (ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 400 50)
   (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 600 50)
+
+  (info-display-render (nest-info-display n) ctx)
   
   (when (nest-event n)
 	(event-render n ctx))

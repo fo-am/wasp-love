@@ -17,15 +17,18 @@
 (define (storm-builder)
   (lambda ()
     (make-event 
-     'storm 10 10 #f
+     'storm 10
+     #f 
      (lambda (nest delta state)
        (cond
 	((eq? state 'first) (nest-modify-weather nest 'stormy))
 	((eq? state 'last) (nest-modify-weather nest 'calm))
 	(else (nest-decimate
-	       nest (* 0.5 delta)
+	       nest
+	       (* (local-get-param "wasp-game" "storm-deadliness")
+		  delta)
 	       (list 'state-forage 'state-forage-return))))))))
-	          
+
 (define (storm-update event delta)
   event)
 

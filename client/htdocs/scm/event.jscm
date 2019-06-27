@@ -14,17 +14,15 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (make-event type probability time data fn) 
-  (list type probability time time data fn))
+(define (make-event type time-left data fn) 
+  (list type time-left data fn))
 
 (define (event-type e) (list-ref e 0))
-(define (event-probability e) (list-ref e 1))
-(define (event-duration e) (list-ref e 2))
-(define (event-time-left e) (list-ref e 3))
-(define (event-modify-time-left e s) (list-replace e 3 s))
-(define (event-data e) (list-ref e 4))
-(define (event-modify-data e s) (list-replace e 4 s))
-(define (event-fn e) (list-ref e 5))
+(define (event-time-left e) (list-ref e 1))
+(define (event-modify-time-left e s) (list-replace e 1 s))
+(define (event-data e) (list-ref e 2))
+(define (event-modify-data e s) (list-replace e 2 s))
+(define (event-fn e) (list-ref e 3))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
