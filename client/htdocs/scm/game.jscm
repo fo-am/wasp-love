@@ -29,6 +29,7 @@
   (list "wasp-tending-time" 5)
   (list "wasp-forage-time" 20)
   (list "wasp-dying-time" 3)
+  (list "wasp-reproductive-threshold" 1)
   (list "nest-year-length" (* 60 5))
   (list "nest-forage-cost" -5)
   (list "nest-build-cell-cost" -10)
@@ -109,8 +110,7 @@
    'calm
    (make-info-display
     (list
-     (make-info "WE LOVE WASPS, DO YOU?" 'welcome time)
-     (make-info "WWE LOVE WASPS, DO YOU?EWE LOVE WASPS, DO YOU? WE LOVE WASPS, DO YOU?LOVE WASPS, DO YOU?" 'welcome2 time)))))
+     (make-info "WE LOVE WASPS, DO YOU?" 'welcome time)))))
 
 ;; setup new game
 (define (nightjar-new-game c)
@@ -304,6 +304,7 @@
    "sprites/lightning.png"
    "sprites/rain.png"
    "sprites/rain2.png"
+   "sprites/glow.png"
    "backgrounds/temperate-city.png"
    "backgrounds/temperate-forest.png"
    ))

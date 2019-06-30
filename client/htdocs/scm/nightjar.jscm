@@ -219,8 +219,7 @@
                  (wrap-text-height-inner
                   (cdr words) test-line y
 		  r))))))))
-  (dbg (wrap-text-height-inner (text.split " ") "" y 0)))
-
+  (wrap-text-height-inner (text.split " ") "" y 0))
 
 (define (wrap-text ctx text x y max-width line-height)
   (define (wrap-text-inner words line y)

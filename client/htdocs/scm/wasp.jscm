@@ -14,7 +14,8 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define default-capabilities (list 'forage 'lay-egg 'tend-brood 'build-cell))
+(define default-capabilities (list 'forage 'lay-egg 'lay-repro-egg 'tend-brood 'build-cell))
+(define repro-capabilities (list))
 
 (define wasp-speed (local-get-param "wasp-game" "wasp-speed"))
 (define wasp-build-time (local-get-param "wasp-game" "wasp-build-time"))
@@ -23,6 +24,7 @@
 (define wasp-pupa-time (local-get-param "wasp-game" "wasp-pupa-time"))
 (define wasp-forage-time (local-get-param "wasp-game" "wasp-forage-time"))
 (define wasp-dying-time (local-get-param "wasp-game" "wasp-dying-time"))
+(define wasp-reproductive-threshold (local-get-param "wasp-game" "wasp-reproductive-threshold"))
 
 (define wasp-animation
   (list
@@ -58,9 +60,9 @@
       (choose (list "left" "right"))
       (rndf)
       (anim-load-frames wasp-animation)
-      0 wasp-animation-idle 8)
+      0 wasp-animation-idle 8 #f)
      (list capabilities)
-     'state-idle pos #f 0 0 #f)))
+     'state-idle pos #f 0 0 #f 'normal)))
 
 (define (make-pupa pos capabilities) 
   (append 
@@ -72,8 +74,23 @@
     "left"
     (rndf)
     (anim-load-frames wasp-animation)
-    0 wasp-animation-pupa 8)
-   (list capabilities 'state-pupa pos pos 0 0 #f)))
+    0 wasp-animation-pupa 8 #f)
+   (list capabilities 'state-pupa pos pos 0 0 #f 'normal)))
+
+(define (make-repro-pupa pos capabilities) 
+  (msg "make repro pupa")
+  (append 
+   (make-entity 
+    (generate-entity-id!)
+    "wasp" 
+    pos
+    (vec2 300 300)
+    "left"
+    (rndf)
+    (anim-load-frames wasp-animation)
+    0 wasp-animation-pupa 8
+    #f)
+   (list capabilities 'state-pupa pos pos 0 0 #f 'repro)))
 
 (define (wasp-capabilities w) (list-ref w (+ entity-size 0)))
 (define (wasp-modify-capabilities w v) (list-replace w (+ entity-size 0) v))
@@ -89,6 +106,7 @@
 (define (wasp-modify-timer w s) (list-replace w (+ entity-size 5) s))
 (define (wasp-tending-id w) (list-ref w (+ entity-size 6)))
 (define (wasp-modify-tending-id w s) (list-replace w (+ entity-size 6) s))
+(define (wasp-type w) (list-ref w (+ entity-size 7)))
 
 ;; capabilities -> menu options
 (define (wasp-build-menu-options w n)
@@ -99,6 +117,10 @@
        (cons (build-menu-option c "Forage") r))
       ((and (eq? c 'lay-egg) (nest-find-empty-cell n)) 
        (cons (build-menu-option c "Lay Egg") r))
+      ((and (eq? c 'lay-repro-egg)
+	    (nest-find-empty-cell n)
+	    (> (nest-energy n) wasp-reproductive-threshold))
+       (cons (build-menu-option c "Lay Repro Egg") r))
       ((eq? c 'build-cell) 
        (cons (build-menu-option c "Build Cell") r))
       ((and (eq? c 'tend-brood) 
@@ -158,6 +180,14 @@
 	   (wasp-walk-to-cell w dest-cell) 
 	   'state-walking-to-lay)
 	  w)))
+   ((eq? menu-code 'lay-repro-egg) 
+    (let ((dest-cell (nest-find-empty-cell nest)))
+      ;; it's possible we coundn't find any free cells
+      (if dest-cell
+	  (wasp-modify-state
+	   (wasp-walk-to-cell w dest-cell) 
+	   'state-walking-to-lay-repro)
+	  w)))
    ((eq? menu-code 'tend-brood) 
     (let ((dest-pupa (nest-find-wasp-in-state nest 'state-pupa)))
       ;; it's possible we coundn't find any pupa
@@ -189,9 +219,16 @@
 	   w))
       ((eq? state 'state-tended-pupa)
        (if (> (wasp-timer w) wasp-pupa-time)
-	   (wasp-modify-capabilities
-	    (wasp-modify-state w 'state-hatched)
-	    default-capabilities)
+	   (if (eq? (wasp-type w) 'normal)
+	       (wasp-modify-capabilities
+		(wasp-modify-state w 'state-hatched)
+		default-capabilities)
+	       (entity-modify-bg-image
+		(wasp-modify-capabilities
+		 (wasp-modify-state w 'state-hatched)
+		 repro-capabilities)
+		;; add the glow indicator to the reproductives
+		(find-image "sprites/glow.png")))
 	   w))
       ((eq? state 'state-hatched) 
        (wasp-modify-state
@@ -227,6 +264,19 @@
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-wander))
 
+      ((eq? state 'state-walking-to-lay-repro)
+       (if (>= (wasp-walk-time w) 1)
+	   (wasp-modify-timer (wasp-modify-state w 'state-laying-repro-egg) 0)
+	   (wasp-walk w delta)))
+      ((eq? state 'state-laying-repro-egg) 
+       (if (> (wasp-timer w) wasp-laying-time)
+	   (wasp-modify-state w 'state-layed-repro-egg)
+	   w))
+      ((eq? state 'state-layed-repro-egg) 
+       (wasp-modify-state
+	(wasp-walk-to-cell w (nest-find-any-cell nest))
+	'state-wander))
+      
       ((eq? state 'state-wander)
        (if (>= (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-idle) 0)
@@ -290,6 +340,7 @@
       ((eq? state 'state-building-cell) wasp-animation-build)
       ((eq? state 'state-walking-to-lay) wasp-animation-walk)
       ((eq? state 'state-laying-egg) wasp-animation-lay)
+      ((eq? state 'state-laying-repro-egg) wasp-animation-lay)
       ((eq? state 'state-wander) wasp-animation-walk)
       ((eq? state 'state-take-off) wasp-animation-fly)
       ((eq? state 'state-forage-start) wasp-animation-fly)
@@ -324,9 +375,16 @@
 (define (wasp-update-wasps wasp wasps)
   (cond
    ((eq? (wasp-state wasp) 'state-layed-egg)
+    (msg "layed normal egg...")
     (cons
      (make-pupa (wasp-walk-to wasp)
 		(list))
+     wasps))
+   ((eq? (wasp-state wasp) 'state-layed-repro-egg)
+    (msg "layed repro egg...")
+    (cons
+     (make-repro-pupa (wasp-walk-to wasp)
+		      (list))
      wasps))
    ((eq? (wasp-state wasp) 'state-tended-egg)
     (entity-list-modify 
