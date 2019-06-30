@@ -28,15 +28,15 @@
 
 (define wasp-animation
   (list
-   (make-anim-move "pupae" "pupa1" (list "1"))
-   (make-anim-move "pupae" "pupa1" (list "1" "2" "3" "4"))
-   (make-anim-move "wasp-7" "7-idle" (list "1" "2"))
-   (make-anim-move "wasp-7" "7-walk" (list "1" "2" "3" "2"))
-   (make-anim-move "wasp-7" "7-defend" (list "1" "2" "3" "2"))
-   (make-anim-move "wasp-7" "7-build" (list "1" "2"))
-   (make-anim-move "wasp-7" "7-fly" (list "1" "2" "3" "4" "5" "4" "3" "2"))
-   (make-anim-move "wasp-7" "7-lay" (list "1" "2" "3" "4"))
-   (make-anim-move "wasp-7" "7-tend" (list "1" "2"))
+   (make-anim-move "pupae" "pupa1" (list "1") 8)
+   (make-anim-move "pupae" "pupa1" (list "1" "2" "3" "4") 8)
+   (make-anim-move "wasp-7" "7-idle" (list "1" "2") 8)
+   (make-anim-move "wasp-7" "7-walk" (list "1" "2" "3" "2") 8)
+   (make-anim-move "wasp-7" "7-defend" (list "1" "2" "3" "2") 8)
+   (make-anim-move "wasp-7" "7-build" (list "1" "2") 8)
+   (make-anim-move "wasp-7" "7-fly" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
+   (make-anim-move "wasp-7" "7-lay" (list "1" "2" "3" "4") 8)
+   (make-anim-move "wasp-7" "7-tend" (list "1" "2") 8)
    ))
 
 (define wasp-animation-pupa 0)
@@ -60,7 +60,7 @@
       (choose (list "left" "right"))
       (rndf)
       (anim-load-frames wasp-animation)
-      0 wasp-animation-idle 8 #f)
+      0 wasp-animation-idle #f)
      (list capabilities)
      'state-idle pos #f 0 0 #f 'normal)))
 
@@ -74,11 +74,10 @@
     "left"
     (rndf)
     (anim-load-frames wasp-animation)
-    0 wasp-animation-pupa 8 #f)
+    0 wasp-animation-pupa #f)
    (list capabilities 'state-pupa pos pos 0 0 #f 'normal)))
 
 (define (make-repro-pupa pos capabilities) 
-  (msg "make repro pupa")
   (append 
    (make-entity 
     (generate-entity-id!)
@@ -88,8 +87,7 @@
     "left"
     (rndf)
     (anim-load-frames wasp-animation)
-    0 wasp-animation-pupa 8
-    #f)
+    0 wasp-animation-pupa #f)
    (list capabilities 'state-pupa pos pos 0 0 #f 'repro)))
 
 (define (wasp-capabilities w) (list-ref w (+ entity-size 0)))
@@ -367,21 +365,17 @@
     (update-cell (wasp-walk-to wasp) cells cell-code-occupied))
    ((eq? (wasp-state wasp) 'state-hatched)
     (update-cell (wasp-walk-to wasp) cells cell-code-empty))
-   ((eq? (wasp-state wasp) 'state-died)
-    (update-cell (wasp-walk-to wasp) cells cell-code-empty))
    (else cells)))
 
 ;; update new wasps mainly - could be much simpler
 (define (wasp-update-wasps wasp wasps)
   (cond
    ((eq? (wasp-state wasp) 'state-layed-egg)
-    (msg "layed normal egg...")
     (cons
      (make-pupa (wasp-walk-to wasp)
 		(list))
      wasps))
    ((eq? (wasp-state wasp) 'state-layed-repro-egg)
-    (msg "layed repro egg...")
     (cons
      (make-repro-pupa (wasp-walk-to wasp)
 		      (list))

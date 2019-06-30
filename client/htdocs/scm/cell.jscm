@@ -19,7 +19,7 @@
 (define cell-code-occupied 2)
 
 (define cell-size-x 18)
-(define cell-size-y 9)
+(define cell-size-y 7)
 
 (define (make-cell pos logical code img) (list pos logical code img))
 (define (cell-pos c) (list-ref c 0))

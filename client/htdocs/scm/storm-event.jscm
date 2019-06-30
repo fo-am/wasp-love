@@ -17,7 +17,7 @@
 (define (storm-builder)
   (lambda ()
     (make-event 
-     'storm 10
+     'storm (local-get-param "wasp-game" "storm-duration")
      #f 
      (lambda (nest delta state)
        (cond
@@ -36,6 +36,6 @@
   0)
 
 (define (storm-render-text ctx event)
-  (wrap-text ctx "OH NO!" -145 580 800 70)
-  (wrap-text ctx "A STORM IS RAGING AND YOUR FORAGERS ARE IN TROUBLE" -145 680 800 70))
+  (wrap-text ctx "OH NO!" -145 480 800 70)
+  (wrap-text ctx "A STORM IS RAGING AND YOUR FORAGERS ARE IN TROUBLE" -145 580 800 70))
 

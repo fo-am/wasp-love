@@ -58,11 +58,13 @@
      (lambda (i item)
        (let ((height
 	      (wrap-text-height
-	       ctx (info-text item) -145 (- 600 pos) 700 70)))
+	       ctx (info-text item) -145 (- 800 pos) 700 70)))
 	 (set! ctx.fillStyle highlight2-col)
 	 (set! pos (+ pos height 10))
-	 (ctx.fillRect 300 (- 540 pos) 700 height)
+	 (set! ctx.globalAlpha 0.8)
+	 (ctx.fillRect 300 (- 745 pos) 700 height)
+	 (set! ctx.globalAlpha 1.0)
 	 (set! ctx.fillStyle text-col)
-	 (wrap-text ctx (info-text item) -145 (- 600 pos) 700 70)))
+	 (wrap-text ctx (info-text item) -145 (- 800 pos) 700 70)))
      (info-display-items d))))
 

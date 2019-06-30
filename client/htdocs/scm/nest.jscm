@@ -25,6 +25,7 @@
 (define nest-energy-drain (local-get-param "wasp-game" "nest-energy-drain"))
 (define event-start-time (local-get-param "wasp-game" "event-start-time"))
 (define event-probability (local-get-param "wasp-game" "event-probability"))
+(define nest-reproductive-threshold (local-get-param "wasp-game" "nest-reproductive-threshold"))
 
 (define (time->season time)
   (cond
@@ -84,7 +85,7 @@
    (lambda (w r)
      (if (and (not r) 
 	      (not (eq? (wasp-state w) 'state-pupa))
-	      (not (eq? (wasp-state w) 'state-untended-pupa))
+	      (not (eq? (wasp-state w) 'state-tended-pupa))
 	      (v2eq? (wasp-walk-to w) pos))
 	 #t r))
    #f

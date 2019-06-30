@@ -81,6 +81,6 @@
      pos)))
 
 (define (pestcontrol-render-text ctx event)
-  (wrap-text ctx "OH NO!" -145 580 800 70)
-  (wrap-text ctx "YOUR NEST IS BEING POISONED BY THE CITY PEST CONTROLLERS" -145 680 800 70))
+  (wrap-text ctx "OH NO!" -145 480 800 70)
+  (wrap-text ctx "YOUR NEST IS BEING POISONED BY THE CITY PEST CONTROLLERS" -145 580 800 70))
 

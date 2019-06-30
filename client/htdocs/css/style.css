@@ -35,6 +35,11 @@ html, body {
     top: 0;
 }
 
+.param-list {
+    height: 500px;
+    overflow: scroll;
+}
+
 .param-row {
     border: 1px solid white;
     background: #f9e973;

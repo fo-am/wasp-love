@@ -15,10 +15,10 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (make-entity id type pos sprite-size facing t sprite-list frame clip anim-speed bg-image)
-  (list id type pos sprite-size facing t sprite-list frame clip anim-speed bg-image))
+(define (make-entity id type pos sprite-size facing t sprite-list frame clip bg-image)
+  (list id type pos sprite-size facing t sprite-list frame clip bg-image))
 
-(define entity-size 11)
+(define entity-size 10)
 
 (define next-entity-id 0)
 (define (generate-entity-id!) 
@@ -37,31 +37,32 @@
 (define (entity-frame e) (list-ref e 7))
 (define (entity-clip e) (list-ref e 8))
 (define (entity-modify-clip e v) (list-replace e 8 v))
-(define (entity-anim-speed e) (list-ref e 9))
-(define (entity-bg-image e) (list-ref e 10))
-(define (entity-modify-bg-image e s) (list-replace e 10 s))
+(define (entity-bg-image e) (list-ref e 9))
+(define (entity-modify-bg-image e s) (list-replace e 9 s))
 
 (define (entity-eq? a b)
   (eq? (entity-id a) (entity-id b)))
 
 (define (entity-render e ctx)
-  (let ((clip (list-ref (entity-sprite-list e) (entity-clip e))))
-    (let ((image 
-	   (list-ref
-	    (list-ref 
-	     clip
-	     (modulo (entity-frame e) 
-		     (length clip)))
-	    (if (eq? (entity-facing e) "left") 0 1))))
-      (when (entity-bg-image e)
-	    (ctx.drawImage 
-	     (entity-bg-image e)
-	     (- (vx (entity-pos e)) (/ image.width 2))
-	     (- (vy (entity-pos e)) (/ image.height 2))))
-      (ctx.drawImage 
-       image
-       (- (vx (entity-pos e)) (/ image.width 2))
-       (- (vy (entity-pos e)) (/ image.height 2))))))
+  (let ((anim (list-ref (entity-sprite-list e) (entity-clip e))))
+    (let ((speed (car anim))
+	  (clip (cadr anim)))
+      (let ((image 
+	     (list-ref
+	      (list-ref 
+	       clip
+	       (modulo (entity-frame e) 
+		       (length clip)))
+	      (if (eq? (entity-facing e) "left") 0 1))))
+	(when (entity-bg-image e)
+	      (ctx.drawImage 
+	       (entity-bg-image e)
+	       (- (vx (entity-pos e)) (/ image.width 2))
+	       (- (vy (entity-pos e)) (/ image.height 2))))
+	(ctx.drawImage 
+	 image
+	 (- (vx (entity-pos e)) (/ image.width 2))
+	 (- (vy (entity-pos e)) (/ image.height 2)))))))
 
 (define (drop-n n l)
   (cond
@@ -70,18 +71,19 @@
    (else (drop-n (- n 1) (cdr l)))))
 
 (define (entity-update e delta)
-  (append
-   (make-entity
-    (entity-id e)
-    (entity-type e)
-    (entity-pos e)
-    (entity-sprite-size e)
-    (entity-facing e)
-    (+ (entity-t e) (* delta (entity-anim-speed e)))
-    (entity-sprite-list e)
-    (Math.floor (entity-t e))
-    (entity-clip e)
-    (entity-anim-speed e)
-    (entity-bg-image e))
-   (drop-n entity-size e)))
+  (let ((anim (list-ref (entity-sprite-list e) (entity-clip e))))
+    (let ((speed (car anim)))
+      (append
+       (make-entity
+	(entity-id e)
+	(entity-type e)
+	(entity-pos e)
+	(entity-sprite-size e)
+	(entity-facing e)
+	(+ (entity-t e) (* delta speed))
+	(entity-sprite-list e)
+	(Math.floor (entity-t e))
+	(entity-clip e)
+	(entity-bg-image e))
+       (drop-n entity-size e)))))
 

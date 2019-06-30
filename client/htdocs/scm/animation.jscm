@@ -14,10 +14,11 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (make-anim-move id name frames) (list id name frames))
+(define (make-anim-move id name frames speed) (list id name frames speed))
 (define (anim-move-id a) (list-ref a 0))
 (define (anim-move-name a) (list-ref a 1))
 (define (anim-move-frames a) (list-ref a 2))
+(define (anim-move-speed a) (list-ref a 3))
 
 (define (anim-build-path dir move frame)
   (string-append 
@@ -47,11 +48,15 @@
 (define (anim-load-frames anim)
   (map
    (lambda (move)
-     (map 
-      (lambda (frame)
-	(list
-	 (find-image (anim-build-path "left" move frame))
-	 (find-image (anim-build-path "right" move frame))))
-      (anim-move-frames move)))
+     ;; bolting speed onto the front of the frame list
+     ;; so we can have different fps for different clips
+     (list
+      (anim-move-speed move)
+      (map 
+       (lambda (frame)
+	 (list
+	  (find-image (anim-build-path "left" move frame))
+	  (find-image (anim-build-path "right" move frame))))
+       (anim-move-frames move))))
    anim))
 

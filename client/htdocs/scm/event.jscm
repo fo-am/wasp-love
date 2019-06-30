@@ -46,7 +46,7 @@
     (set! ctx.font "normal 25pt pompiere")
     (set! ctx.fillStyle highlight2-col)
     (set! ctx.globalAlpha 0.8)
-    (ctx.fillRect 250 500 800 300)
+    (ctx.fillRect 250 400 800 300)
     (set! ctx.globalAlpha 1.0)
     (set! ctx.fillStyle text-col)
     (set! ctx.font "normal 50pt pompiere")
