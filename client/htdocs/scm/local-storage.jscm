@@ -108,7 +108,7 @@
    (lambda (kv r)
      ;; check we have the new units 
      (cond
-      ((not (eq? (length kv) 3))
+      ((and kv (not (eq? (length kv) 3)))
        (local-nuke) #f)
       (else     
        (if (eq? (param-key kv) name)
