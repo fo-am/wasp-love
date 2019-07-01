@@ -41,21 +41,30 @@ html, body {
 }
 
 .param-row {
+    display: table;
     border: 1px solid white;
     background: #f9e973;
 }
 
 .param-key {
-    float: left;
-    width: 70%;
+    display: table-cell;
+    width: 200px;
 }
 
 .param-value {
+    display: table-cell;
     font-family: 'sans';
-    width: 5em;
-    border: none;
+    width: 50px;
+    border: 1px solid black;
     background: none;
 }
+
+.param-units {
+    display: table-cell;
+    font-size: 50%;
+    width: 50px;
+}
+
 
 button {
     background: #f9e973;

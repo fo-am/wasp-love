@@ -1,7 +1,28 @@
 ;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;; use browser local storage for stuff
 ;; hopefully removing the need for a server in certain situations
+
+(define (make-param key value units)
+  (list key value units))
+
+(define (param-key p) (list-ref p 0))
+(define (param-value p) (list-ref p 1))
+(define (param-units p) (list-ref p 2))
 
 (define (local-save name o)
   (localStorage.setItem name (JSON.stringify o)))
@@ -25,21 +46,22 @@
     def)
    (else (local-load name))))
 
-(define (set-game-param key value)
-  (local-set-param "wasp-game" key value))
+(define (set-game-param key value units)
+  (local-set-param "wasp-game" key value units))
 
-(define (param-form key value)
+(define (param-form key value units)
   (string-append
         "<div class='param-row'>
            <div class='param-key'>" key "</div>
-           <input class='param-value' onChange='set_game_param(this.name,this.value);' type='text' name='" key "' value='" value "'></br>
+           <input class='param-value' onChange='set_game_param(this.name,this.value);' type='text' name='" key "' value='" value "'>
+           <div class='param-units'><center>" units "</center></div></br>
 	</div>"))
 
 (define (setup-params-interface params)
   (let ((c ($ ".param-list") ))
     (for-each
      (lambda (m)
-       (c.append (param-form (car m) (cadr m))))
+       (c.append (param-form (param-key m) (param-value m) (param-units m))))
      params)))
 
 (define (check-and-add-params! namespace new-params)
@@ -48,7 +70,7 @@
    (string-append namespace "-params")
    (foldl
     (lambda (param r)
-      (if (not (local-param-exists? namespace (car param)))
+      (if (not (local-param-exists? namespace (param-key param)))
 	  (begin
 	    (msg (string-append "Adding " (car param) " to existing params"))
 	    (append r (list param)))
@@ -62,14 +84,14 @@
   (check-and-add-params! namespace params)
   (setup-params-interface (local-load (string-append namespace "-params"))))
 
-(define (local-set-param namespace name value)
+(define (local-set-param namespace name value units)
   (msg namespace name value)
   (local-save
    (string-append namespace "-params")
    (map
     (lambda (kv)
       (if (eq? (car kv) name)
-	  (list name value)
+	  (make-param name value units)
 	  kv))
     (local-load (string-append namespace "-params")))))
 
@@ -77,15 +99,20 @@
   (foldl
    (lambda (kv r)
      (if (eq? (car kv) name)
-	 (cadr kv) r))
+	 (param-value kv) r))
    #f
    (local-load (string-append namespace "-params"))))
 
 (define (local-param-exists? namespace name) 
   (foldl
    (lambda (kv r)
-     (if (eq? (car kv) name)
-	 #t r))
+     ;; check we have the new units 
+     (cond
+      ((not (eq? (length kv) 3))
+       (local-nuke) #f)
+      (else     
+       (if (eq? (param-key kv) name)
+	   #t r))))
    #f
    (local-load (string-append namespace "-params"))))
 

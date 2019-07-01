@@ -117,7 +117,7 @@
        (cons (build-menu-option c "Lay Egg") r))
       ((and (eq? c 'lay-repro-egg)
 	    (nest-find-empty-cell n)
-	    (> (nest-energy n) wasp-reproductive-threshold))
+	    (> (length (nest-wasps n)) wasp-reproductive-threshold))
        (cons (build-menu-option c "Lay Repro Egg") r))
       ((eq? c 'build-cell) 
        (cons (build-menu-option c "Build Cell") r))
