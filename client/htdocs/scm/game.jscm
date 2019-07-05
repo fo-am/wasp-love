@@ -23,6 +23,7 @@
  "wasp-game" 
  (list
   (make-param "wasp-speed" 1 "seconds to get there")
+  (make-param "ant-speed" 1 "seconds to get there")
   (make-param "wasp-build-time" 5 "seconds")
   (make-param "wasp-laying-time" 5 "seconds")
   (make-param "wasp-pupa-time" 20 "seconds") 
@@ -54,6 +55,10 @@
   (make-param "manicured-probability" 0.05 "prob per second")
   (make-param "manicured-duration" 10 "seconds")  
   (make-param "manicured-multiplier" 0.5 "energy reduction")
+  (make-param "ant-probability" 0.05 "prob per second")
+  (make-param "ant-duration" 10 "seconds")  
+  (make-param "ant-number" 5 "ants")
+  
   ))
 
 (load "scm/particles.jscm")
@@ -68,6 +73,8 @@
 (load "scm/pestcontrol-event.jscm")
 (load "scm/wildflower-event.jscm")
 (load "scm/manicured-event.jscm")
+(load "scm/ant-event.jscm")
+(load "scm/ants.jscm")
 (load "scm/nest.jscm")
 (load "scm/menu.jscm")
 (load "scm/info.jscm")
@@ -270,6 +277,7 @@
 (load-images!
  (append 
   (anim->filenames wasp-animation)
+  (anim->filenames ant-animation)
   (list 
    "sprites/hex.png"
    "sprites/cloud-1.png"

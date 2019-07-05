@@ -367,7 +367,7 @@
      (nest-menu n)
      (nest-wasps-update-cells n)
      (nest-update-window-stack n delta)    
-     (event-update (nest-event n) delta)
+     (event-update (nest-event n) n delta)
      (nest-events n)
      (nest-weather n)
      ;; add info text

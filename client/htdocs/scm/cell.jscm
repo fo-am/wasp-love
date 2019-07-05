@@ -63,12 +63,10 @@
     ;; bloomin hexagons...
     (append
      (list
-      (dbg (cell-pos->index (dbg (vec2 x (+ y 1)))))
-      (dbg (cell-pos->index (dbg (vec2 x (- y 1)))))
+      (cell-pos->index (vec2 x (+ y 1)))
+      (cell-pos->index (vec2 x (- y 1)))
       (cell-pos->index (vec2 (+ x 1) y))
-      (cell-pos->index (vec2 (- x 1) y))
-      )
-
+      (cell-pos->index (vec2 (- x 1) y)))
      (if (zero? (modulo x 2))
      	 (list
      	  (cell-pos->index (vec2 (+ x 1) (+ y 1)))
@@ -76,5 +74,4 @@
      	 (list
      	  (cell-pos->index (vec2 (+ x 1) (- y 1)))
      	  (cell-pos->index (vec2 (- x 1) (- y 1)))))
-
      ))))

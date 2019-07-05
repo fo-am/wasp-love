@@ -25,13 +25,19 @@
 	((eq? state 'last) (nest-modify-energy-mult nest 1))
 	(else nest))))))
 
-(define (manicured-update event delta)
+(define (manicured-update event nest delta)
   event)
 
 (define (manicured-render ctx event)
-  0)
+  ;; explanation text box
+  (set! ctx.font "normal 25pt pompiere")
+  (set! ctx.fillStyle highlight2-col)
+  (set! ctx.globalAlpha 0.8)
+  (ctx.fillRect 250 400 800 300)
+  (set! ctx.globalAlpha 1.0)
+  (set! ctx.fillStyle text-col)
+  (set! ctx.font "normal 50pt pompiere")
 
-(define (manicured-render-text ctx event)
   (ctx.drawImage (find-image "sprites/manicuredgarden1.png") 270 395)
   (ctx.drawImage (find-image "sprites/manicuredgarden2.png") 880 395)
   (wrap-text ctx "FORAGERS FOUND A MANICURED GARDEN - HALF ENERGY!" -145 480 450 70))

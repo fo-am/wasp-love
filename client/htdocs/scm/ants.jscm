@@ -1,0 +1,119 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define ant-speed (local-get-param "wasp-game" "ant-speed"))
+
+(define ant-animation
+  (list
+   (make-anim-move "ant" "ant" (list "1" "2") 8)
+   ))
+
+(define ant-animation-walk 0)
+
+(define (make-ant) 
+  (let ((pos (vec2 2000 1000)))
+    (append 
+     (make-entity 
+      (generate-entity-id!)
+      "ant" 
+      pos
+      (vec2 300 300)
+      "left"
+      (rndf)
+      (anim-load-frames ant-animation)
+      0 ant-animation-walk #f)
+     (list 'state-appear pos pos (rndf) (rndf) 0))))
+
+(define (ant-state a) (list-ref a (+ entity-size 0)))
+(define (ant-modify-state a s) (list-replace a (+ entity-size 0) s))
+(define (ant-walk-from w) (list-ref w (+ entity-size 1)))
+(define (ant-modify-walk-from w s) (list-replace w (+ entity-size 1) s))
+(define (ant-walk-to w) (list-ref w (+ entity-size 2)))
+(define (ant-modify-walk-to w s) (list-replace w (+ entity-size 2) s))
+(define (ant-walk-time w) (list-ref w (+ entity-size 3)))
+(define (ant-modify-walk-time w s) (list-replace w (+ entity-size 3) s))
+(define (ant-timer w) (list-ref w (+ entity-size 4)))
+(define (ant-modify-timer w s) (list-replace w (+ entity-size 4) s))
+(define (ant-dest-cell w) (list-ref w (+ entity-size 5)))
+(define (ant-modify-dest-cell w s) (list-replace w (+ entity-size 5) s))
+
+(define (ant-walk-to-cell a dest-cell)
+  (ant-walk-to-pos
+   (ant-modify-dest-cell a dest-cell)
+   (cell-pos dest-cell)))
+
+(define (ant-walk-to-pos w pos)
+  (ant-modify-walk-time 
+   (ant-modify-walk-to
+    (ant-modify-walk-from 
+     ;; face the right direction
+     (if (< (vx (entity-pos w)) (vx pos))
+	 (entity-modify-facing w 'right)
+	 (entity-modify-facing w 'left))
+     (entity-pos w))
+    pos)
+   0))
+
+(define (ant-walk w delta)
+  (entity-modify-pos 
+   (ant-modify-walk-time w (min 1 (+ (ant-walk-time w) (* ant-speed delta))))
+   (v2lerp 
+    (ant-walk-from w)
+    (ant-walk-to w) 
+    (ant-walk-time w))))
+
+(define (ant-update a delta nest)
+  (ant-update-animation
+   (let ((state (ant-state a)))
+     (cond
+      
+      ((eq? state 'state-appear)
+       (if (< (rndf) 0.01)
+	   (ant-modify-state
+	    (ant-walk-to-cell
+	     a (list-ref (nest-cells nest) (- (length (nest-cells nest)) 1)))
+	    'state-search)
+	   a))
+      
+      ((eq? state 'state-search)
+       (ant-modify-state
+	(ant-walk-to-cell
+	 a (list-ref
+	    (nest-cells nest)
+	    (choose
+	     (filter
+	      (lambda (i)
+		(and (> i 0) (< i (length (nest-cells nest)))))
+	      (cell-nindexes (ant-dest-cell a))))))
+	'state-wander))
+      
+      ((eq? state 'state-wander)
+       (if (>= (ant-walk-time a) 1)
+	   (ant-modify-state a 'state-search)
+	   (ant-walk a delta)))
+      
+      (else a)))
+   delta))
+
+(define (ant-update-animation w delta)  
+  (let ((state (ant-state w)))
+    (entity-modify-clip 
+     (ant-modify-timer w (+ (ant-timer w) delta))
+     (cond
+      ((eq? state 'state-appear) ant-animation-walk)
+      ((eq? state 'state-wander) ant-animation-walk)
+      ((eq? state 'state-search) ant-animation-walk)
+      (else (entity-clip w))))))

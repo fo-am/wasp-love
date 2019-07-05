@@ -29,13 +29,19 @@
 		  delta)
 	       (list 'state-forage 'state-forage-return))))))))
 
-(define (storm-update event delta)
+(define (storm-update event nest delta)
   event)
 
 (define (storm-render ctx event)
-  0)
-
-(define (storm-render-text ctx event)
+  ;; explanation text box
+  (set! ctx.font "normal 25pt pompiere")
+  (set! ctx.fillStyle highlight2-col)
+  (set! ctx.globalAlpha 0.8)
+  (ctx.fillRect 250 400 800 300)
+  (set! ctx.globalAlpha 1.0)
+  (set! ctx.fillStyle text-col)
+  (set! ctx.font "normal 50pt pompiere")
+  
   (wrap-text ctx "OH NO!" -145 480 800 70)
   (wrap-text ctx "A STORM IS RAGING AND YOUR FORAGERS ARE IN TROUBLE" -145 580 800 70))
 
