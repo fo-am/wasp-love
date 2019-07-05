@@ -48,6 +48,12 @@
   (make-param "pestcontrol-probability" 0.05 "prob per second")
   (make-param "pestcontrol-duration" 10 "seconds")  
   (make-param "pestcontrol-deadliness" 0.2 "prob per second")
+  (make-param "wildflower-probability" 0.05 "prob per second")
+  (make-param "wildflower-duration" 10 "seconds")  
+  (make-param "wildflower-multiplier" 2.0 "energy boost")
+  (make-param "manicured-probability" 0.05 "prob per second")
+  (make-param "manicured-duration" 10 "seconds")  
+  (make-param "manicured-multiplier" 0.5 "energy reduction")
   ))
 
 (load "scm/particles.jscm")
@@ -60,6 +66,8 @@
 (load "scm/event.jscm")
 (load "scm/storm-event.jscm")
 (load "scm/pestcontrol-event.jscm")
+(load "scm/wildflower-event.jscm")
+(load "scm/manicured-event.jscm")
 (load "scm/nest.jscm")
 (load "scm/menu.jscm")
 (load "scm/info.jscm")
@@ -91,26 +99,7 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (empty-nightjar-data time)
-  (make-nest 
-   (string->number (local-get-param "wasp-game" "nest-start-energy"))
-   'city 0 
-   (build-list
-    (string->number (local-get-param "wasp-game" "nest-start-wasps"))
-    (lambda (_)
-      (make-wasp default-capabilities)))
-   (build-menu 
-    (vec2 100 100) #f 
-    (list)
-    #f 0)
-   (generate-cells cell-size-x cell-size-y)
-   (make-window-stack (list))
-   #f
-   (build-wasp-game-events)
-   'calm
-   (make-info-display
-    (list
-     (make-info "WE LOVE WASPS, DO YOU?" 'welcome time)))))
+(define (empty-nightjar-data time) (make-new-nest time))
 
 ;; setup new game
 (define (nightjar-new-game c)
@@ -306,6 +295,10 @@
    "sprites/rain.png"
    "sprites/rain2.png"
    "sprites/glow.png"
+   "sprites/wildflowers1.png"
+   "sprites/wildflowers2.png"
+   "sprites/manicuredgarden1.png"
+   "sprites/manicuredgarden2.png"
    "backgrounds/temperate-city.png"
    "backgrounds/temperate-forest.png"
    ))

@@ -1,0 +1,38 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define (wildflower-builder)
+  (lambda ()
+    (make-event 
+     'wildflower (local-get-param "wasp-game" "wildflower-duration")
+     #f 
+     (lambda (nest delta state)
+       (cond
+	((eq? state 'first) (nest-modify-energy-mult nest (local-get-param "wasp-game" "wildflower-multiplier")))
+	((eq? state 'last) (nest-modify-energy-mult nest 1))
+	(else nest))))))
+       
+(define (wildflower-update event delta)
+  event)
+
+(define (wildflower-render ctx event)
+  0)
+
+(define (wildflower-render-text ctx event)
+  (ctx.drawImage (find-image "sprites/wildflowers1.png") 220 390)
+  (ctx.drawImage (find-image "sprites/wildflowers2.png") 830 400)
+  (wrap-text ctx "FORAGERS FOUND A WILDFLOWER GARDEN - DOUBLE ENERGY!" -145 480 450 70))
+

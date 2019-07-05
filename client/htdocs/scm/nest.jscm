@@ -36,8 +36,30 @@
 	 (< time (* (/ nest-year-length 4) 3))) 'autumn)
    (else 'winter)))
 
-(define (make-nest energy location time-of-year wasps menu cells window-stack event events weather info-display) 
-  (list energy location time-of-year wasps menu cells window-stack event events weather info-display))
+(define (make-nest energy location time-of-year wasps menu cells window-stack event events weather info-display energy-mult) 
+  (list energy location time-of-year wasps menu cells window-stack event events weather info-display energy-mult))
+
+(define (make-new-nest time)
+  (make-nest 
+   (string->number (local-get-param "wasp-game" "nest-start-energy"))
+   'city 0 
+   (build-list
+    (string->number (local-get-param "wasp-game" "nest-start-wasps"))
+    (lambda (_)
+      (make-wasp default-capabilities)))
+   (build-menu 
+    (vec2 100 100) #f 
+    (list)
+    #f 0)
+   (generate-cells cell-size-x cell-size-y)
+   (make-window-stack (list))
+   #f
+   (build-wasp-game-events)
+   'calm
+   (make-info-display
+    (list
+     ))
+   1))
 
 (define (nest-energy n) (list-ref n 0))
 (define (nest-modify-energy n s) (list-replace n 0 s))
@@ -56,7 +78,9 @@
 (define (nest-weather n) (list-ref n 9))
 (define (nest-modify-weather n s) (list-replace n 9 s))
 (define (nest-info-display n) (list-ref n 10))
-(define (nest-modify-info-display n s) (list-replace n 10 s))
+(define (nest-modify-info-display n s) (list-replace n 10 s))(
+(define (nest-energy-mult n) (list-ref n 11))
+(define (nest-modify-energy-mult n s) (list-replace n 11 s))
 
 (define (nest-wasps-update n delta)
   (map
@@ -180,13 +204,15 @@
    (lambda (wasp r)
      (cond
       ((eq? (wasp-state wasp) 'state-forage-end)
-       (let ((energy (* nest-forage-benefit
-			(* (rndf) nest-forage-variation))))
+       (let ((energy 
+	      (+
+	       (* nest-forage-benefit (nest-energy-mult n))
+	       (* (rndf) nest-forage-variation))))
 	 (nest-add-info 
 	  (nest-modify-energy n (+ (nest-energy n) energy))
 	  (string-append
 	   "FORAGER RETURNED WITH A " 
-	   (choose (list "SPIDER" "CATERPILLAR" "ANT" "FLY"))
+	   (choose (list "SPIDER" "CATERPILLAR" "FLY"))
 	   " WORTH " (floor energy) " ENERGY POINTS")
 	  'allow-dup time)))
       ((eq? (wasp-state wasp) 'state-died)
@@ -269,7 +295,8 @@
 	    (nest-event n)
 	    (nest-events n)
 	    (nest-weather n)
-	    (nest-info-display n))
+	    (nest-info-display n)
+	    (nest-energy-mult n))
 	   (menu-selection menu))
 	  n))))
 
@@ -337,7 +364,8 @@
      (nest-events n)
      (nest-weather n)
      ;; add info text
-     (nest-update-info-text n time))
+     (nest-update-info-text n time)
+     (nest-energy-mult n))
     time)
    delta))
 
@@ -378,7 +406,7 @@
   (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 600 50)
 
   (info-display-render (nest-info-display n) ctx)
-  
+      
   (when (nest-event n)
 	(event-render n ctx))
   )

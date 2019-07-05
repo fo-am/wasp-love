@@ -31,6 +31,8 @@
     (cond
      ((eq? (event-type event) 'attack) (pestcontrol-update event delta))
      ((eq? (event-type event) 'storm) (storm-update event delta))
+     ((eq? (event-type event) 'wildflower) (storm-update event delta))
+     ((eq? (event-type event) 'manicured) (manicured-update event delta))
      (else event))
     (- (event-time-left event) delta)))
 
@@ -40,6 +42,8 @@
     (cond
      ((eq? (event-type event) 'attack) (pestcontrol-render ctx event))
      ((eq? (event-type event) 'storm) (storm-render ctx event))
+     ((eq? (event-type event) 'wildflower) (wildflower-render ctx event))
+     ((eq? (event-type event) 'manicured) (manicured-render ctx event))
      (else 0))
 
     ;; explanation text box
@@ -55,6 +59,8 @@
     (cond
      ((eq? (event-type event) 'storm) (storm-render-text ctx event))
      ((eq? (event-type event) 'attack) (pestcontrol-render-text ctx event))
+     ((eq? (event-type event) 'wildflower) (wildflower-render-text ctx event))
+     ((eq? (event-type event) 'manicured) (manicured-render-text ctx event))
      (else 0))))
 
 ;; if probs add up to less than 1 might return false
@@ -75,5 +81,9 @@
    (list (storm-builder)
 	 (local-get-param "wasp-game" "storm-probability"))
    (list (pestcontrol-builder)
-	 (local-get-param "wasp-game" "pestcontrol-probability"))))
+	 (local-get-param "wasp-game" "pestcontrol-probability"))
+   (list (wildflower-builder)
+	 (local-get-param "wasp-game" "wildflower-probability"))
+   (list (manicured-builder)
+	 (local-get-param "wasp-game" "manicured-probability"))))
 

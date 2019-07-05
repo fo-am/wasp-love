@@ -1,0 +1,38 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define (manicured-builder)
+  (lambda ()
+    (make-event 
+     'manicured (local-get-param "wasp-game" "manicured-duration")
+     #f 
+     (lambda (nest delta state)
+       (cond
+	((eq? state 'first) (nest-modify-energy-mult nest (local-get-param "wasp-game" "manicured-multiplier")))
+	((eq? state 'last) (nest-modify-energy-mult nest 1))
+	(else nest))))))
+
+(define (manicured-update event delta)
+  event)
+
+(define (manicured-render ctx event)
+  0)
+
+(define (manicured-render-text ctx event)
+  (ctx.drawImage (find-image "sprites/manicuredgarden1.png") 270 395)
+  (ctx.drawImage (find-image "sprites/manicuredgarden2.png") 880 395)
+  (wrap-text ctx "FORAGERS FOUND A MANICURED GARDEN - HALF ENERGY!" -145 480 450 70))
+
