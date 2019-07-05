@@ -205,14 +205,16 @@
      (cond
       ((eq? (wasp-state wasp) 'state-forage-end)
        (let ((energy 
-	      (+
-	       (* nest-forage-benefit (nest-energy-mult n))
-	       (* (rndf) nest-forage-variation))))
+	      (+ (* nest-forage-benefit (nest-energy-mult n))
+		 (* (rndf) nest-forage-variation))))
 	 (nest-add-info 
 	  (nest-modify-energy n (+ (nest-energy n) energy))
 	  (string-append
 	   "FORAGER RETURNED WITH A " 
-	   (choose (list "SPIDER" "CATERPILLAR" "FLY"))
+	   (cond
+	    ((eq? (wasp-carrying wasp) 'spider) "SPIDER")
+	    ((eq? (wasp-carrying wasp) 'caterpillar) "CATERPILLAR")
+	    (else "???"))
 	   " WORTH " (floor energy) " ENERGY POINTS")
 	  'allow-dup time)))
       ((eq? (wasp-state wasp) 'state-died)
@@ -309,12 +311,12 @@
        (cond 
 	((eq? (wasp-state wasp) 'state-forage-start)
 	 (append r (list (build-window wasp))))
+	((eq? (wasp-state wasp) 'state-forage)
+	 (window-stack-update-wasp r wasp))
 	((eq? (wasp-state wasp) 'state-forage-return)
-	 (window-stack-return r wasp))
+	 (window-stack-update-wasp r wasp))
  	((eq? (wasp-state wasp) 'state-forage-end)
 	 (window-stack-remove r wasp))
-	((eq? (wasp-state wasp) 'state-dying)
-	 (window-stack-death r wasp))
 	(else r)))
      (window-stack-windows (nest-window-stack nest))
      (nest-wasps nest)))

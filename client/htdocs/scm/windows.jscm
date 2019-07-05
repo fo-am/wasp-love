@@ -74,8 +74,8 @@
   
 (define (window-update w delta nest)
   (make-window
-   (entity-update (wasp-update (window-wasp w) delta nest) delta)
-   (window-env w)   
+   (window-wasp w)
+   (window-env w)
    (map 
     (lambda (cloud)
       (cloud-update cloud delta (window-dir w)))
@@ -159,36 +159,18 @@
 
 (define (window-stack-windows s) (list-ref s 0))
 
-(define (window-stack-return s wasp)
-  s)
+(define (window-stack-update-wasp s wasp)
+  (map
+   (lambda (w)
+     (if (entity-eq? wasp (window-wasp w))
+	 (window-modify-wasp w wasp)
+	 w))
+   s))
 
 (define (window-stack-remove s wasp)
   (filter
    (lambda (w)
      (not (entity-eq? wasp (window-wasp w))))
-   s))
-
-(define (window-stack-death s wasp)
-  (map
-   (lambda (w)
-     (if (entity-eq? wasp (window-wasp w))
-	 (window-modify-wasp
-	  w (wasp-modify-timer
-	     (wasp-modify-state (window-wasp w) 'state-dying)
-	     0))
-	 w))
-   s))
-
-(define (window-stack-return s wasp)
-  (map
-   (lambda (w)
-     (if (and (eq? (window-dir w) 'out) 
-	      (entity-eq? wasp (window-wasp w)))
-	 (window-modify-dir 
-	  (window-modify-wasp 
-	   w (entity-modify-facing (window-wasp w) 'left)) 
-	  'return)
-	 w))
    s))
 
 (define (window-stack-update s delta nest)

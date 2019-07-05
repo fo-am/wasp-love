@@ -35,6 +35,8 @@
    (make-anim-move "wasp-7" "7-defend" (list "1" "2" "3" "2") 8)
    (make-anim-move "wasp-7" "7-build" (list "1" "2") 8)
    (make-anim-move "wasp-7" "7-fly" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
+   (make-anim-move "wasp-7" "7-flycat" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
+   (make-anim-move "wasp-7" "7-flyspider" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
    (make-anim-move "wasp-7" "7-lay" (list "1" "2" "3" "4") 8)
    (make-anim-move "wasp-7" "7-tend" (list "1" "2") 8)
    ))
@@ -46,8 +48,12 @@
 (define wasp-animation-defend 4)
 (define wasp-animation-build 5)
 (define wasp-animation-fly 6)
-(define wasp-animation-lay 7)
-(define wasp-animation-tend 8)
+(define wasp-animation-flycat 7)
+(define wasp-animation-flyspider 8)
+(define wasp-animation-lay 9)
+(define wasp-animation-tend 10)
+
+(define wasp-prey-types (list 'spider 'caterpillar))
 
 (define (make-wasp capabilities) 
   (let ((pos (vec2 (random 1000) (random 500))))
@@ -61,8 +67,7 @@
       (rndf)
       (anim-load-frames wasp-animation)
       0 wasp-animation-idle #f)
-     (list capabilities)
-     'state-idle pos #f 0 0 #f 'normal)))
+     (list capabilities 'state-idle pos #f 0 0 #f 'normal #f))))
 
 (define (make-pupa pos capabilities) 
   (append 
@@ -75,7 +80,7 @@
     (rndf)
     (anim-load-frames wasp-animation)
     0 wasp-animation-pupa #f)
-   (list capabilities 'state-pupa pos pos 0 0 #f 'normal)))
+   (list capabilities 'state-pupa pos pos 0 0 #f 'normal #f)))
 
 (define (make-repro-pupa pos capabilities) 
   (append 
@@ -88,7 +93,7 @@
     (rndf)
     (anim-load-frames wasp-animation)
     0 wasp-animation-pupa #f)
-   (list capabilities 'state-pupa pos pos 0 0 #f 'repro)))
+   (list capabilities 'state-pupa pos pos 0 0 #f 'repro #f)))
 
 (define (wasp-capabilities w) (list-ref w (+ entity-size 0)))
 (define (wasp-modify-capabilities w v) (list-replace w (+ entity-size 0) v))
@@ -105,6 +110,8 @@
 (define (wasp-tending-id w) (list-ref w (+ entity-size 6)))
 (define (wasp-modify-tending-id w s) (list-replace w (+ entity-size 6) s))
 (define (wasp-type w) (list-ref w (+ entity-size 7)))
+(define (wasp-carrying w) (list-ref w (+ entity-size 8)))
+(define (wasp-modify-carrying w s) (list-replace w (+ entity-size 8) s))
 
 ;; capabilities -> menu options
 (define (wasp-build-menu-options w n)
@@ -288,16 +295,23 @@
        (wasp-modify-state w 'state-forage))
       ((eq? state 'state-forage)
        (if (> (wasp-timer w) (/ wasp-forage-time 2))
-	   (wasp-modify-timer (wasp-modify-state w 'state-forage-return) 0)
+	   (entity-modify-facing
+	    (wasp-modify-carrying
+	     (wasp-modify-timer
+	      (wasp-modify-state w 'state-forage-return) 0)
+	     (choose wasp-prey-types))
+	    'left)
 	   (wasp-walk w delta)))
       ((eq? state 'state-forage-return)
        (if (> (wasp-timer w) (/ wasp-forage-time 2))
 	   (wasp-modify-timer (wasp-modify-state w 'state-forage-end) 0)
 	   (wasp-walk w delta)))
       ((eq? state 'state-forage-end)       
-       (wasp-modify-state 
-	(wasp-walk-to-cell w (nest-find-any-cell nest))
-	'state-forage-finish))
+       (wasp-modify-carrying
+	(wasp-modify-state 
+	 (wasp-walk-to-cell w (nest-find-any-cell nest))
+	 'state-forage-finish)
+	#f))
       ((eq? state 'state-forage-finish)
        (if (>= (wasp-walk-time w) 1)
 	   (wasp-modify-timer (wasp-modify-state w 'state-idle) 0)
@@ -315,7 +329,7 @@
        (wasp-modify-state
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-wander))
-
+      
       ((eq? state 'state-start-dying)
        (wasp-modify-timer (wasp-modify-state w 'state-dying) 0))
       ((eq? state 'state-dying)
@@ -325,8 +339,14 @@
       (else w)))
    delta))
 
+(define (wasp-fly-animation w)
+  (cond
+   ((eq? (wasp-carrying w) 'spider) wasp-animation-flyspider)
+   ((eq? (wasp-carrying w) 'caterpillar) wasp-animation-flycat)
+   (else wasp-animation-fly)))
+
 ;; map the states to the right animation clips
-(define (wasp-update-animation w delta)
+(define (wasp-update-animation w delta)  
   (let ((state (wasp-state w)))
     (entity-modify-clip 
      (wasp-modify-timer w (+ (wasp-timer w) delta))
@@ -340,9 +360,10 @@
       ((eq? state 'state-laying-egg) wasp-animation-lay)
       ((eq? state 'state-laying-repro-egg) wasp-animation-lay)
       ((eq? state 'state-wander) wasp-animation-walk)
-      ((eq? state 'state-take-off) wasp-animation-fly)
-      ((eq? state 'state-forage-start) wasp-animation-fly)
-      ((eq? state 'state-forage) wasp-animation-fly)
+      ((eq? state 'state-take-off) (wasp-fly-animation w))
+      ((eq? state 'state-forage-start) (wasp-fly-animation w))
+      ((eq? state 'state-forage) (wasp-fly-animation w))
+      ((eq? state 'state-forage-return) (wasp-fly-animation w))
       ((eq? state 'state-tending-egg) wasp-animation-tend)
       ;;((eq? state 'state-dying) wasp-animation-pupa-tended)
       (else (entity-clip w))))))
