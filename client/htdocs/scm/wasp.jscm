@@ -220,7 +220,7 @@
      (cond
       ((eq? state 'state-pupa)
        (if (> (wasp-timer w) wasp-pupa-time)
-	   (wasp-modify-state w 'state-died)
+	   (wasp-modify-state w 'state-died-pupa)
 	   w))
       ((eq? state 'state-tended-pupa)
        (if (> (wasp-timer w) wasp-pupa-time)
@@ -301,7 +301,7 @@
 	      (wasp-modify-state w 'state-forage-return) 0)
 	     (choose wasp-prey-types))
 	    'left)
-	   (wasp-walk w delta)))
+	    (wasp-walk w delta)))
       ((eq? state 'state-forage-return)
        (if (> (wasp-timer w) (/ wasp-forage-time 2))
 	   (wasp-modify-timer (wasp-modify-state w 'state-forage-end) 0)
@@ -385,6 +385,8 @@
    ((eq? (wasp-state wasp) 'state-layed-egg)
     (update-cell (wasp-walk-to wasp) cells cell-code-occupied))
    ((eq? (wasp-state wasp) 'state-hatched)
+    (update-cell (wasp-walk-to wasp) cells cell-code-empty))
+   ((eq? (wasp-state wasp) 'state-died-pupa)
     (update-cell (wasp-walk-to wasp) cells cell-code-empty))
    (else cells)))
 

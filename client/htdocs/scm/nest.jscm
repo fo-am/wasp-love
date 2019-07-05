@@ -222,6 +222,11 @@
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
 	(string-append "A WASP HAS DIED, " (length (nest-wasps n)) " WASPS LEFT")
 	'allow-dup time))
+      ((eq? (wasp-state wasp) 'state-died-pupa)
+       (nest-add-info 
+	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
+	(string-append "A PUPA HAS DIED AS IT WAS NOT TENDED")
+	'allow-dup time))
       (else r)))
    n
    (nest-wasps n)))
