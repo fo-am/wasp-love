@@ -15,10 +15,10 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (make-entity id type pos sprite-size facing t sprite-list frame clip bg-image)
-  (list id type pos sprite-size facing t sprite-list frame clip bg-image))
+(define (make-entity id type pos sprite-size facing t sprite-list frame clip bg-image depth-plane)
+  (list id type pos sprite-size facing t sprite-list frame clip bg-image depth-plane))
 
-(define entity-size 10)
+(define entity-size 11)
 
 (define next-entity-id 0)
 (define (generate-entity-id!) 
@@ -39,6 +39,8 @@
 (define (entity-modify-clip e v) (list-replace e 8 v))
 (define (entity-bg-image e) (list-ref e 9))
 (define (entity-modify-bg-image e s) (list-replace e 9 s))
+(define (entity-depth-plane e) (list-ref e 10))
+(define (entity-modify-depth-plane e s) (list-replace e 10 s))
 
 (define (entity-eq? a b)
   (eq? (entity-id a) (entity-id b)))
@@ -84,6 +86,7 @@
 	(entity-sprite-list e)
 	(Math.floor (entity-t e))
 	(entity-clip e)
-	(entity-bg-image e))
+	(entity-bg-image e)
+	(entity-depth-plane e))
        (drop-n entity-size e)))))
 

@@ -17,12 +17,6 @@
 
 ;; can be optimised hugely and easily using ordered lists...
 
-(define (entity-list-render el ctx)
-  (for-each
-   (lambda (e)
-     (entity-render e ctx))
-   el))
-
 (define (entity-list-update el delta)
   (map
    (lambda (e)

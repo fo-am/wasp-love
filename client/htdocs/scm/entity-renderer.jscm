@@ -1,0 +1,46 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;; deferred rendering so we can depth sort
+
+(define (renderer ordered-list)
+  (list ordered-list))
+
+(define (renderer-ordered-list r) (list-ref r 0))
+(define (renderer-modify-ordered-list r s) (list-replace r 0 s))
+
+;; depth plane should be more than height of window
+;; used to force entities into background/foreground
+;; but still sorted irt to each other
+(define depth-plane-size 1000)
+
+(define (renderer-add-entities r e)
+  (renderer
+   (foldl
+    (lambda (e r)
+      (ordered-list-insert
+       r (list (+ (vy (entity-pos e))
+		  (* (entity-depth-plane e) depth-plane-size))
+	       e)))
+    (renderer-ordered-list r)
+    e)))
+  
+(define (renderer-render! r ctx)
+  (for-each
+   (lambda (e)
+     (entity-render (cadr e) ctx))
+   (renderer-ordered-list r)))
+

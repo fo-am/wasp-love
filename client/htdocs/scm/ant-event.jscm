@@ -32,7 +32,11 @@
       (entity-update (ant-update ant delta nest) delta))
     (event-data event))))
 
+(define (ant-attack-render-entities renderer event)
+  (renderer-add-entities renderer (event-data event)))
+
 (define (ant-attack-render ctx event)
-  (entity-list-render (event-data event) ctx))
+  0)
+
 
 

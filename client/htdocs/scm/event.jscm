@@ -37,6 +37,14 @@
      (else event))
     (- (event-time-left event) delta)))
 
+(define (event-render-entities renderer nest)
+  (let ((event (nest-event nest)))    
+    ;; event specific background animation
+    (cond
+     ((eq? (event-type event) 'ant-attack)
+      (ant-attack-render-entities renderer event))
+     (else renderer))))
+
 (define (event-render nest ctx)
   (let ((event (nest-event nest)))    
     ;; event specific background animation

@@ -66,7 +66,7 @@
       (choose (list "left" "right"))
       (rndf)
       (anim-load-frames wasp-animation)
-      0 wasp-animation-idle #f)
+      0 wasp-animation-idle #f 0)
      (list capabilities 'state-idle pos #f 0 0 #f 'normal #f))))
 
 (define (make-pupa pos capabilities) 
@@ -79,7 +79,7 @@
     "left"
     (rndf)
     (anim-load-frames wasp-animation)
-    0 wasp-animation-pupa #f)
+    0 wasp-animation-pupa #f -1)
    (list capabilities 'state-pupa pos pos 0 0 #f 'normal #f)))
 
 (define (make-repro-pupa pos capabilities) 
@@ -92,7 +92,7 @@
     "left"
     (rndf)
     (anim-load-frames wasp-animation)
-    0 wasp-animation-pupa #f)
+    0 wasp-animation-pupa #f -1)
    (list capabilities 'state-pupa pos pos 0 0 #f 'repro #f)))
 
 (define (wasp-capabilities w) (list-ref w (+ entity-size 0)))

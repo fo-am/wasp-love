@@ -398,9 +398,16 @@
 	      (- (vx (cell-pos cell)) (/ img.width 2))
 	      (- (vy (cell-pos cell)) (/ img.height 2))))))
    (nest-cells n))
-  (entity-list-render (nest-wasps n) ctx)
+
+  ;; build and render the entity renderer
+  (renderer-render!
+   (renderer-add-entities
+    (event-render-entities (renderer (list)) n)
+    (nest-wasps n))
+   ctx)
+
   (window-stack-render (nest-window-stack n) ctx)
-  (menu-render (nest-menu n))
+
   (set! ctx.font "normal 25pt pompiere")
   (set! ctx.fillStyle "#fff")
   (set! ctx.globalAlpha 0.8)
@@ -413,7 +420,9 @@
   (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 600 50)
 
   (info-display-render (nest-info-display n) ctx)
-      
-  (when (nest-event n)
-	(event-render n ctx))
+  (when (nest-event n) (event-render n ctx))
+  
+  (menu-render (nest-menu n))
+
+  
   )

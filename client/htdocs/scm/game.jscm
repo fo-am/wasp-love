@@ -61,10 +61,12 @@
   
   ))
 
+(load "scm/ordered-list.jscm")
 (load "scm/particles.jscm")
 (load "scm/animation.jscm")
 (load "scm/entity.jscm")
 (load "scm/entity-list.jscm")
+(load "scm/entity-renderer.jscm")
 (load "scm/windows.jscm")
 (load "scm/wasp.jscm")
 (load "scm/cell.jscm")

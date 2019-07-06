@@ -18,7 +18,7 @@
 
 (define ant-animation
   (list
-   (make-anim-move "ant" "ant" (list "1" "2") 8)
+   (make-anim-move "ant" "ant" (list "1" "2") 15)
    ))
 
 (define ant-animation-walk 0)
@@ -34,7 +34,7 @@
       "left"
       (rndf)
       (anim-load-frames ant-animation)
-      0 ant-animation-walk #f)
+      0 ant-animation-walk #f 0)
      (list 'state-appear pos pos (rndf) (rndf) 0))))
 
 (define (ant-state a) (list-ref a (+ entity-size 0)))
