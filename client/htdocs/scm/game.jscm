@@ -19,11 +19,19 @@
 (load "scm/nightjar.jscm")
 (load "scm/local-storage.jscm")
 
+(define params-version 1)
+
+(let ((v (local-load "wasp-game-version")))
+  (when (or (not v) (< v params-version))
+	(local-nuke)
+	(local-save "wasp-game-version" params-version)
+	))
+
 (local-setup-params 
  "wasp-game" 
  (list
-  (make-param "wasp-speed" 1 "seconds to get there")
-  (make-param "ant-speed" 1 "seconds to get there")
+  (make-param "wasp-speed" 300 "pixels per second")
+  (make-param "ant-speed" 300 "pixels per second")
   (make-param "wasp-build-time" 5 "seconds")
   (make-param "wasp-laying-time" 5 "seconds")
   (make-param "wasp-pupa-time" 20 "seconds") 
@@ -60,6 +68,8 @@
   (make-param "ant-number" 5 "ants")
   
   ))
+
+
 
 (load "scm/ordered-list.jscm")
 (load "scm/particles.jscm")
