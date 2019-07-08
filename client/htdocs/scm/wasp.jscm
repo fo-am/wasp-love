@@ -26,20 +26,22 @@
 (define wasp-dying-time (local-get-param "wasp-game" "wasp-dying-time"))
 (define wasp-reproductive-threshold (local-get-param "wasp-game" "wasp-reproductive-threshold"))
 
+(define wasp-anim-variations (list "2" "4" "5" "6" "7"))
+
 (define wasp-animation
   (list
-   (make-anim-move "pupae" "pupa1" (list "1") 8)
-   (make-anim-move "pupae" "pupa1" (list "1" "2" "3" "4") 8)
-   (make-anim-move "wasp-7" "7-idle" (list "1" "2") 8)
-   (make-anim-move "wasp-7" "7-walk" (list "1" "2" "3" "2") 8)
-   (make-anim-move "wasp-7" "7-defend" (list "1" "2" "3" "2") 8)
-   (make-anim-move "wasp-7" "7-build" (list "1" "2") 8)
-   (make-anim-move "wasp-7" "7-fly" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
-   (make-anim-move "wasp-7" "7-flycat" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
-   (make-anim-move "wasp-7" "7-flyspider" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
-   (make-anim-move "wasp-7" "7-flyfly" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
-   (make-anim-move "wasp-7" "7-lay" (list "1" "2" "3" "4") 8)
-   (make-anim-move "wasp-7" "7-tend" (list "1" "2") 8)
+   (make-anim-move "pupae" "pupa1" '() (list "1") 8)
+   (make-anim-move "pupae" "pupa1" '() (list "1" "2" "3" "4") 8)
+   (make-anim-move "wasp" "idle" wasp-anim-variations (list "1" "2") 8)
+   (make-anim-move "wasp" "walk" wasp-anim-variations (list "1" "2" "3" "2") 8)
+   (make-anim-move "wasp" "defend" wasp-anim-variations (list "1" "2" "3" "2") 8)
+   (make-anim-move "wasp" "build" wasp-anim-variations (list "1" "2") 8)
+   (make-anim-move "wasp" "fly" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
+   (make-anim-move "wasp" "flycat" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
+   (make-anim-move "wasp" "flyspider" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
+   (make-anim-move "wasp" "flyfly" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
+   (make-anim-move "wasp" "lay" wasp-anim-variations (list "1" "2" "3" "4") 8)
+   (make-anim-move "wasp" "tend" wasp-anim-variations (list "1" "2") 8)
    ))
 
 (define wasp-animation-pupa 0)
@@ -67,7 +69,7 @@
       (vec2 300 300)
       (choose (list "left" "right"))
       (rndf)
-      (anim-load-frames wasp-animation)
+      (anim-load-frames (choose wasp-anim-variations) wasp-animation)
       0 wasp-animation-idle #f 0 pos #f 0 0)
      (list capabilities 'state-idle #f 'normal #f))))
 
@@ -80,7 +82,7 @@
     (vec2 300 300)
     "left"
     (rndf)
-    (anim-load-frames wasp-animation)
+    (anim-load-frames (choose wasp-anim-variations) wasp-animation)
     0 wasp-animation-pupa #f -1 pos pos 0 0)
    (list capabilities 'state-pupa #f 'normal #f)))
 
@@ -93,7 +95,7 @@
     (vec2 300 300)
     "left"
     (rndf)
-    (anim-load-frames wasp-animation)
+    (anim-load-frames (choose wasp-anim-variations) wasp-animation)
     0 wasp-animation-pupa #f -1 pos pos 0 0)
    (list capabilities 'state-pupa #f 'repro #f)))
 

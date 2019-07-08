@@ -14,38 +14,51 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (make-anim-move id name frames speed) (list id name frames speed))
+(define (make-anim-move id name variations frames speed) (list id name variations frames speed))
 (define (anim-move-id a) (list-ref a 0))
 (define (anim-move-name a) (list-ref a 1))
-(define (anim-move-frames a) (list-ref a 2))
-(define (anim-move-speed a) (list-ref a 3))
+(define (anim-move-variations a) (list-ref a 2))
+(define (anim-move-frames a) (list-ref a 3))
+(define (anim-move-speed a) (list-ref a 4))
 
-(define (anim-build-path dir move frame)
+(define (anim-build-path dir variation move frame)
   (string-append 
    "sprites/" (anim-move-id move) "/" dir "/"
+   (if (eq? variation "")
+       "" (string-append variation "-"))
    (anim-move-name move) "-" 
    frame ".png"))
+
+(define (anim-move->filenames l variation move)
+  (foldl
+   (lambda (frame r)
+     ;; temporary hack to get demo out (common excuse)
+     (if (eq? (anim-move-id move) "pupae")
+	 (append
+	  (list (anim-build-path "left" variation move frame))
+	  r)		   
+	 (append
+	  (list (anim-build-path "left" variation move frame)
+		(anim-build-path "right" variation move frame))
+	  r)))
+   l
+   (anim-move-frames move)))
 
 (define (anim->filenames anim)
   (foldl
    (lambda (move r)
-     (foldl
-      (lambda (frame r)
-	;; temporary hack to get demo out (common excuse)
-	(if (eq? (anim-move-id move) "pupae")
-	    (append
-	     (list (anim-build-path "left" move frame))
-	     r)		   
-	    (append
-	     (list (anim-build-path "left" move frame)
-		   (anim-build-path "right" move frame))
-	     r)))
-      r
-      (anim-move-frames move)))
+     (msg (anim-move-variations move))
+     (if (null? (anim-move-variations move))
+	 (anim-move->filenames r "" move)
+	 (foldl
+	  (lambda (variation r)
+	    (anim-move->filenames r variation move))
+	  r
+	  (anim-move-variations move))))
    '()
    anim))
 
-(define (anim-load-frames anim)
+(define (anim-load-frames variation anim)
   (map
    (lambda (move)
      ;; bolting speed onto the front of the frame list
@@ -55,8 +68,14 @@
       (map 
        (lambda (frame)
 	 (list
-	  (find-image (anim-build-path "left" move frame))
-	  (find-image (anim-build-path "right" move frame))))
+	  (find-image
+	   (anim-build-path
+	    "left" (if (null? (anim-move-variations move)) "" variation)
+	    move frame))
+	  (find-image
+	   (anim-build-path
+	    "right" (if (null? (anim-move-variations move)) "" variation)
+	    move frame))))
        (anim-move-frames move))))
    anim))
 
