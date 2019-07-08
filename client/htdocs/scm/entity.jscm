@@ -15,10 +15,13 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (make-entity id type pos sprite-size facing t sprite-list frame clip bg-image depth-plane)
-  (list id type pos sprite-size facing t sprite-list frame clip bg-image depth-plane))
+(define (make-entity id type pos sprite-size facing t sprite-list
+		     frame clip bg-image depth-plane walk-from
+		     walk-to walk-time timer)
+  (list id type pos sprite-size facing t sprite-list frame clip
+	bg-image depth-plane walk-from walk-to walk-time timer))
 
-(define entity-size 11)
+(define entity-size 15)
 
 (define next-entity-id 0)
 (define (generate-entity-id!) 
@@ -41,6 +44,14 @@
 (define (entity-modify-bg-image e s) (list-replace e 9 s))
 (define (entity-depth-plane e) (list-ref e 10))
 (define (entity-modify-depth-plane e s) (list-replace e 10 s))
+(define (entity-walk-from e) (list-ref e 11))
+(define (entity-modify-walk-from e s) (list-replace e 11 s))
+(define (entity-walk-to e) (list-ref e 12))
+(define (entity-modify-walk-to e s) (list-replace e 12 s))
+(define (entity-walk-time e) (list-ref e 13))
+(define (entity-modify-walk-time e s) (list-replace e 13 s))
+(define (entity-timer e) (list-ref e 14))
+(define (entity-modify-timer e s) (list-replace e 14 s))
 
 (define (entity-eq? a b)
   (eq? (entity-id a) (entity-id b)))
@@ -72,6 +83,31 @@
    ((zero? n) l)
    (else (drop-n (- n 1) (cdr l)))))
 
+(define (entity-walk-to-pos e pos)
+  (entity-modify-walk-time 
+   (entity-modify-walk-to
+    (entity-modify-walk-from 
+     ;; face the right direction
+     (if (< (vx (entity-pos e)) (vx pos))
+	 (entity-modify-facing e 'right)
+	 (entity-modify-facing e 'left))
+     (entity-pos e))
+    pos)
+   0))
+
+(define (entity-walk e speed delta)
+  (entity-modify-pos 
+   (entity-modify-walk-time
+    e (min 1 (+ (entity-walk-time e)
+		(/ (* speed delta)
+		   ;; todo: store
+		   (v2dist (entity-walk-from e)
+			   (entity-walk-to e))))))
+   (v2lerp 
+    (entity-walk-from e)
+    (entity-walk-to e) 
+    (entity-walk-time e))))
+
 (define (entity-update e delta)
   (let ((anim (list-ref (entity-sprite-list e) (entity-clip e))))
     (let ((speed (car anim)))
@@ -87,6 +123,10 @@
 	(Math.floor (entity-t e))
 	(entity-clip e)
 	(entity-bg-image e)
-	(entity-depth-plane e))
+	(entity-depth-plane e)
+	(entity-walk-from e)
+	(entity-walk-to e) 
+	(entity-walk-time e)
+	(entity-timer e))
        (drop-n entity-size e)))))
 

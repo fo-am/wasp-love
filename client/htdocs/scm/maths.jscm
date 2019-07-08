@@ -183,11 +183,22 @@
   (vec2 (+ (vx a) (vx b))
           (+ (vy a) (vy b))))
 
+(define (v2sub a b)
+  (vec2 (- (vx a) (vx b))
+	(- (vy a) (vy b))))
+
 (define (v2mul v a)
   (vec2 (* (vx v) a) (* (vy v) a)))
 
 (define (v2mul2 a b)
   (vec2 (* (vx a) (vx b)) (* (vy a) (vy b))))
+
+(define (v2mag v)
+  (sqrt (+ (square (vx v))
+           (square (vy v)))))
+
+(define (v2dist a b)
+  (v2mag (v2sub a b)))
 
 (define (v2lerp a b t)
   (vec2

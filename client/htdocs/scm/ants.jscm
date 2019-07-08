@@ -34,46 +34,18 @@
       "left"
       (rndf)
       (anim-load-frames ant-animation)
-      0 ant-animation-walk #f 0)
-     (list 'state-appear pos pos (rndf) (rndf) 0))))
+      0 ant-animation-walk #f 0 pos pos 0 0)
+     (list 'state-appear 0))))
 
 (define (ant-state a) (list-ref a (+ entity-size 0)))
 (define (ant-modify-state a s) (list-replace a (+ entity-size 0) s))
-(define (ant-walk-from w) (list-ref w (+ entity-size 1)))
-(define (ant-modify-walk-from w s) (list-replace w (+ entity-size 1) s))
-(define (ant-walk-to w) (list-ref w (+ entity-size 2)))
-(define (ant-modify-walk-to w s) (list-replace w (+ entity-size 2) s))
-(define (ant-walk-time w) (list-ref w (+ entity-size 3)))
-(define (ant-modify-walk-time w s) (list-replace w (+ entity-size 3) s))
-(define (ant-timer w) (list-ref w (+ entity-size 4)))
-(define (ant-modify-timer w s) (list-replace w (+ entity-size 4) s))
-(define (ant-dest-cell w) (list-ref w (+ entity-size 5)))
-(define (ant-modify-dest-cell w s) (list-replace w (+ entity-size 5) s))
+(define (ant-dest-cell w) (list-ref w (+ entity-size 1)))
+(define (ant-modify-dest-cell w s) (list-replace w (+ entity-size 1) s))
 
 (define (ant-walk-to-cell a dest-cell)
-  (ant-walk-to-pos
+  (entity-walk-to-pos
    (ant-modify-dest-cell a dest-cell)
    (cell-pos dest-cell)))
-
-(define (ant-walk-to-pos w pos)
-  (ant-modify-walk-time 
-   (ant-modify-walk-to
-    (ant-modify-walk-from 
-     ;; face the right direction
-     (if (< (vx (entity-pos w)) (vx pos))
-	 (entity-modify-facing w 'right)
-	 (entity-modify-facing w 'left))
-     (entity-pos w))
-    pos)
-   0))
-
-(define (ant-walk w delta)
-  (entity-modify-pos 
-   (ant-modify-walk-time w (min 1 (+ (ant-walk-time w) (* ant-speed delta))))
-   (v2lerp 
-    (ant-walk-from w)
-    (ant-walk-to w) 
-    (ant-walk-time w))))
 
 (define (ant-update a delta nest)
   (ant-update-animation
@@ -81,29 +53,25 @@
      (cond
       
       ((eq? state 'state-appear)
+       ;; random timer
        (if (< (rndf) 0.01)
-	   (ant-modify-state
-	    (ant-walk-to-cell
-	     a (list-ref (nest-cells nest) (- (length (nest-cells nest)) 1)))
-	    'state-search)
+	   (ant-modify-state a 'state-search)
 	   a))
       
       ((eq? state 'state-search)
-       (ant-modify-state
-	(ant-walk-to-cell
-	 a (list-ref
-	    (nest-cells nest)
-	    (choose
-	     (filter
-	      (lambda (i)
-		(and (> i 0) (< i (length (nest-cells nest)))))
-	      (cell-nindexes (ant-dest-cell a))))))
-	'state-wander))
+       (let ((pupa (nest-find-pupa nest)))
+	 ;; head to a pupa or a random position
+	 (ant-modify-state
+	  (entity-walk-to-pos a (if pupa
+				    (entity-pos pupa)
+				    (vec2 (* (rndf) 1000)
+					  (* (rndf) 500))))
+	  'state-wander)))
       
       ((eq? state 'state-wander)
-       (if (>= (ant-walk-time a) 1)
+       (if (>= (entity-walk-time a) 1)
 	   (ant-modify-state a 'state-search)
-	   (ant-walk a delta)))
+	   (entity-walk a ant-speed delta)))
       
       (else a)))
    delta))
@@ -111,7 +79,7 @@
 (define (ant-update-animation w delta)  
   (let ((state (ant-state w)))
     (entity-modify-clip 
-     (ant-modify-timer w (+ (ant-timer w) delta))
+     (entity-modify-timer w (+ (entity-timer w) delta))
      (cond
       ((eq? state 'state-appear) ant-animation-walk)
       ((eq? state 'state-wander) ant-animation-walk)

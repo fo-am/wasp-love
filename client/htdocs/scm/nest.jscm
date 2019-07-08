@@ -110,7 +110,7 @@
      (if (and (not r) 
 	      (not (eq? (wasp-state w) 'state-pupa))
 	      (not (eq? (wasp-state w) 'state-tended-pupa))
-	      (v2eq? (wasp-walk-to w) pos))
+	      (v2eq? (entity-walk-to w) pos))
 	 #t r))
    #f
    (nest-wasps n)))
@@ -161,7 +161,17 @@
   (foldl
    (lambda (w r)
      (if (and (not r) (eq? (wasp-state w) state)
-	      (not (nest-wasp-present? n (wasp-walk-to w))))
+	      (not (nest-wasp-present? n (entity-walk-to w))))
+	 w r))
+   #f
+   (shuffle (nest-wasps n))))
+
+(define (nest-find-pupa n)
+  (foldl
+   (lambda (w r)
+     (if (and (not r)
+	      (or (eq? (wasp-state w) 'state-pupa)
+		  (eq? (wasp-state w) 'state-untended-pupa)))
 	 w r))
    #f
    (shuffle (nest-wasps n))))
