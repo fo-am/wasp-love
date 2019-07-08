@@ -28,20 +28,20 @@
 
 (define (event-update event nest delta)
   (event-modify-time-left
-    (cond
-     ((eq? (event-type event) 'attack) (pestcontrol-update event delta))
-     ((eq? (event-type event) 'storm) (storm-update event delta))
-     ((eq? (event-type event) 'wildflower) (storm-update event delta))
-     ((eq? (event-type event) 'manicured) (manicured-update event delta))
-     ((eq? (event-type event) 'ant-attack) (ant-attack-update event nest delta))
-     (else event))
-    (- (event-time-left event) delta)))
+   (cond
+    ((eq? (event-type event) 'attack) (pestcontrol-update event delta))
+    ((eq? (event-type event) 'storm) (storm-update event delta))
+    ((eq? (event-type event) 'wildflower) (storm-update event delta))
+    ((eq? (event-type event) 'manicured) (manicured-update event delta))
+    ((eq? (event-type event) 'ant-attack) (ant-attack-update event nest delta))
+    (else event))
+   (- (event-time-left event) delta)))
 
 (define (event-render-entities renderer nest)
   (let ((event (nest-event nest)))    
     ;; event specific background animation
     (cond
-     ((eq? (event-type event) 'ant-attack)
+     ((and event (eq? (event-type event) 'ant-attack))
       (ant-attack-render-entities renderer event))
      (else renderer))))
 

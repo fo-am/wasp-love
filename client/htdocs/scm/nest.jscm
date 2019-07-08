@@ -171,7 +171,7 @@
    (lambda (w r)
      (if (and (not r)
 	      (or (eq? (wasp-state w) 'state-pupa)
-		  (eq? (wasp-state w) 'state-untended-pupa)))
+		  (eq? (wasp-state w) 'state-tended-pupa)))
 	 w r))
    #f
    (shuffle (nest-wasps n))))
@@ -224,6 +224,7 @@
 	   (cond
 	    ((eq? (wasp-carrying wasp) 'spider) "SPIDER")
 	    ((eq? (wasp-carrying wasp) 'caterpillar) "CATERPILLAR")
+	    ((eq? (wasp-carrying wasp) 'fly) "FLY")
 	    (else "???"))
 	   " WORTH " (floor energy) " ENERGY POINTS")
 	  'allow-dup time)))
@@ -237,9 +238,14 @@
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
 	(string-append "A PUPA HAS DIED AS IT WAS NOT TENDED")
 	'allow-dup time))
+      ((eq? (wasp-state wasp) 'state-taken-pupa)
+       (nest-add-info 
+	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
+	(string-append "A PUPA HAS BEEN STOLEN")
+	'stolen-pupa time))
       (else r)))
    n
-   (nest-wasps n)))
+   (nest-wasps n))))
 
 (define (nest-energy-for-action action)
   (cond
@@ -380,7 +386,6 @@
      (event-update (nest-event n) n delta)
      (nest-events n)
      (nest-weather n)
-     ;; add info text
      (nest-update-info-text n time)
      (nest-energy-mult n))
     time)
@@ -432,7 +437,4 @@
   (info-display-render (nest-info-display n) ctx)
   (when (nest-event n) (event-render n ctx))
   
-  (menu-render (nest-menu n))
-
-  
-  )
+  (menu-render (nest-menu n)))

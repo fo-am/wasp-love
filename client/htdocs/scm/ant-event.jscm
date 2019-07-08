@@ -22,7 +22,21 @@
       (local-get-param "wasp-game" "ant-number")
       (lambda (i) (make-ant)))
      (lambda (nest delta state)
-       nest))))
+       ;; event will be false for the last tick!...
+       (if (nest-event nest)
+	   (foldl
+	    (lambda (ant n)
+	      (if (ant-killed-pupa ant)
+		  (nest-modify-wasps
+		   n (entity-list-modify
+		      (nest-wasps n)
+		      (ant-dest-pupa ant)
+		      (lambda (e)
+			(wasp-modify-state e 'state-taken-pupa))))
+		  n))
+	    nest
+	    (event-data (nest-event nest)))
+	   nest)))))
 
 (define (ant-attack-update event nest delta)
   (event-modify-data

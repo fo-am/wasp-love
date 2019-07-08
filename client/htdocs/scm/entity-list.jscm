@@ -37,3 +37,10 @@
    (lambda (e)
      (if (eq? (entity-id e) id) (fn e) e))
    el))
+
+(define (entity-list-slow-search el id)
+  (foldl
+   (lambda (e r)
+     (if (and (not r) (eq? (entity-id e) id)) e r))
+   #f
+   el))

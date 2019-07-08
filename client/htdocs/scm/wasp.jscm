@@ -37,6 +37,7 @@
    (make-anim-move "wasp-7" "7-fly" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
    (make-anim-move "wasp-7" "7-flycat" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
    (make-anim-move "wasp-7" "7-flyspider" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
+   (make-anim-move "wasp-7" "7-flyfly" (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
    (make-anim-move "wasp-7" "7-lay" (list "1" "2" "3" "4") 8)
    (make-anim-move "wasp-7" "7-tend" (list "1" "2") 8)
    ))
@@ -50,13 +51,14 @@
 (define wasp-animation-fly 6)
 (define wasp-animation-flycat 7)
 (define wasp-animation-flyspider 8)
-(define wasp-animation-lay 9)
-(define wasp-animation-tend 10)
+(define wasp-animation-flyfly 9)
+(define wasp-animation-lay 10)
+(define wasp-animation-tend 11)
 
-(define wasp-prey-types (list 'spider 'caterpillar))
+(define wasp-prey-types (list 'spider 'caterpillar 'fly))
 
 (define (make-wasp capabilities) 
-  (let ((pos (vec2 (random 1000) (random 500))))
+  (let ((pos (vec2 (+ 100 (random 1000)) (+ 100 (random 500)))))
     (append 
      (make-entity 
       (generate-entity-id!)
@@ -315,6 +317,7 @@
   (cond
    ((eq? (wasp-carrying w) 'spider) wasp-animation-flyspider)
    ((eq? (wasp-carrying w) 'caterpillar) wasp-animation-flycat)
+   ((eq? (wasp-carrying w) 'fly) wasp-animation-flyfly)
    (else wasp-animation-fly)))
 
 ;; map the states to the right animation clips
@@ -352,13 +355,12 @@
 ;; update the code for the cells as things hatch etc
 (define (wasp-update-cells wasp cells)
   (cond
-   ((eq? (wasp-state wasp) 'state-built-cell)
-    (update-cell (entity-walk-to wasp) cells cell-code-empty))
    ((eq? (wasp-state wasp) 'state-layed-egg)
     (update-cell (entity-walk-to wasp) cells cell-code-occupied))
-   ((eq? (wasp-state wasp) 'state-hatched)
-    (update-cell (entity-walk-to wasp) cells cell-code-empty))
-   ((eq? (wasp-state wasp) 'state-died-pupa)
+   ((or (eq? (wasp-state wasp) 'state-built-cell)
+	(eq? (wasp-state wasp) 'state-hatched)
+	(eq? (wasp-state wasp) 'state-died-pupa)
+	(eq? (wasp-state wasp) 'state-taken-pupa))
     (update-cell (entity-walk-to wasp) cells cell-code-empty))
    (else cells)))
 
