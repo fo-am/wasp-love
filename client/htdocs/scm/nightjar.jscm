@@ -113,8 +113,6 @@
                                      (length images)) 100)) "%") 0 340)
             (when (eq? (length image-lib)
                        (length images))
-		  (msg (length images))
-		  (msg (length image-lib))
                   (finished))))
     (set! image.src (+ "images/" fn))))
 

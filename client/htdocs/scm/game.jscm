@@ -19,7 +19,7 @@
 (load "scm/nightjar.jscm")
 (load "scm/local-storage.jscm")
 
-(define params-version 1)
+(define params-version 2)
 
 (let ((v (local-load "wasp-game-version")))
   (when (or (not v) (< v params-version))
@@ -51,25 +51,18 @@
   (make-param "nest-start-wasps" 2 "wasps")
   (make-param "nest-energy-drain" 0.2 "energy units per sec")
   (make-param "event-start-time" (* 60 2.5) "seconds")
-  (make-param "storm-probability" 0.05 "prob per second")
+  (make-param "event-probability" 0.005 "prob per second")
   (make-param "storm-duration" 10 "seconds")  
   (make-param "storm-deadliness" 0.1 "prob per second")
-  (make-param "pestcontrol-probability" 0.05 "prob per second")
   (make-param "pestcontrol-duration" 10 "seconds")  
   (make-param "pestcontrol-deadliness" 0.2 "prob per second")
-  (make-param "wildflower-probability" 0.05 "prob per second")
   (make-param "wildflower-duration" 10 "seconds")  
   (make-param "wildflower-multiplier" 2.0 "energy boost")
-  (make-param "manicured-probability" 0.05 "prob per second")
   (make-param "manicured-duration" 10 "seconds")  
   (make-param "manicured-multiplier" 0.5 "energy reduction")
-  (make-param "ant-probability" 0.05 "prob per second")
   (make-param "ant-duration" 10 "seconds")  
-  (make-param "ant-number" 5 "ants")
-  
+  (make-param "ant-number" 50 "ants")  
   ))
-
-
 
 (load "scm/ordered-list.jscm")
 (load "scm/particles.jscm")

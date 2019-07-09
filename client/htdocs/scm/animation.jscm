@@ -47,7 +47,6 @@
 (define (anim->filenames anim)
   (foldl
    (lambda (move r)
-     (msg (anim-move-variations move))
      (if (null? (anim-move-variations move))
 	 (anim-move->filenames r "" move)
 	 (foldl

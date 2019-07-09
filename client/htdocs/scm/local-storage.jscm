@@ -85,7 +85,6 @@
   (setup-params-interface (local-load (string-append namespace "-params"))))
 
 (define (local-set-param namespace name value units)
-  (msg namespace name value)
   (local-save
    (string-append namespace "-params")
    (map
@@ -142,7 +141,6 @@
    (else (msg "unknown-csv no idea what") (msg l) (msg "is..."))))
 
 (define (local->csv namespace name) 
-  (msg name)
   (unknown->csv (local-load (string-append namespace "-" name))))
 
 (define (download-data filename text) 

@@ -71,14 +71,11 @@
 
 (define (build-wasp-game-events)
   (list
-   (list (storm-builder)
-	 (local-get-param "wasp-game" "storm-probability"))
-   (list (pestcontrol-builder)
-	 (local-get-param "wasp-game" "pestcontrol-probability"))
-   (list (wildflower-builder)
-	 (local-get-param "wasp-game" "wildflower-probability"))
-   (list (manicured-builder)
-	 (local-get-param "wasp-game" "manicured-probability"))
-   (list (ant-attack-builder)
-	 (local-get-param "wasp-game" "ant-probability"))))
+   (storm-builder)
+   (pestcontrol-builder)
+   (wildflower-builder)
+   (manicured-builder)
+   (ant-attack-builder)
+   ))
+
 
