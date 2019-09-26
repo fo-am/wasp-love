@@ -237,12 +237,12 @@
       ((eq? (wasp-state wasp) 'state-died-pupa)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
-	(string-append "A PUPA HAS DIED AS IT WAS NOT TENDED")
+	(string-append "AN EGG HAS DIED AS IT WAS NOT TENDED")
 	'allow-dup time))
       ((eq? (wasp-state wasp) 'state-taken-pupa)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
-	(string-append "A PUPA HAS BEEN STOLEN")
+	(string-append "YOU BROOD IS BEING STOLEN")
 	'stolen-pupa time))
       (else r)))
    n

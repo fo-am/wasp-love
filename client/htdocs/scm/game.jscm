@@ -227,6 +227,15 @@
 	    c)))
      (game-modify-buttons
       (list
+       (rect-button
+	"RESTART"
+	20
+	default-button-y
+	default-button-width default-button-height
+	"jumpy"
+	(lambda (c)
+	  (button-sound)
+	  (nightjar-intro c)))
        ) c)))))
 
 (define (nightjar-end c)
