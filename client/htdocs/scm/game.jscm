@@ -49,7 +49,7 @@
   (make-param "nest-forage-variation" 5 "energy units")
   (make-param "nest-start-energy" 100 "energy units")
   (make-param "nest-start-wasps" 2 "wasps")
-  (make-param "nest-energy-drain" 0.2 "energy units per sec")
+  (make-param "nest-energy-drain" 0.02 "energy units per sec")
   (make-param "event-start-time" (* 60 2.5) "seconds")
   (make-param "event-probability" 0.005 "prob per second")
   (make-param "storm-duration" 10 "seconds")  
