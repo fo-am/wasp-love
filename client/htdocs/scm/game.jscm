@@ -253,9 +253,11 @@
 	(ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 500 400)
 	(ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 500 450)
 	(ctx.fillText (string-append "Reproductive wasps: " (length (filter (lambda (w) (eq? (wasp-type w) 'repro)) (nest-wasps n)))) 500 500)
-	(ctx.fillText (string-append "Cells: " (length (nest-cells n))) 500 550))
-
-
+	(ctx.fillText (string-append "Cells: " (length (filter
+							(lambda (c) (not (eq? (cell-code c) cell-code-unbuilt)))
+							(nest-cells n)))) 500 550))
+      
+	
       (set! ctx.globalAlpha 0.5)
       ;;(ctx.drawImage (find-image "foam-logo.png") (- (+ default-button-x 200) 50) 790)
       (set! ctx.globalAlpha 1.0)      
