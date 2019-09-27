@@ -51,7 +51,6 @@
   (make-param "nest-start-wasps" 2 "wasps")
   (make-param "nest-energy-drain" 0.02 "energy units per sec")
   (make-param "event-start-time" (* 60 2.5) "seconds")
-  (make-param "event-probability" 0.005 "prob per second")
   (make-param "storm-duration" 10 "seconds")  
   (make-param "storm-deadliness" 0.1 "prob per second")
   (make-param "pestcontrol-duration" 10 "seconds")  

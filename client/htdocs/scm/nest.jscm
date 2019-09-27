@@ -27,6 +27,9 @@
 (define event-probability (local-get-param "wasp-game" "event-probability"))
 (define nest-reproductive-threshold (local-get-param "wasp-game" "nest-reproductive-threshold"))
 
+(define time-between-events
+  (/ (- nest-year-length event-start-time) (+ (length (build-wasp-game-events)) 1)))
+
 (define (time->season time)
   (cond
    ((< time (/ nest-year-length 4)) 'spring)
@@ -36,8 +39,8 @@
 	 (< time (* (/ nest-year-length 4) 3))) 'autumn)
    (else 'winter)))
 
-(define (make-nest energy location time-of-year wasps menu cells window-stack event events weather info-display energy-mult) 
-  (list energy location time-of-year wasps menu cells window-stack event events weather info-display energy-mult))
+(define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult) 
+  (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult))
 
 (define (make-new-nest time)
   (make-nest 
@@ -54,6 +57,7 @@
    (generate-cells cell-size-x cell-size-y)
    (make-window-stack (list))
    #f
+   event-start-time
    (build-wasp-game-events)
    'calm
    (make-info-display
@@ -74,14 +78,16 @@
 (define (nest-modify-window-stack n s v) (list-replace n 6 v))
 (define (nest-event n) (list-ref n 7))
 (define (nest-modify-event n s) (list-replace n 7 s))
-(define (nest-events n) (list-ref n 8))
-(define (nest-modify-events n s) (list-replace n 8 s))
-(define (nest-weather n) (list-ref n 9))
-(define (nest-modify-weather n s) (list-replace n 9 s))
-(define (nest-info-display n) (list-ref n 10))
-(define (nest-modify-info-display n s) (list-replace n 10 s))(
-(define (nest-energy-mult n) (list-ref n 11))
-(define (nest-modify-energy-mult n s) (list-replace n 11 s))
+(define (nest-next-event-time n) (list-ref n 8))
+(define (nest-modify-next-event-time n s) (list-replace n 8 s))
+(define (nest-events n) (list-ref n 9))
+(define (nest-modify-events n s) (list-replace n 9 s))
+(define (nest-weather n) (list-ref n 10))
+(define (nest-modify-weather n s) (list-replace n 10 s))
+(define (nest-info-display n) (list-ref n 11))
+(define (nest-modify-info-display n s) (list-replace n 11 s))
+(define (nest-energy-mult n) (list-ref n 12))
+(define (nest-modify-energy-mult n s) (list-replace n 12 s))
 
 (define (nest-wasps-update n delta)
   (map
@@ -274,22 +280,24 @@
 	   ;; tell function if this is the last event update
 	   (if (< (event-time-left e) 0) 'last 'mid)))
 	;; no event, is it time for a new one?
-	(if (and (> (nest-time-of-year n) event-start-time)
-		 (< (rndf) (local-get-param "wasp-game" "event-probability")))
+	(if (> (nest-time-of-year n) (nest-next-event-time n))
 	    (let ((new-events (shuffle (nest-events n))))
-	      (if (null? new-events)
-		  ;; we ran out of events!
-		  (nest-modify-event n #f)
-		  ;; run event
-		  (let ((event-builder (car new-events)))
-		    (let ((new-event (event-builder)))
-		      (let ((fn (event-fn new-event))) 
-			;; time to run the event function on the whole nest
-			;; to do whatever it wants to do, and remove this event
-			;; from the list
-			(nest-modify-events
-			 (fn (nest-modify-event n new-event) delta 'first)
-			 (cdr new-events)))))))
+	      (nest-modify-next-event-time
+	       (if (null? new-events)
+		   ;; we ran out of events!
+		   (nest-modify-event n #f)
+		   ;; run event
+		   (let ((event-builder (car new-events)))
+		     (let ((new-event (event-builder)))
+		       (let ((fn (event-fn new-event))) 
+			 ;; time to run the event function on the whole nest
+			 ;; to do whatever it wants to do, and remove this event
+			 ;; from the list
+			 (nest-modify-events
+			  (fn (nest-modify-event n new-event) delta 'first)
+			  (cdr new-events))))))
+	       ;; set the time for the next event
+	       (+ (nest-next-event-time n) time-between-events)))
 	    ;; no event created due to probability or too early
 	    (nest-modify-event n #f)))))
 
@@ -323,6 +331,7 @@
 	    (nest-cells n)
 	    (nest-window-stack n)
 	    (nest-event n)
+	    (nest-next-event-time n)
 	    (nest-events n)
 	    (nest-weather n)
 	    (nest-info-display n)
@@ -363,10 +372,10 @@
 (define (nest-update-info-text n time)
   (info-display-update
    (cond
-    ((< (length (nest-wasps n)) 2)
-     (info-display-add
-      (nest-info-display n)
-      (make-info "ONLY ONE WASP REMAINS!" 'one-wasp time)))
+    ;;((< (length (nest-wasps n)) 2)
+    ; (info-display-add
+    ;;  (nest-info-display n)
+    ;;  (make-info "ONLY ONE WASP REMAINS!" 'one-wasp time)))
     ((<= (nest-energy n) 0)
      (info-display-add
       (nest-info-display n)
@@ -397,6 +406,7 @@
      (nest-wasps-update-cells n)
      (nest-update-window-stack n delta)    
      (event-update (nest-event n) n delta)
+     (nest-next-event-time n)
      (nest-events n)
      (nest-weather n)
      (nest-update-info-text n time)
@@ -443,10 +453,10 @@
   (set! ctx.globalAlpha 1.0)
   (set! ctx.fillStyle "#000")
   (ctx.fillText (string-append "Energy: " (floor (nest-energy n))) 10 50)
-  (ctx.fillText (string-append "Game time: " (floor (nest-time-of-year n))) 200 50)
-  (ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 400 50)
-  (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 600 50)
-
+  (ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 200 50)
+  (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 400 50)
+  (ctx.fillText (string-append "Event in: " (floor (- (nest-next-event-time n) (nest-time-of-year n)))) 600 50)
+  
   (info-display-render (nest-info-display n) ctx)
   (when (nest-event n) (event-render n ctx))
   
