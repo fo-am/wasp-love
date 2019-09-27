@@ -177,7 +177,7 @@
   (foldl
    (lambda (w r)
      (if (and (not r) (wasp-foraging? w))
-	 #f r))
+	 #t r))
    #f
    (nest-wasps n)))
 
@@ -298,11 +298,11 @@
 		      (fn (nest-modify-event n new-event) delta 'first)
 		      (cdr new-events))
 		     ;; set the time for the next event
-		     (dbg (+ (dbg (nest-next-event-time n))
-			     (dbg time-between-events)))))
+		     (+ (nest-next-event-time n)
+			time-between-events)))		
 		  (nest-modify-next-event-time
 		   (nest-modify-event n #f)
-		   (+ (nest-next-event-time n) 5)))))))))) ;; try again in 5 secs
+		   (+ (nest-next-event-time n) 5))))))))) ;; try again in 5 secs
 
 (define (nest-update-from-event n delta)
   (let ((e (nest-event n)))

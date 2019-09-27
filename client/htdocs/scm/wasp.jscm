@@ -114,7 +114,7 @@
    (eq? (wasp-state w) 'state-forage-start)
    (eq? (wasp-state w) 'state-forage)
    (eq? (wasp-state w) 'state-forage-return)
-   (eq? (wasp-state w) 'state-forage-end))) 
+   (eq? (wasp-state w) 'state-forage-end)))
 
 ;; capabilities -> menu options
 (define (wasp-build-menu-options w n)
