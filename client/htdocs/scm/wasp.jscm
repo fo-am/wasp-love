@@ -115,8 +115,7 @@
   (or
    (eq? (wasp-state w) 'state-forage-start)
    (eq? (wasp-state w) 'state-forage)
-   (eq? (wasp-state w) 'state-forage-return)
-   (eq? (wasp-state w) 'state-forage-end)))
+   (eq? (wasp-state w) 'state-forage-return)))
 
 ;; capabilities -> menu options
 (define (wasp-build-menu-options w n)
@@ -303,14 +302,25 @@
       ((eq? state 'state-forage-end)       
        (wasp-modify-carrying
 	(wasp-modify-state 
-	 (wasp-walk-to-cell w (nest-find-any-cell nest))
-	 'state-forage-finish)
+	 (wasp-walk-to-cell
+	  w (or			       
+	     (nest-find-occupied-cell nest)
+	     (nest-find-empty-cell nest)
+	     (nest-find-any-cell nest)))
+	 'state-forage-move-away)
 	#f))
+      ((eq? state 'state-forage-move-away)
+       (if (>= (entity-walk-time w) 1)	   
+	   (wasp-modify-state
+	    (wasp-walk-to-cell w (nest-find-any-cell nest))
+	    'state-forage-finish)
+	    (entity-walk w wasp-speed delta)))      
       ((eq? state 'state-forage-finish)
        (if (>= (entity-walk-time w) 1)
 	   (entity-modify-timer (wasp-modify-state w 'state-idle) 0)
 	   (entity-walk w wasp-speed delta)))
 
+      
       ((eq? state 'state-walking-to-tend)
        (if (>= (entity-walk-time w) 1)
 	   (entity-modify-timer (wasp-modify-state w 'state-tending-egg) 0)
@@ -329,13 +339,11 @@
       ((eq? state 'state-disperse)
        (if (> (entity-timer w) wasp-disperse-time)
 	   (wasp-modify-state
-	    w 'state-mating
-	    ;; (if (eq? (time->season (nest-time-of-year nest)) 'winter)
-	    ;; 'state-mating
-	    ;; 'state-start-dying)
-	    )
+	    w (if (eq? (time->season (nest-time-of-year nest)) 'winter)
+		  'state-mating
+		  'state-start-dying))
 	   (entity-walk w wasp-speed delta)))
-
+      
       ((eq? state 'state-mating)
        (if (> (entity-timer w) wasp-mating-time)
 	   (wasp-modify-state w 'state-mated)
@@ -376,6 +384,7 @@
       ((eq? state 'state-forage-start) (wasp-fly-animation w))
       ((eq? state 'state-forage) (wasp-fly-animation w))
       ((eq? state 'state-forage-return) (wasp-fly-animation w))
+      ((eq? state 'state-forage-finish) wasp-animation-walk)
       ((eq? state 'state-tending-egg) wasp-animation-tend)
       ((eq? state 'state-disperse) (wasp-fly-animation w))
       ((eq? state 'state-disperse) (wasp-fly-animation w))

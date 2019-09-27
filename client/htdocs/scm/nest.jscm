@@ -119,7 +119,21 @@
      (if (and (not r) 
 	      (not (eq? (wasp-state w) 'state-pupa))
 	      (not (eq? (wasp-state w) 'state-tended-pupa))
-	      (v2eq? (entity-walk-to w) pos))
+	      (v2eq? (entity-walk-to w) pos)
+	      )
+	 #t r))
+   #f
+   (nest-wasps n)))
+
+(define (nest-pupa-present? n pos)
+  (foldl
+   (lambda (w r)
+     (if (and (not r) 
+	      (or
+	       (eq? (wasp-state w) 'state-pupa)
+	       (eq? (wasp-state w) 'state-tended-pupa))
+	      (v2eq? (entity-walk-to w) pos)
+	      )
 	 #t r))
    #f
    (nest-wasps n)))
@@ -128,7 +142,8 @@
   (foldl
    (lambda (c r)
      (if (and (not r) (not (eq? (cell-code c) cell-code-unbuilt))
-	      (not (nest-wasp-present? n (cell-pos c))))
+	      ;;(not (nest-wasp-present? n (cell-pos c)))
+	      )
 	 c r))
    #f
    (shuffle (nest-cells n))))
@@ -137,7 +152,18 @@
   (foldl
    (lambda (c r)
      (if (and (not r) (eq? (cell-code c) cell-code-empty)
+	      ;; used for finding cells to lay, so reject
+	      ;; ones that might already be laying - not great?
 	      (not (nest-wasp-present? n (cell-pos c))))
+	 c r))
+   #f
+   (shuffle (nest-cells n))))
+
+(define (nest-find-occupied-cell n)
+  (foldl
+   (lambda (c r)
+     (if (and (not r) (eq? (cell-code c) cell-code-empty)
+	      (nest-pupa-present? n (cell-pos c)))
 	 c r))
    #f
    (shuffle (nest-cells n))))
@@ -170,7 +196,8 @@
   (foldl
    (lambda (w r)
      (if (and (not r) (eq? (wasp-state w) state)
-	      (not (nest-wasp-present? n (entity-walk-to w))))
+	      ;; (not (nest-wasp-present? n (entity-walk-to w)))
+	      )
 	 w r))
    #f
    (shuffle (nest-wasps n))))
@@ -428,9 +455,10 @@
   (nest-update-from-event
    (nest-update-from-wasps
     (make-nest
-     (- (nest-energy n) (* delta
-			   (length (nest-wasps n))
-			   nest-energy-drain)) ;; per wasp drain 
+     (- (nest-energy n)
+	(* delta
+	   (length (nest-wasps n))
+	   nest-energy-drain)) ;; per wasp drain 
      (nest-location n)
      (+ (nest-time-of-year n) delta)
      (nest-wasps-update-wasps
