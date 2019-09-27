@@ -15,7 +15,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (define default-capabilities (list 'forage 'lay-egg 'lay-repro-egg 'tend-brood 'build-cell))
-(define repro-capabilities (list))
+(define repro-capabilities (list 'disperse))
 
 (define wasp-speed (local-get-param "wasp-game" "wasp-speed"))
 (define wasp-build-time (local-get-param "wasp-game" "wasp-build-time"))
@@ -24,6 +24,8 @@
 (define wasp-pupa-time (local-get-param "wasp-game" "wasp-pupa-time"))
 (define wasp-forage-time (local-get-param "wasp-game" "wasp-forage-time"))
 (define wasp-dying-time (local-get-param "wasp-game" "wasp-dying-time"))
+(define wasp-disperse-time (local-get-param "wasp-game" "wasp-disperse-time"))
+(define wasp-mating-time (local-get-param "wasp-game" "wasp-mating-time"))
 (define wasp-reproductive-threshold (local-get-param "wasp-game" "wasp-reproductive-threshold"))
 
 (define wasp-anim-variations (list "2" "4" "5" "6" "7"))
@@ -73,7 +75,7 @@
       0 wasp-animation-idle #f 0 pos #f 0 0)
      (list capabilities 'state-idle #f 'normal #f))))
 
-(define (make-pupa pos capabilities) 
+(define (make-pupa pos) 
   (append 
    (make-entity 
     (generate-entity-id!)
@@ -84,9 +86,9 @@
     (rndf)
     (anim-load-frames (choose wasp-anim-variations) wasp-animation)
     0 wasp-animation-pupa #f -1 pos pos 0 0)
-   (list capabilities 'state-pupa #f 'normal #f)))
+   (list '() 'state-pupa #f 'normal #f)))
 
-(define (make-repro-pupa pos capabilities) 
+(define (make-repro-pupa pos) 
   (append 
    (make-entity 
     (generate-entity-id!)
@@ -97,7 +99,7 @@
     (rndf)
     (anim-load-frames (choose wasp-anim-variations) wasp-animation)
     0 wasp-animation-pupa #f -1 pos pos 0 0)
-   (list capabilities 'state-pupa #f 'repro #f)))
+   (list '() 'state-pupa #f 'repro #f)))
 
 (define (wasp-capabilities w) (list-ref w (+ entity-size 0)))
 (define (wasp-modify-capabilities w v) (list-replace w (+ entity-size 0) v))
@@ -136,6 +138,8 @@
        (cons (build-menu-option c "TEND BROOD") r))
       ((eq? c 'defend-nest) 
        (cons (build-menu-option c "DEFEND NEST") r))
+      ((eq? c 'disperse) 
+       (cons (build-menu-option c "DISPERSE") r))
       (else r)))
    '()
    (wasp-capabilities w)))
@@ -159,6 +163,8 @@
 (define (wasp-update-action w menu-code nest)
   (cond
    ((eq? menu-code 'forage) 
+    (wasp-fly-to-forage w nest))
+   ((eq? menu-code 'disperse) 
     (wasp-fly-to-forage w nest))
    ((eq? menu-code 'build-cell) 
     (let ((dest-cell (nest-find-unbuilt-cell nest 0)))
@@ -272,8 +278,13 @@
 
       ((eq? state 'state-take-off)
        (if (>= (entity-walk-time w) 1)
-	   (entity-modify-timer (wasp-modify-state w 'state-forage-start) 0)
+	   (entity-modify-timer
+	    (wasp-modify-state
+	     w (if (eq? (wasp-type w) 'normal)
+		   'state-forage-start
+		   'state-disperse-start)) 0)
 	   (entity-walk w wasp-speed delta)))
+      
       ((eq? state 'state-forage-start)
        (wasp-modify-state w 'state-forage))
       ((eq? state 'state-forage)
@@ -312,6 +323,23 @@
        (wasp-modify-state
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-wander))
+
+      ((eq? state 'state-disperse-start)
+       (wasp-modify-state w 'state-disperse))
+      ((eq? state 'state-disperse)
+       (if (> (entity-timer w) wasp-disperse-time)
+	   (wasp-modify-state
+	    w 'state-mating
+	    ;; (if (eq? (time->season (nest-time-of-year nest)) 'winter)
+	    ;; 'state-mating
+	    ;; 'state-start-dying)
+	    )
+	   (entity-walk w wasp-speed delta)))
+
+      ((eq? state 'state-mating)
+       (if (> (entity-timer w) wasp-mating-time)
+	   (wasp-modify-state w 'state-mated)
+	   (entity-walk w wasp-speed delta)))
       
       ((eq? state 'state-start-dying)
        (entity-modify-timer (wasp-modify-state w 'state-dying) 0))
@@ -349,6 +377,8 @@
       ((eq? state 'state-forage) (wasp-fly-animation w))
       ((eq? state 'state-forage-return) (wasp-fly-animation w))
       ((eq? state 'state-tending-egg) wasp-animation-tend)
+      ((eq? state 'state-disperse) (wasp-fly-animation w))
+      ((eq? state 'state-disperse) (wasp-fly-animation w))
       ;;((eq? state 'state-dying) wasp-animation-pupa-tended)
       (else (entity-clip w))))))
 
@@ -378,13 +408,11 @@
   (cond
    ((eq? (wasp-state wasp) 'state-layed-egg)
     (cons
-     (make-pupa (entity-walk-to wasp)
-		(list))
+     (make-pupa (entity-walk-to wasp))
      wasps))
    ((eq? (wasp-state wasp) 'state-layed-repro-egg)
     (cons
-     (make-repro-pupa (entity-walk-to wasp)
-		      (list))
+     (make-repro-pupa (entity-walk-to wasp))
      wasps))
    ((eq? (wasp-state wasp) 'state-tended-egg)
     (entity-list-modify 

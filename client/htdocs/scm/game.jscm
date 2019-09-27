@@ -38,6 +38,8 @@
   (make-param "wasp-tending-time" 5 "seconds")
   (make-param "wasp-forage-time" 20 "seconds")
   (make-param "wasp-dying-time" 3 "seconds")
+  (make-param "wasp-disperse-time" 10 "seconds")
+  (make-param "wasp-mating-time" 30 "seconds")
   (make-param "wasp-reproductive-threshold" 5 "wasps")
   (make-param "nest-year-length" (* 60 5) "seconds")
   (make-param "nest-forage-cost" -5 "energy units")
@@ -310,6 +312,7 @@
    "sprites/hex-3.png"
    "sprites/hex-4.png"
    "sprites/hex-drop.png"
+   "sprites/heart.png"
    "sprites/poison.png"
    "sprites/spray-can.png"
    "sprites/lightning.png"

@@ -74,10 +74,13 @@
   (make-window
    (window-wasp w)
    (window-env w)
-   (map 
-    (lambda (cloud)
-      (cloud-update cloud delta (entity-facing (window-wasp w))))
-    (window-clouds w))
+   ;; stop with clouds moving if we are mating
+   (if (eq? (wasp-state (window-wasp w)) 'state-mating)
+       (window-clouds w)
+       (map 
+	(lambda (cloud)
+	  (cloud-update cloud delta (entity-facing (window-wasp w))))
+	(window-clouds w)))
    (window-w w)
    (window-h w)
    ;; get current weather from nest here
@@ -102,6 +105,9 @@
 
   ;; position wasp properly
   (cond
+   ((eq? (wasp-state (window-wasp w)) 'state-mating)
+    0)
+   
    ((or (eq? (wasp-state (window-wasp w)) 'state-dying)
 	(eq? (wasp-state (window-wasp w)) 'state-died))
     (entity-render
@@ -147,7 +153,30 @@
 
   (when (and (eq? (window-weather w) 'stormy)
 	     (< (rndf) 0.01))
-	(ctx.drawImage (find-image "sprites/lightning.png") (vx pos) (vy pos)))
+	(ctx.drawImage (find-image "sprites/lightning.png")
+		       (vx pos) (vy pos)))
+  
+  (when (eq? (wasp-state (window-wasp w)) 'state-mating)
+
+	(ctx.save)
+	(ctx.translate (+ (vx pos) 95) (+ (vy pos) 25))
+	(ctx.translate 70 70)
+	(ctx.rotate (* 0.5 (sin (* (window-time w) 3))))
+	(ctx.translate -70 -70)
+	(ctx.drawImage (find-image "sprites/heart.png") 0 0)
+	(ctx.restore)
+
+	(entity-render
+	 (entity-modify-pos
+	  (window-wasp w) (vadd pos (vec2 70 90))) ctx)
+	
+	(entity-render
+	 (entity-modify-pos
+	  (entity-modify-facing
+	   (window-wasp w) 'left)
+	  (vadd pos (vec2 250 90))) ctx)
+	
+	)
   
   (ctx.restore))
 
@@ -175,7 +204,8 @@
    (foldl
     (lambda (window r)
       ;; remove dead wasps at the same time as updating...
-      (if (eq? (wasp-state (window-wasp window)) 'state-died)
+      (if (or (eq? (wasp-state (window-wasp window)) 'state-died)
+	      (eq? (wasp-state (window-wasp window)) 'state-mated))
 	  r (append r (list (window-update window delta nest)))))
     '()
     (window-stack-windows s))))

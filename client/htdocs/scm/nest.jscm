@@ -39,8 +39,8 @@
 	 (< time (* (/ nest-year-length 4) 3))) 'autumn)
    (else 'winter)))
 
-(define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult) 
-  (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult))
+(define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult new-nest-score) 
+  (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult new-nest-score))
 
 (define (make-new-nest time)
   (make-nest 
@@ -63,7 +63,7 @@
    (make-info-display
     (list
      ))
-   1))
+   1 0))
 
 (define (nest-energy n) (list-ref n 0))
 (define (nest-modify-energy n s) (list-replace n 0 s))
@@ -88,6 +88,8 @@
 (define (nest-modify-info-display n s) (list-replace n 11 s))
 (define (nest-energy-mult n) (list-ref n 12))
 (define (nest-modify-energy-mult n s) (list-replace n 12 s))
+(define (nest-new-nest-score n) (list-ref n 13))
+(define (nest-modify-new-nest-score n s) (list-replace n 13 s))
 
 (define (nest-wasps-update n delta)
   (map
@@ -249,6 +251,13 @@
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
 	(string-append "A WASP HAS DIED, " (length (nest-wasps n)) " WASPS LEFT")
 	'allow-dup time))
+      ((eq? (wasp-state wasp) 'state-mated)
+       (nest-modify-new-nest-score
+	(nest-add-info 
+	 (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
+	 (string-append "CONGRATS: A NEW NEST HAS BEEN FOUNDED")
+	 'allow-dup time)
+	(+ (nest-new-nest-score n) 1)))       
       ((eq? (wasp-state wasp) 'state-died-pupa)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
@@ -353,7 +362,8 @@
 	    (nest-events n)
 	    (nest-weather n)
 	    (nest-info-display n)
-	    (nest-energy-mult n))
+	    (nest-energy-mult n)
+	    (nest-new-nest-score n))
 	   (menu-selection menu))
 	  n))))
 
@@ -366,10 +376,15 @@
        (cond 
 	((eq? (wasp-state wasp) 'state-forage-start)
 	 (append r (list (build-window wasp))))
+	((eq? (wasp-state wasp) 'state-disperse-start)
+	 (append r (list (build-window wasp))))
 	((or (eq? (wasp-state wasp) 'state-forage)
 	     (eq? (wasp-state wasp) 'state-forage-return)
+	     (eq? (wasp-state wasp) 'state-disperse)
+	     (eq? (wasp-state wasp) 'state-mating)
 	     (eq? (wasp-state wasp) 'state-dying)
-	     (eq? (wasp-state wasp) 'state-died))
+	     (eq? (wasp-state wasp) 'state-died)
+	     (eq? (wasp-state wasp) 'state-mated))
 	 ;; means all dying/dead wasps get 'pushed' to
 	 ;; window stack - but they will be ignored if
 	 ;; not foraging
@@ -428,7 +443,8 @@
      (nest-events n)
      (nest-weather n)
      (nest-update-info-text n time)
-     (nest-energy-mult n))
+     (nest-energy-mult n)
+     (nest-new-nest-score n))
     time)
    delta))
 
@@ -473,6 +489,7 @@
   (ctx.fillText (string-append "Energy: " (floor (nest-energy n))) 10 50)
   (ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 200 50)
   (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 400 50)
+  (ctx.fillText (string-append "New nests: " (nest-new-nest-score n)) 600 50)
   
   (info-display-render (nest-info-display n) ctx)
   (when (nest-event n) (event-render n ctx))
