@@ -57,7 +57,12 @@
        (nest-decimate
 	nest
 	(* (local-get-param "wasp-game" "pestcontrol-deadliness") delta)
-	(list 'state-idle)))
+	;; anything inside the nest, basically
+	(list 'state-idle
+	      'state-building-cell
+	      'state-laying-egg
+	      'state-laying-repro-egg
+	      'state-tending-egg)))
      (lambda (nest)
        #t))))
 
