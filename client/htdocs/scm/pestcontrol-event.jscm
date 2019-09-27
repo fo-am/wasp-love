@@ -57,8 +57,9 @@
        (nest-decimate
 	nest
 	(* (local-get-param "wasp-game" "pestcontrol-deadliness") delta)
-	(list 'state-idle))
-       ))))
+	(list 'state-idle)))
+     (lambda (nest)
+       #t))))
 
 (define (pestcontrol-update event nest delta)
   (event-modify-data

@@ -14,8 +14,8 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (make-event type time-left data fn) 
-  (list type time-left data fn))
+(define (make-event type time-left data fn cond-fn) 
+  (list type time-left data fn cond-fn))
 
 (define (event-type e) (list-ref e 0))
 (define (event-time-left e) (list-ref e 1))
@@ -23,6 +23,7 @@
 (define (event-data e) (list-ref e 2))
 (define (event-modify-data e s) (list-replace e 2 s))
 (define (event-fn e) (list-ref e 3))
+(define (event-cond-fn e) (list-ref e 4))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

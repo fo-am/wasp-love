@@ -23,7 +23,7 @@
 (define nest-forage-benefit (local-get-param "wasp-game" "nest-forage-benefit"))
 (define nest-forage-variation (local-get-param "wasp-game" "nest-forage-variation"))
 (define nest-energy-drain (local-get-param "wasp-game" "nest-energy-drain"))
-(define event-start-time (local-get-param "wasp-game" "event-start-time"))
+(define event-start-time (string->number (local-get-param "wasp-game" "event-start-time")))
 (define event-probability (local-get-param "wasp-game" "event-probability"))
 (define nest-reproductive-threshold (local-get-param "wasp-game" "nest-reproductive-threshold"))
 
@@ -173,6 +173,15 @@
    #f
    (shuffle (nest-wasps n))))
 
+(define (nest-wasps-foraging? n)
+  (foldl
+   (lambda (w r)
+     (if (and (not r) (wasp-foraging? w))
+	 #f r))
+   #f
+   (nest-wasps n)))
+
+
 (define (nest-find-pupa n)
   (foldl
    (lambda (w r)
@@ -269,6 +278,32 @@
 (define (nest-update-from-action n action)
   (nest-modify-energy n (+ (nest-energy n) (nest-energy-for-action action))))
 
+(define (nest-pick-new-event n delta)
+  (let ((new-events (shuffle (nest-events n))))
+    (if (null? new-events)
+	;; no more events!
+	(nest-modify-next-event-time (nest-modify-event n #f) 9999999)
+	;; run new event
+	(let ((event-builder (car new-events)))
+	  (let ((new-event (event-builder)))
+	    (let ((event-cond (event-cond-fn new-event))) 
+	      ;; can we run this event at the moment?
+	      (if (event-cond n) 			 		       
+		  (let ((fn (event-fn new-event))) 
+		    ;; time to run the event function on the whole nest
+		    ;; to do whatever it wants to do, and remove this event
+		    ;; from the list
+		    (nest-modify-next-event-time
+		     (nest-modify-events
+		      (fn (nest-modify-event n new-event) delta 'first)
+		      (cdr new-events))
+		     ;; set the time for the next event
+		     (dbg (+ (dbg (nest-next-event-time n))
+			     (dbg time-between-events)))))
+		  (nest-modify-next-event-time
+		   (nest-modify-event n #f)
+		   (+ (nest-next-event-time n) 5)))))))))) ;; try again in 5 secs
+
 (define (nest-update-from-event n delta)
   (let ((e (nest-event n)))
     (if e 
@@ -281,24 +316,7 @@
 	   (if (< (event-time-left e) 0) 'last 'mid)))
 	;; no event, is it time for a new one?
 	(if (> (nest-time-of-year n) (nest-next-event-time n))
-	    (let ((new-events (shuffle (nest-events n))))
-	      (nest-modify-next-event-time
-	       (if (null? new-events)
-		   ;; we ran out of events!
-		   (nest-modify-event n #f)
-		   ;; run event
-		   (let ((event-builder (car new-events)))
-		     (let ((new-event (event-builder)))
-		       (let ((fn (event-fn new-event))) 
-			 ;; time to run the event function on the whole nest
-			 ;; to do whatever it wants to do, and remove this event
-			 ;; from the list
-			 (nest-modify-events
-			  (fn (nest-modify-event n new-event) delta 'first)
-			  (cdr new-events))))))
-	       ;; set the time for the next event
-	       (+ (nest-next-event-time n) time-between-events)))
-	    ;; no event created due to probability or too early
+	    (nest-pick-new-event n delta)
 	    (nest-modify-event n #f)))))
 
 (define (nest-update-mouse n state mx my)
@@ -455,7 +473,6 @@
   (ctx.fillText (string-append "Energy: " (floor (nest-energy n))) 10 50)
   (ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 200 50)
   (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 400 50)
-  (ctx.fillText (string-append "Event in: " (floor (- (nest-next-event-time n) (nest-time-of-year n)))) 600 50)
   
   (info-display-render (nest-info-display n) ctx)
   (when (nest-event n) (event-render n ctx))

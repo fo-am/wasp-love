@@ -109,6 +109,13 @@
 (define (wasp-carrying w) (list-ref w (+ entity-size 4)))
 (define (wasp-modify-carrying w s) (list-replace w (+ entity-size 4) s))
 
+(define (wasp-foraging? w)
+  (or
+   (eq? (wasp-state w) 'state-forage-start)
+   (eq? (wasp-state w) 'state-forage)
+   (eq? (wasp-state w) 'state-forage-return)
+   (eq? (wasp-state w) 'state-forage-end))) 
+
 ;; capabilities -> menu options
 (define (wasp-build-menu-options w n)
   (foldl

@@ -23,7 +23,9 @@
        (cond
 	((eq? state 'first) (nest-modify-energy-mult nest (local-get-param "wasp-game" "manicured-multiplier")))
 	((eq? state 'last) (nest-modify-energy-mult nest 1))
-	(else nest))))))
+	(else nest)))
+     (lambda (nest)
+       (nest-wasps-foraging? nest)))))
 
 (define (manicured-update event nest delta)
   event)

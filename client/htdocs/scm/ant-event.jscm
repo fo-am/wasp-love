@@ -36,7 +36,9 @@
 		  n))
 	    nest
 	    (event-data (nest-event nest)))
-	   nest)))))
+	   nest))
+     (lambda (nest)
+       #t))))
 
 (define (ant-attack-update event nest delta)
   (event-modify-data

@@ -27,7 +27,9 @@
 	       nest
 	       (* (local-get-param "wasp-game" "storm-deadliness")
 		  delta)
-	       (list 'state-forage 'state-forage-return))))))))
+	       (list 'state-forage 'state-forage-return)))))
+     (lambda (nest)
+       (nest-wasps-foraging? nest)))))
 
 (define (storm-update event nest delta)
   event)
