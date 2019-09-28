@@ -37,10 +37,10 @@ start_dying -> dying
 dying -> died
 
 
-menu_action -> take_off
-menu_action -> walking_to_cell
-menu_action -> walking_to_lay
-menu_action -> walking_to_lay_repro
-menu_action -> walking_to_tend
+player_action -> take_off
+player_action -> walking_to_cell
+player_action -> walking_to_lay
+player_action -> walking_to_lay_repro
+player_action -> walking_to_tend
 
 }

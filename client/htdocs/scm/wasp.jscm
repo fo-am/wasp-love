@@ -375,10 +375,6 @@
 	   (entity-modify-pos w (v2add (entity-pos w) (vec2 0 5)))))
       
       (else w)))
-
-
-
-   
    delta))
 
 (define (wasp-fly-animation w)
@@ -426,7 +422,7 @@
 (define (wasp-update-cells wasp cells)
   (cond
    ((or (eq? (wasp-state wasp) 'state-laid-egg)
-	(eq? (wasp-state wasp) 'state-laid-repro-egg)
+	(eq? (wasp-state wasp) 'state-laid-repro-egg))
     (update-cell (entity-walk-to wasp) cells cell-code-occupied))
    ((or (eq? (wasp-state wasp) 'state-built-cell)
 	(eq? (wasp-state wasp) 'state-hatched)

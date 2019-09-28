@@ -268,6 +268,12 @@
   (foldl
    (lambda (wasp r)
      (cond
+      ((eq? (wasp-state wasp) 'state-egg)
+       (if (> (entity-timer wasp) (/ wasp-egg-time 2))
+	   (nest-add-info 
+	    r (string-append "DON'T FORGET TO TEND YOUR BROOD")
+	    'tend-warning time)
+	   r))
       ((eq? (wasp-state wasp) 'state-forage-end)
        (let ((energy 
 	      (+ (* nest-forage-benefit (nest-energy-mult n))
