@@ -57,21 +57,83 @@
   (+ (min (- cell-size-x 1) (vx pos))
      (* (min (- cell-size-y 1) (vy pos)) cell-size-x)))
 
-(define (cell-nindexes cell)
+(define (cell-nindexes cell cells)
   (let ((x (vx (cell-logical cell)))
 	(y (vy (cell-logical cell))))
     ;; bloomin hexagons...
-    (append
-     (list
-      (cell-pos->index (vec2 x (+ y 1)))
-      (cell-pos->index (vec2 x (- y 1)))
-      (cell-pos->index (vec2 (+ x 1) y))
-      (cell-pos->index (vec2 (- x 1) y)))
-     (if (zero? (modulo x 2))
-     	 (list
-     	  (cell-pos->index (vec2 (+ x 1) (+ y 1)))
-     	  (cell-pos->index (vec2 (- x 1) (+ y 1))))
-     	 (list
-     	  (cell-pos->index (vec2 (+ x 1) (- y 1)))
-     	  (cell-pos->index (vec2 (- x 1) (- y 1)))))
-     ))))
+    (filter
+     (lambda (index)
+       (and (< index (length cells)) (>= index 0)))
+     (append
+      (list
+       (cell-pos->index (vec2 x (+ y 1)))
+       (cell-pos->index (vec2 x (- y 1)))
+       (cell-pos->index (vec2 (+ x 1) y))
+       (cell-pos->index (vec2 (- x 1) y)))
+      (if (zero? (modulo x 2))
+          (list
+           (cell-pos->index (vec2 (+ x 1) (+ y 1)))
+           (cell-pos->index (vec2 (- x 1) (+ y 1))))
+          (list
+           (cell-pos->index (vec2 (+ x 1) (- y 1)))
+           (cell-pos->index (vec2 (- x 1) (- y 1)))))
+      ))))
+
+
+(define (cells-find-built-cell cells)
+  (foldl
+   (lambda (c r)
+     (if (and (not r) (not (eq? (cell-code c) cell-code-unbuilt)))
+	 c r))
+   #f
+   (shuffle cells)))
+
+(define (cells-find-built-cells cells)
+  (filter
+   (lambda (c)
+     (not (eq? (cell-code c) cell-code-unbuilt)))
+   cells))
+
+(define (cells-find-unbuilt cells timeout)
+  (if (> timeout 100) 
+      #f
+      (let ((built (cells-find-built-cell cells)))
+	(let ((candidate (list-ref cells (choose (cell-nindexes built cells)))))
+	  (if (eq? (cell-code candidate) cell-code-unbuilt)
+	      candidate
+	      (cells-find-unbuilt cells (+ timeout 1)))))))
+
+
+;; indices of all the unbuilt neighbours of all the built cells
+;; this list will contain duplicates
+(define (cells-optimal-candidate-indexes cells)
+  (filter
+   (lambda (index)
+     (eq? (cell-code (list-ref cells index)) cell-code-unbuilt))
+   (foldl
+    (lambda (built r)     
+      (append r (cell-nindexes built cells)))
+    '()
+    (cells-find-built-cells cells))))
+
+(define (cells-count-built-neighbours index cells)
+  (foldl
+   (lambda (index r)
+     (if (eq? (cell-code (list-ref cells index)) cell-code-unbuilt)
+	 r (+ r 1)))
+   0
+   (cell-nindexes (list-ref cells index) cells)))
+
+(define (cells-find-optimal cells)
+  (let ((res (foldl
+	       (lambda (index r)
+		 (let ((most-neighbours (car r))
+		       (neighbours (cells-count-built-neighbours index cells)))	     
+		   (if (> neighbours most-neighbours)
+		       (list neighbours index)
+		       r)))
+	       (list 0 #f)
+	       (cells-optimal-candidate-indexes cells))))
+    (list-ref cells (cadr res))))
+
+       

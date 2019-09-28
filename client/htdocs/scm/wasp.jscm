@@ -168,7 +168,7 @@
    ((eq? menu-code 'disperse) 
     (wasp-fly-to-forage w nest))
    ((eq? menu-code 'build-cell) 
-    (let ((dest-cell (nest-find-unbuilt-cell nest 0)))
+    (let ((dest-cell (nest-find-unbuilt-cell nest)))
       ;; it's possible we coundn't find any free cells
       (if dest-cell
 	  (wasp-modify-state

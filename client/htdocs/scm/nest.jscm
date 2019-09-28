@@ -116,7 +116,6 @@
   (cadr
    (foldl
     (lambda (w r)
-      (msg (entity-pos w))
       (let ((closest (car r))
 	    (dist (v2dist (vec2 mx my) (entity-pos w))))
 	(if (> closest dist)
@@ -151,14 +150,7 @@
    (nest-wasps n)))
 
 (define (nest-find-built-cell n)
-  (foldl
-   (lambda (c r)
-     (if (and (not r) (not (eq? (cell-code c) cell-code-unbuilt))
-	      ;;(not (nest-wasp-present? n (cell-pos c)))
-	      )
-	 c r))
-   #f
-   (shuffle (nest-cells n))))
+  (cells-find-built-cell (nest-cells n)))
 
 (define (nest-find-empty-cell n)
   (foldl
@@ -243,14 +235,9 @@
    #f
    (shuffle (nest-wasps n))))
 
-(define (nest-find-unbuilt-cell n timeout)
-  (if (> timeout 100) 
-      #f
-      (let ((built (nest-find-built-cell n)))
-	(let ((candidate (list-ref (nest-cells n) (choose (cell-nindexes built)))))
-	  (if (eq? (cell-code candidate) cell-code-unbuilt)
-	      candidate
-	      (nest-find-unbuilt-cell n (+ timeout 1)))))))
+(define (nest-find-unbuilt-cell n)
+  ;;(cells-find-unbuilt (nest-cells n) 0)
+  (cells-find-optimal (nest-cells n)))
 
 (define (nest-wasps-update-cells n)
   (foldl
