@@ -1,0 +1,46 @@
+digraph {
+
+egg -> tended_egg
+egg -> died_egg
+tended_egg -> hatched	
+hatched -> wander
+idle -> egg_check
+walking_to_cell -> building_cell
+building_cell -> built_cell
+built_cell -> wander
+walking_to_lay -> laying_egg
+laying_egg -> laid_egg
+laid_egg -> wander
+walking_to_lay_repro -> laying_repro_egg
+laying_repro_egg -> laid_repro_egg
+laid_repro_egg -> wander
+wander -> idle
+take_off -> disperse_start
+take_off -> forage_start
+forage_start -> forage
+forage -> forage_return
+forage_return -> forage_end
+forage_end -> forage_feed
+forage_feed -> wander
+walking_to_tend -> tending
+tending -> tended
+tended -> wander
+disperse_start -> disperse
+disperse -> mating
+disperse -> start_dying
+mating -> mated
+egg_check -> idle
+egg_check -> walking_to_remove
+walking_to_remove -> remove_egg
+remove_egg -> wander
+start_dying -> dying
+dying -> died
+
+
+menu_action -> take_off
+menu_action -> walking_to_cell
+menu_action -> walking_to_lay
+menu_action -> walking_to_lay_repro
+menu_action -> walking_to_tend
+
+}

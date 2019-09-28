@@ -255,9 +255,9 @@
 	   (entity-walk w wasp-speed delta)))
       ((eq? state 'state-laying-egg) 
        (if (> (entity-timer w) wasp-laying-time)
-	   (wasp-modify-state w 'state-layed-egg)
+	   (wasp-modify-state w 'state-laid-egg)
 	   w))
-      ((eq? state 'state-layed-egg) 
+      ((eq? state 'state-laid-egg) 
        (wasp-modify-state
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-wander))
@@ -268,9 +268,9 @@
 	   (entity-walk w wasp-speed delta)))
       ((eq? state 'state-laying-repro-egg) 
        (if (> (entity-timer w) wasp-laying-time)
-	   (wasp-modify-state w 'state-layed-repro-egg)
+	   (wasp-modify-state w 'state-laid-repro-egg)
 	   w))
-      ((eq? state 'state-layed-repro-egg) 
+      ((eq? state 'state-laid-repro-egg) 
        (wasp-modify-state
 	(wasp-walk-to-cell w (nest-find-any-cell nest))
 	'state-wander))
@@ -425,7 +425,8 @@
 ;; update the code for the cells as things hatch etc
 (define (wasp-update-cells wasp cells)
   (cond
-   ((eq? (wasp-state wasp) 'state-layed-egg)
+   ((or (eq? (wasp-state wasp) 'state-laid-egg)
+	(eq? (wasp-state wasp) 'state-laid-repro-egg)
     (update-cell (entity-walk-to wasp) cells cell-code-occupied))
    ((or (eq? (wasp-state wasp) 'state-built-cell)
 	(eq? (wasp-state wasp) 'state-hatched)
@@ -438,11 +439,11 @@
 ;; update new wasps mainly - could be much simpler
 (define (wasp-update-wasps wasp wasps)
   (cond
-   ((eq? (wasp-state wasp) 'state-layed-egg)
+   ((eq? (wasp-state wasp) 'state-laid-egg)
     (cons
      (make-egg (entity-walk-to wasp) (wasp-type wasp))
      wasps))
-   ((eq? (wasp-state wasp) 'state-layed-repro-egg)
+   ((eq? (wasp-state wasp) 'state-laid-repro-egg)
     (cons
      (make-repro-egg (entity-walk-to wasp) (wasp-type wasp))
      wasps))
