@@ -97,21 +97,33 @@
      (entity-update (wasp-update wasp delta n) delta))
    (nest-wasps n)))
 
-(define (nest-wasps-click n mx my)
+(define (nest-wasps-select n mx my)
   (foldl
    (lambda (w r)
-     (if (and (not r) 
-	      (not (eq? (wasp-state w) 'state-egg))
+     (if (and (not (eq? (wasp-state w) 'state-egg))
 	      (not (eq? (wasp-state w) 'state-tended-egg))
 	      (in-rect? 
-	       (- (vx (entity-pos w)) 150)
-	       (- (vy (entity-pos w)) 150)
+	       (- (vx (entity-pos w)) 100)
+	       (- (vy (entity-pos w)) 75)
 	       (vx (entity-sprite-size w))
 	       (vy (entity-sprite-size w))
 	       mx my))
-	 w r))
-   #f
+	 (cons w r) r))
+   '()
    (nest-wasps n)))
+
+(define (nest-wasps-click n mx my)
+  (cadr
+   (foldl
+    (lambda (w r)
+      (msg (entity-pos w))
+      (let ((closest (car r))
+	    (dist (v2dist (vec2 mx my) (entity-pos w))))
+	(if (> closest dist)
+	    (list dist w)
+	    r)))
+    (list 99999 #f)
+    (nest-wasps-select n mx my))))
 
 (define (nest-wasp-present? n pos)
   (foldl

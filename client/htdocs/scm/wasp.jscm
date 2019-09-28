@@ -69,7 +69,7 @@
       (generate-entity-id!)
       "wasp" 
       pos
-      (vec2 300 300)
+      (vec2 200 150)
       (choose (list "left" "right"))
       (rndf)
       (anim-load-frames (choose wasp-anim-variations) wasp-animation)
