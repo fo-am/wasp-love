@@ -101,8 +101,8 @@
   (foldl
    (lambda (w r)
      (if (and (not r) 
-	      (not (eq? (wasp-state w) 'state-pupa))
-	      (not (eq? (wasp-state w) 'state-tended-pupa))
+	      (not (eq? (wasp-state w) 'state-egg))
+	      (not (eq? (wasp-state w) 'state-tended-egg))
 	      (in-rect? 
 	       (- (vx (entity-pos w)) 150)
 	       (- (vy (entity-pos w)) 150)
@@ -117,21 +117,21 @@
   (foldl
    (lambda (w r)
      (if (and (not r) 
-	      (not (eq? (wasp-state w) 'state-pupa))
-	      (not (eq? (wasp-state w) 'state-tended-pupa))
+	      (not (eq? (wasp-state w) 'state-egg))
+	      (not (eq? (wasp-state w) 'state-tended-egg))
 	      (v2eq? (entity-walk-to w) pos)
 	      )
 	 #t r))
    #f
    (nest-wasps n)))
 
-(define (nest-pupa-present? n pos)
+(define (nest-egg-present? n pos)
   (foldl
    (lambda (w r)
      (if (and (not r) 
 	      (or
-	       (eq? (wasp-state w) 'state-pupa)
-	       (eq? (wasp-state w) 'state-tended-pupa))
+	       (eq? (wasp-state w) 'state-egg)
+	       (eq? (wasp-state w) 'state-tended-egg))
 	      (v2eq? (entity-walk-to w) pos)
 	      )
 	 #t r))
@@ -163,7 +163,7 @@
   (foldl
    (lambda (c r)
      (if (and (not r) (eq? (cell-code c) cell-code-empty)
-	      (nest-pupa-present? n (cell-pos c)))
+	      (nest-egg-present? n (cell-pos c)))
 	 c r))
    #f
    (shuffle (nest-cells n))))
@@ -210,23 +210,23 @@
    #f
    (nest-wasps n)))
 
-(define (nest-find-pupa n)
+(define (nest-find-egg n)
   (foldl
    (lambda (w r)
      (if (and (not r)
-	      (or (eq? (wasp-state w) 'state-pupa)
-		  (eq? (wasp-state w) 'state-tended-pupa)))
+	      (or (eq? (wasp-state w) 'state-egg)
+		  (eq? (wasp-state w) 'state-tended-egg)))
 	 w r))
    #f
    (shuffle (nest-wasps n))))
 
-(define (nest-find-worker-pupa n)
+(define (nest-find-worker-egg n)
   (foldl
    (lambda (w r)
      (if (and (not r)
 	      (eq? (wasp-parent w) 'worker)
-	      (or (eq? (wasp-state w) 'state-pupa)
-		  (eq? (wasp-state w) 'state-tended-pupa)))
+	      (or (eq? (wasp-state w) 'state-egg)
+		  (eq? (wasp-state w) 'state-tended-egg)))
 	 w r))
    #f
    (shuffle (nest-wasps n))))
@@ -295,16 +295,16 @@
 	 (string-append "CONGRATS: A NEW NEST HAS BEEN FOUNDED")
 	 'allow-dup time)
 	(+ (nest-new-nest-score n) 1)))       
-      ((eq? (wasp-state wasp) 'state-died-pupa)
+      ((eq? (wasp-state wasp) 'state-died-egg)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
 	(string-append "AN EGG HAS DIED AS IT WAS NOT TENDED")
 	'allow-dup time))
-      ((eq? (wasp-state wasp) 'state-taken-pupa)
+      ((eq? (wasp-state wasp) 'state-taken-egg)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
 	(string-append "YOU BROOD IS BEING STOLEN")
-	'stolen-pupa time))
+	'stolen-egg time))
       (else r)))
    n
    (nest-wasps n))))
@@ -381,7 +381,7 @@
 		(nest-wasps n))
 	    ;; if there is a wasp clicked on, and it's not the current one
 	    (if (and wasp
-		     (not (eq? (wasp-state wasp) 'state-pupa))
+		     (not (eq? (wasp-state wasp) 'state-egg))
 		     ;;(not (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
 		     )
 		(build-menu

@@ -40,10 +40,10 @@
 
 (define (ant-state a) (list-ref a (+ entity-size 0)))
 (define (ant-modify-state a s) (list-replace a (+ entity-size 0) s))
-(define (ant-dest-pupa a) (list-ref a (+ entity-size 1)))
-(define (ant-modify-dest-pupa a s) (list-replace a (+ entity-size 1) s))
-(define (ant-killed-pupa a) (list-ref a (+ entity-size 2)))
-(define (ant-modify-killed-pupa a s) (list-replace a (+ entity-size 2) s))
+(define (ant-dest-egg a) (list-ref a (+ entity-size 1)))
+(define (ant-modify-dest-egg a s) (list-replace a (+ entity-size 1) s))
+(define (ant-killed-egg a) (list-ref a (+ entity-size 2)))
+(define (ant-modify-killed-egg a s) (list-replace a (+ entity-size 2) s))
 
 (define (ant-update a delta nest)
   (ant-update-animation
@@ -57,13 +57,13 @@
 	   a))
       
       ((eq? state 'state-search)
-       (let ((pupa (nest-find-pupa nest)))
-	 ;; head to a pupa or a random position
+       (let ((egg (nest-find-egg nest)))
+	 ;; head to a egg or a random position
 	 (ant-modify-state
-	  (if pupa
-	      (ant-modify-dest-pupa	       
-	       (entity-walk-to-pos a (entity-pos pupa))
-	       (entity-id pupa))
+	  (if egg
+	      (ant-modify-dest-egg	       
+	       (entity-walk-to-pos a (entity-pos egg))
+	       (entity-id egg))
 	      (entity-walk-to-pos
 	       a (vec2 (+ 100 (* (rndf) 1000))
 		       (+ 100 (* (rndf) 500)))))
@@ -71,19 +71,19 @@
       
       ((eq? state 'state-wander)
        (if (>= (entity-walk-time a) 1)
-	   (let ((pupa (entity-list-slow-search
+	   (let ((egg (entity-list-slow-search
 			(nest-wasps nest)
-			(ant-dest-pupa a))))
-	     ;; check if pupa still exists
-	     (if (and pupa
-		      ;; is it still a pupa?
-		      (or (eq? (wasp-state pupa) 'state-pupa)
-			  (eq? (wasp-state pupa) 'state-tended-pupa)))
+			(ant-dest-egg a))))
+	     ;; check if egg still exists
+	     (if (and egg
+		      ;; is it still an egg?
+		      (or (eq? (wasp-state egg) 'state-egg)
+			  (eq? (wasp-state egg) 'state-tended-egg)))
 		 ;; (if so it can't have moved)		
-		 ;; flag ant as having killed pupa to be picked up later
+		 ;; flag ant as having killed egg to be picked up later
 		 (entity-walk-to-pos
 		  (ant-modify-state
-		   (ant-modify-killed-pupa
+		   (ant-modify-killed-egg
 		    (entity-modify-bg-image
 		     a (find-image "sprites/ant/pupa-carry.png"))
 		    #t)
@@ -97,7 +97,7 @@
        (if (>= (entity-walk-time a) 1)
 	   ;; return to the nest searching
 	   (ant-modify-state
-	    (ant-modify-killed-pupa
+	    (ant-modify-killed-egg
 	     (entity-modify-bg-image a #f)
 	     #f)
 	    'state-search)

@@ -26,13 +26,13 @@
        (if (nest-event nest)
 	   (foldl
 	    (lambda (ant n)
-	      (if (ant-killed-pupa ant)
+	      (if (ant-killed-egg ant)
 		  (nest-modify-wasps
 		   n (entity-list-modify
 		      (nest-wasps n)
-		      (ant-dest-pupa ant)
+		      (ant-dest-egg ant)
 		      (lambda (e)
-			(wasp-modify-state e 'state-taken-pupa))))
+			(wasp-modify-state e 'state-taken-egg))))
 		  n))
 	    nest
 	    (event-data (nest-event nest)))

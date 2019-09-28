@@ -34,7 +34,7 @@
   (make-param "ant-speed" 300 "pixels per second")
   (make-param "wasp-build-time" 5 "seconds")
   (make-param "wasp-laying-time" 5 "seconds")
-  (make-param "wasp-pupa-time" 20 "seconds") 
+  (make-param "wasp-egg-time" 20 "seconds") 
   (make-param "wasp-tending-time" 5 "seconds")
   (make-param "wasp-forage-time" 20 "seconds")
   (make-param "wasp-dying-time" 3 "seconds")
