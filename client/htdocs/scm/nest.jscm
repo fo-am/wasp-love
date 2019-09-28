@@ -210,11 +210,21 @@
    #f
    (nest-wasps n)))
 
-
 (define (nest-find-pupa n)
   (foldl
    (lambda (w r)
      (if (and (not r)
+	      (or (eq? (wasp-state w) 'state-pupa)
+		  (eq? (wasp-state w) 'state-tended-pupa)))
+	 w r))
+   #f
+   (shuffle (nest-wasps n))))
+
+(define (nest-find-worker-pupa n)
+  (foldl
+   (lambda (w r)
+     (if (and (not r)
+	      (eq? (wasp-parent w) 'worker)
 	      (or (eq? (wasp-state w) 'state-pupa)
 		  (eq? (wasp-state w) 'state-tended-pupa)))
 	 w r))

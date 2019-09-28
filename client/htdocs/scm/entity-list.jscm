@@ -32,6 +32,12 @@
      (not (entity-eq? other e)))
    el))
 
+(define (entity-list-remove-id el e)
+  (filter
+   (lambda (other)
+     (not (eq? (entity-id other) e)))
+   el))
+
 (define (entity-list-modify el id fn)
   (map
    (lambda (e)
