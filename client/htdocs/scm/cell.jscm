@@ -136,4 +136,9 @@
 	       (cells-optimal-candidate-indexes cells))))
     (list-ref cells (cadr res))))
 
-       
+;; will contain dups
+(define (cells-surrounding-built cells)
+  (map
+   (lambda (index)
+     (list-ref cells index))
+   (cells-optimal-candidate-indexes cells)))

@@ -17,11 +17,11 @@
 
 (define (make-entity id type pos sprite-size facing t sprite-list
 		     frame clip bg-image depth-plane walk-from
-		     walk-to walk-time timer)
+		     walk-to walk-time timer offset)
   (list id type pos sprite-size facing t sprite-list frame clip
-	bg-image depth-plane walk-from walk-to walk-time timer))
+	bg-image depth-plane walk-from walk-to walk-time timer offset))
 
-(define entity-size 15)
+(define entity-size 16)
 
 (define next-entity-id 0)
 (define (generate-entity-id!) 
@@ -52,30 +52,23 @@
 (define (entity-modify-walk-time e s) (list-replace e 13 s))
 (define (entity-timer e) (list-ref e 14))
 (define (entity-modify-timer e s) (list-replace e 14 s))
+(define (entity-offset e) (list-ref e 15))
+(define (entity-modify-offset e v) (list-replace e 15 v))
 
 (define (entity-eq? a b)
   (eq? (entity-id a) (entity-id b)))
 
 (define (entity-render e ctx)
-  (let ((anim (list-ref (entity-sprite-list e) (entity-clip e))))
-    (let ((speed (car anim))
-	  (clip (cadr anim)))
-      (let ((image 
-	     (list-ref
-	      (list-ref 
-	       clip
-	       (modulo (entity-frame e) 
-		       (length clip)))
-	      (if (eq? (entity-facing e) "left") 0 1))))
-	(when (entity-bg-image e)
-	      (ctx.drawImage 
-	       (entity-bg-image e)
-	       (- (vx (entity-pos e)) (/ image.width 2))
-	       (- (vy (entity-pos e)) (/ image.height 2))))
-	(ctx.drawImage 
-	 image
-	 (- (vx (entity-pos e)) (/ image.width 2))
-	 (- (vy (entity-pos e)) (/ image.height 2)))))))
+  (let ((clip (list-ref (entity-sprite-list e) (entity-clip e))))
+    (let ((image (anim-clip-frame-looped
+		  clip (entity-facing e)
+		  (entity-frame e))))
+      (let ((posx (+ (- (vx (entity-pos e)) (/ image.width 2))
+		     (vx (entity-offset e))))
+	    (posy (+ (- (vy (entity-pos e)) (/ image.height 2))
+		     (vy (entity-offset e)))))
+	(when (entity-bg-image e) (ctx.drawImage (entity-bg-image e) posx posy))
+	(ctx.drawImage image posx posy)))))
 
 (define (drop-n n l)
   (cond
@@ -94,6 +87,26 @@
      (entity-pos e))
     pos)
    0))
+
+(define (entity-walk-to-pos-offset e pos next-clip)
+  (entity-modify-offset
+   (entity-modify-walk-time 
+    (entity-modify-walk-to
+     (entity-modify-walk-from 
+      ;; face the right direction
+      (if (< (vx (entity-pos e)) (vx pos))
+	  (entity-modify-facing e 'right)
+	  (entity-modify-facing e 'left))
+      (entity-pos e))
+     pos)
+    0)
+   (if next-clip
+       (let ((clip (list-ref (entity-sprite-list e) next-clip)))
+	 ;; orient the offset based on which way we are facing 
+	 (vec2 (* (vx (anim-clip-offset clip))
+		  (if (eq? (entity-facing e) "right") 1 -1))	       
+	       (vy (anim-clip-offset clip))))
+       (vec2 0 0))))
 
 (define (entity-walk e speed delta)
   (entity-modify-pos 
@@ -127,6 +140,7 @@
 	(entity-walk-from e)
 	(entity-walk-to e) 
 	(entity-walk-time e)
-	(entity-timer e))
+	(entity-timer e)
+	(entity-offset e))
        (drop-n entity-size e)))))
 

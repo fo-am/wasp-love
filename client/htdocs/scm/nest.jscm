@@ -178,7 +178,9 @@
      (if (and (not r) (not (nest-wasp-present? n (cell-pos c))))
 	 c r))
    #f
-   (shuffle (nest-cells n))))
+   (shuffle (cells-surrounding-built (nest-cells n)))))
+
+;;(shuffle (nest-cells n))))
 
 (define (in-list? i l)
   (foldl

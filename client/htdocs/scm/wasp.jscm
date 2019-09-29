@@ -32,18 +32,18 @@
 
 (define wasp-animation
   (list
-   (make-anim-move "pupae" "pupa1" '() (list "1") 8)
-   (make-anim-move "pupae" "pupa1" '() (list "1" "2" "3" "4") 8)
-   (make-anim-move "wasp" "idle" wasp-anim-variations (list "1" "2") 8)
-   (make-anim-move "wasp" "walk" wasp-anim-variations (list "1" "2" "3" "2") 8)
-   (make-anim-move "wasp" "defend" wasp-anim-variations (list "1" "2" "3" "2") 8)
-   (make-anim-move "wasp" "build" wasp-anim-variations (list "1" "2") 8)
-   (make-anim-move "wasp" "fly" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
-   (make-anim-move "wasp" "flycat" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
-   (make-anim-move "wasp" "flyspider" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
-   (make-anim-move "wasp" "flyfly" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32)
-   (make-anim-move "wasp" "lay" wasp-anim-variations (list "1" "2" "3" "4") 8)
-   (make-anim-move "wasp" "tend" wasp-anim-variations (list "1" "2") 8)
+   (make-anim-move "pupae" "pupa1" '() (list "1") 8 (vec2 0 0))
+   (make-anim-move "pupae" "pupa1" '() (list "1" "2" "3" "4") 8 (vec2 0 0))
+   (make-anim-move "wasp" "idle" wasp-anim-variations (list "1" "2") 8 (vec2 0 0))
+   (make-anim-move "wasp" "walk" wasp-anim-variations (list "1" "2" "3" "2") 8 (vec2 0 0))
+   (make-anim-move "wasp" "defend" wasp-anim-variations (list "1" "2" "3" "2") 8 (vec2 0 0))
+   (make-anim-move "wasp" "build" wasp-anim-variations (list "1" "2") 8 (vec2 -50 -40))
+   (make-anim-move "wasp" "fly" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32 (vec2 0 0))
+   (make-anim-move "wasp" "flycat" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32 (vec2 0 0))
+   (make-anim-move "wasp" "flyspider" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32 (vec2 0 0))
+   (make-anim-move "wasp" "flyfly" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32 (vec2 0 0))
+   (make-anim-move "wasp" "lay" wasp-anim-variations (list "1" "2" "3" "4") 8 (vec2 70 -50))
+   (make-anim-move "wasp" "tend" wasp-anim-variations (list "1" "2") 8 (vec2 -50 -20))
    ))
 
 (define wasp-animation-egg 0)
@@ -73,7 +73,7 @@
       (choose (list "left" "right"))
       (rndf)
       (anim-load-frames (choose wasp-anim-variations) wasp-animation)
-      0 wasp-animation-idle (find-image "sprites/glow.png") 0 pos #f 0 0)
+      0 wasp-animation-idle (find-image "sprites/glow.png") 0 pos #f 0 0 (vec2 0 0))
      (list capabilities 'state-idle #f 'queen #f 'repro))))
 
 (define (make-egg pos parent) 
@@ -86,7 +86,7 @@
     "left"
     (rndf)
     (anim-load-frames (choose wasp-anim-variations) wasp-animation)
-    0 wasp-animation-egg #f -1 pos pos 0 0)
+    0 wasp-animation-egg #f -1 pos pos 0 0 (vec2 0 0))
    (list '() 'state-egg #f 'worker #f parent)))
 
 (define (make-repro-egg pos parent) 
@@ -99,7 +99,7 @@
     "left"
     (rndf)
     (anim-load-frames (choose wasp-anim-variations) wasp-animation)
-    0 wasp-animation-egg #f -1 pos pos 0 0)
+    0 wasp-animation-egg #f -1 pos pos 0 0 (vec2 0 0))
    (list '() 'state-egg #f 'repro #f parent)))
 
 (define (wasp-capabilities w) (list-ref w (+ entity-size 0)))
@@ -146,8 +146,8 @@
    (wasp-capabilities w)))
 
 ;; set up a wasp to walk to a destination cell
-(define (wasp-walk-to-cell w dest-cell)
-  (entity-walk-to-pos w (cell-pos dest-cell)))
+(define (wasp-walk-to-cell w dest-cell next-clip)
+  (entity-walk-to-pos-offset w (cell-pos dest-cell) next-clip))
 
 (define (wasp-fly-to-forage w nest)
   (wasp-modify-state 
@@ -172,7 +172,7 @@
       ;; it's possible we coundn't find any free cells
       (if dest-cell
 	  (wasp-modify-state
-	   (wasp-walk-to-cell w dest-cell) 
+	   (wasp-walk-to-cell w dest-cell wasp-animation-build) 
 	   'state-walking-to-cell)
 	  w)))
    ((eq? menu-code 'lay-egg) 
@@ -180,7 +180,7 @@
       ;; it's possible we coundn't find any free cells
       (if dest-cell
 	  (wasp-modify-state
-	   (wasp-walk-to-cell w dest-cell) 
+	   (wasp-walk-to-cell w dest-cell wasp-animation-lay) 
 	   'state-walking-to-lay)
 	  w)))
    ((eq? menu-code 'lay-repro-egg) 
@@ -188,7 +188,7 @@
       ;; it's possible we coundn't find any free cells
       (if dest-cell
 	  (wasp-modify-state
-	   (wasp-walk-to-cell w dest-cell) 
+	   (wasp-walk-to-cell w dest-cell wasp-animation-lay) 
 	   'state-walking-to-lay-repro)
 	  w)))
    ((eq? menu-code 'tend-brood) 
@@ -196,13 +196,19 @@
       ;; it's possible we coundn't find any egg
       (if dest-egg
 	  (wasp-modify-state
-	   (entity-walk-to-pos 
+	   (entity-walk-to-pos-offset 
 	    (wasp-modify-tending-id w (entity-id dest-egg)) 
-	    (entity-pos dest-egg)) 
+	    (entity-pos dest-egg)
+	    wasp-animation-tend) 
 	   'state-walking-to-tend)
 	  w)))
    (else w)))
 
+(define (wasp-start-wandering w nest)
+  (wasp-modify-state
+   (wasp-walk-to-cell w (nest-find-any-cell nest) #f)
+   'state-wander))
+	   
 ;; main state update function, full lifecycle of the wasp
 (define (wasp-update w delta nest)
   (wasp-update-animation
@@ -225,10 +231,7 @@
 		;; add the glow indicator to the reproductives
 		(find-image "sprites/glow.png")))
 	   w))
-      ((eq? state 'state-hatched) 
-       (wasp-modify-state
-	(wasp-walk-to-cell w (nest-find-any-cell nest))
-	'state-wander))
+      ((eq? state 'state-hatched) (wasp-start-wandering w nest))
 
       ((eq? state 'state-idle)
        (if (> (entity-timer w) 5)
@@ -244,10 +247,7 @@
        (if (> (entity-timer w) wasp-build-time)
 	   (wasp-modify-state w 'state-built-cell)
 	   w))
-      ((eq? state 'state-built-cell) 
-       (wasp-modify-state
-	(wasp-walk-to-cell w (nest-find-any-cell nest))
-	'state-wander))
+      ((eq? state 'state-built-cell) (wasp-start-wandering w nest))
 
       ((eq? state 'state-walking-to-lay)
        (if (>= (entity-walk-time w) 1)
@@ -257,10 +257,7 @@
        (if (> (entity-timer w) wasp-laying-time)
 	   (wasp-modify-state w 'state-laid-egg)
 	   w))
-      ((eq? state 'state-laid-egg) 
-       (wasp-modify-state
-	(wasp-walk-to-cell w (nest-find-any-cell nest))
-	'state-wander))
+      ((eq? state 'state-laid-egg) (wasp-start-wandering w nest))
 
       ((eq? state 'state-walking-to-lay-repro)
        (if (>= (entity-walk-time w) 1)
@@ -270,10 +267,7 @@
        (if (> (entity-timer w) wasp-laying-time)
 	   (wasp-modify-state w 'state-laid-repro-egg)
 	   w))
-      ((eq? state 'state-laid-repro-egg) 
-       (wasp-modify-state
-	(wasp-walk-to-cell w (nest-find-any-cell nest))
-	'state-wander))
+      ((eq? state 'state-laid-repro-egg) (wasp-start-wandering w nest))
       
       ((eq? state 'state-wander)
        (if (>= (entity-walk-time w) 1)
@@ -311,14 +305,12 @@
 	  w (or			       
 	     (nest-find-occupied-cell nest)
 	     (nest-find-empty-cell nest)
-	     (nest-find-any-cell nest)))
+	     (nest-find-any-cell nest)) #f)
 	 'state-forage-feed)
 	#f))
       ((eq? state 'state-forage-feed)
-       (if (>= (entity-walk-time w) 1)	   
-	   (wasp-modify-state
-	    (wasp-walk-to-cell w (nest-find-any-cell nest))
-	    'state-wander)
+       (if (>= (entity-walk-time w) 1)
+	   (wasp-start-wandering w nest)
 	   (entity-walk w wasp-speed delta)))
        
       ((eq? state 'state-walking-to-tend)
@@ -329,10 +321,7 @@
        (if (> (entity-timer w) wasp-tending-time)
 	   (wasp-modify-state w 'state-tended)
 	   w))
-      ((eq? state 'state-tended) 
-       (wasp-modify-state
-	(wasp-walk-to-cell w (nest-find-any-cell nest))
-	'state-wander))
+      ((eq? state 'state-tended) (wasp-start-wandering w nest))
 
       ((eq? state 'state-disperse-start)
        (wasp-modify-state w 'state-disperse))
@@ -362,10 +351,7 @@
        (if (>= (entity-walk-time w) 1) 
 	   (wasp-modify-state w 'state-remove-egg)
 	   (entity-walk w wasp-speed delta)))      
-      ((eq? state 'state-remove-egg)
-       (wasp-modify-state
-	(wasp-walk-to-cell w (nest-find-any-cell nest))
-	'state-wander))
+      ((eq? state 'state-remove-egg) (wasp-start-wandering w nest))
       
       ((eq? state 'state-start-dying)
        (entity-modify-timer (wasp-modify-state w 'state-dying) 0))

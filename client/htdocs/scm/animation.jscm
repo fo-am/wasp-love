@@ -14,12 +14,13 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (make-anim-move id name variations frames speed) (list id name variations frames speed))
+(define (make-anim-move id name variations frames speed offset) (list id name variations frames speed offset))
 (define (anim-move-id a) (list-ref a 0))
 (define (anim-move-name a) (list-ref a 1))
 (define (anim-move-variations a) (list-ref a 2))
 (define (anim-move-frames a) (list-ref a 3))
 (define (anim-move-speed a) (list-ref a 4))
+(define (anim-move-offset a) (list-ref a 5))
 
 (define (anim-build-path dir variation move frame)
   (string-append 
@@ -57,12 +58,26 @@
    '()
    anim))
 
+(define (make-anim-clip speed frames offset)
+  (list speed frames offset))
+
+(define (anim-clip-speed c) (list-ref c 0))
+(define (anim-clip-frames c) (list-ref c 1))
+(define (anim-clip-offset c) (list-ref c 2))
+
+(define (anim-clip-frame-looped clip facing n)
+  (list-ref
+   (list-ref 
+    (anim-clip-frames clip)
+    (modulo n (length (anim-clip-frames clip))))
+   (if (eq? facing "left") 0 1)))
+
 (define (anim-load-frames variation anim)
   (map
    (lambda (move)
      ;; bolting speed onto the front of the frame list
      ;; so we can have different fps for different clips
-     (list
+     (make-anim-clip
       (anim-move-speed move)
       (map 
        (lambda (frame)
@@ -75,6 +90,7 @@
 	   (anim-build-path
 	    "right" (if (null? (anim-move-variations move)) "" variation)
 	    move frame))))
-       (anim-move-frames move))))
+       (anim-move-frames move))
+      (anim-move-offset move)))
    anim))
 
