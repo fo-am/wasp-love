@@ -76,6 +76,20 @@
       0 wasp-animation-idle (find-image "sprites/glow.png") 0 pos #f 0 0 (vec2 0 0))
      (list capabilities 'state-idle #f 'queen #f 'repro))))
 
+(define (make-demo-wasp capabilities) 
+  (let ((pos (vec2 (+ 100 (random 1000)) (+ 100 (random 500)))))
+    (append 
+     (make-entity 
+      (generate-entity-id!)
+      "wasp" 
+      pos
+      (vec2 200 150)
+      (choose (list "left" "right"))
+      (rndf)
+      (anim-load-frames (choose wasp-anim-variations) wasp-animation)
+      0 wasp-animation-idle #f 0 pos #f 0 0 (vec2 0 0))
+     (list capabilities 'state-idle #f 'queen #f 'repro))))
+
 (define (make-egg pos parent) 
   (append 
    (make-entity 

@@ -84,6 +84,7 @@
 (load "scm/nest.jscm")
 (load "scm/menu.jscm")
 (load "scm/info.jscm")
+(load "scm/demo.jscm")
 
 (define (button-image)
   (find-image (choose (list "button-1.png" "button-2.png" "button-3.png"))))
@@ -114,66 +115,58 @@
 
 (define (empty-nightjar-data time) (make-new-nest time))
 
-;; setup new game
-(define (nightjar-new-game c)
-  (nightjar-game
-   (game-modify-data
-    (lambda (d)
-      (empty-nightjar-data (/ (game-time c) 1000)))
-    c)))
-
-(set! randseed (choose (list 7.21 1)))
-
-(define (seeded-choose l)
-  (list-ref l (Math.floor (* (seeded-random) (length l)))))
-
 (define (nightjar-intro c)
     (game-modify-timeout
      (lambda ()
        (set! window.location "/"))
      (game-modify-data
       (lambda (d)
-	(empty-nightjar-data (/ (game-time c) 1000)))
-      (game-modify-render
-       (lambda (ctx)
-	 ;;(ctx.drawImage (find-image "crab1.png") 0 (+ crab-offset 355))
-	 (set! ctx.fillStyle "#606353")
-	 
-	 (set! ctx.font "normal 75pt pompiere")
-
-	 (wrap-text ctx "Why We Love Wasps" 0 200 1300 100)
-	 
-	 (set! ctx.font "normal 25pt pompiere")
-	 (wrap-text ctx "Wasps are super..." 0 300 800 40)
-	 (set! ctx.font "normal 30pt pompiere")
-
-
-	 )
-       
-       (game-modify-buttons
-	(list
-	 
-	 (rect-button
-	  "PLAY!"
-	  (- default-button-x 200)
-	  default-button-y
-	  default-button-width default-button-height
-	  "jumpy"
-	  (lambda (c)
-	    (button-sound)
-	    (nightjar-game-screen c)))
-	 
-	 (rect-button
-	  "ABOUT"
-	  (+ default-button-x 200)
-	  default-button-y
-	  default-button-width default-button-height
-	  "jumpy"
-	  (lambda (c)
-	    (button-sound)
-	    (nightjar-about c)))
-	 )
-	c)))))
+	(make-new-demo))
+      (game-modify-update
+       (lambda (t c)
+	 (game-modify-data
+	  (lambda (d)
+	    (demo-update (game-data c) (/ t 1000) (game-delta c)))
+	  c))
+       (game-modify-render
+	(lambda (ctx)
+	  (demo-render (game-data c) ctx)
+	  (set! ctx.fillStyle "#606353")
+	  
+	  (set! ctx.font "normal 75pt pompiere")
+	  
+	  (wrap-text ctx "Why We Love Wasps" 0 200 1300 100)
+	  
+	  (set! ctx.font "normal 25pt pompiere")
+	  (wrap-text ctx "Wasps are super..." 0 300 800 40)
+	  (set! ctx.font "normal 30pt pompiere")
+	  
+	  )
+	
+	(game-modify-buttons
+	 (list
+	  
+	  (rect-button
+	   "PLAY!"
+	   (- default-button-x 200)
+	   default-button-y
+	   default-button-width default-button-height
+	   "jumpy"
+	   (lambda (c)
+	     (button-sound)
+	     (nightjar-game-screen c)))
+	  
+	  (rect-button
+	   "ABOUT"
+	   (+ default-button-x 200)
+	   default-button-y
+	   default-button-width default-button-height
+	   "jumpy"
+	   (lambda (c)
+	     (button-sound)
+	     (nightjar-about c)))
+	  )
+	 c))))))
 
 (define (nightjar-about c)
    (game-modify-render
@@ -207,37 +200,40 @@
      c)))
 
 (define (nightjar-game-screen c)
-  (game-modify-mouse-hook
-   (lambda (state c)
-     (game-modify-data
-      (lambda (d)
-	(nest-update-mouse (game-data c) state (game-mx c) (game-my c)))
-      c))   
-   (game-modify-render
-    (lambda (ctx)
-      (nest-render (game-data c) ctx))
-    (game-modify-update
-     (lambda (t c)
-       (game-modify-data
-	(lambda (d)
-	  (nest-update (game-data c) (/ t 1000) (game-delta c)))
-	(if (or (> (nest-time-of-year (game-data c)) nest-year-length)
-		;;(< (nest-energy (game-data c)) 0)	    
-		(< (length (nest-wasps (game-data c))) 1))	    
-	    (nightjar-end c)
-	    c)))
-     (game-modify-buttons
-      (list
-       (rect-button
-	"RESTART"
-	20
-	default-button-y
-	default-button-width default-button-height
-	"jumpy"
-	(lambda (c)
-	  (button-sound)
-	  (nightjar-intro c)))
-       ) c)))))
+  (game-modify-data
+   (lambda (d)
+     (empty-nightjar-data (/ (game-time c) 1000)))
+   (game-modify-mouse-hook
+    (lambda (state c)
+      (game-modify-data
+       (lambda (d)
+	 (nest-update-mouse (game-data c) state (game-mx c) (game-my c)))
+       c))   
+    (game-modify-render
+     (lambda (ctx)
+       (nest-render (game-data c) ctx))
+     (game-modify-update
+      (lambda (t c)
+	(game-modify-data
+	 (lambda (d)
+	   (nest-update (game-data c) (/ t 1000) (game-delta c)))
+	 (if (or (> (nest-time-of-year (game-data c)) nest-year-length)
+		 ;;(< (nest-energy (game-data c)) 0)	    
+		 (< (length (nest-wasps (game-data c))) 1))	    
+	     (nightjar-end c)
+	     c)))
+      (game-modify-buttons
+       (list
+	(rect-button
+	 "RESTART"
+	 20
+	 default-button-y
+	 default-button-width default-button-height
+	 "jumpy"
+	 (lambda (c)
+	   (button-sound)
+	   (nightjar-intro c)))
+	) c))))))
 
 (define (nightjar-end c)
    (game-modify-render

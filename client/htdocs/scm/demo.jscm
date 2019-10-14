@@ -1,0 +1,73 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+(define (make-new-demo)
+  (make-demo (build-list 10 (lambda (_) (make-demo-wasp '())))))
+
+(define (make-demo wasps)
+  (list wasps))
+
+(define (demo-wasps d) (list-ref d 0))
+
+(define (demo-render d ctx)
+  ;; build and render the entity renderer
+  (renderer-render!
+   (renderer-add-entities
+    (renderer (list))
+    (demo-wasps d))
+   ctx))
+
+(define (demo-update d time delta)
+  (make-demo
+   (map
+    (lambda (wasp)
+      (entity-update (demo-wasp-update wasp delta) delta))
+    (demo-wasps d))))
+
+
+(define (demo-wasp-update w delta)
+  (wasp-update-animation
+   (let ((state (wasp-state w)))
+     (cond
+      ((eq? state 'state-idle)
+       (if (and (> (entity-timer w) 5) (zero? (random 100)))
+	   (wasp-modify-state
+	    (entity-walk-to-pos w (vec2 (random screen-width) (random screen-height)))
+	    (choose (list 'state-take-off 'state-wander)))
+	   w))
+      
+      ((eq? state 'state-wander)
+       (if (>= (entity-walk-time w) 1)
+	   (entity-modify-timer (wasp-modify-state w 'state-idle) 0)
+	   (entity-walk w wasp-speed delta)))
+
+      ((eq? state 'state-take-off)
+       (if (>= (entity-walk-time w) 1)
+      	   (entity-modify-timer (wasp-modify-state w 'state-forage-end) 0)
+	   (entity-walk w wasp-speed delta)))
+      
+      ((eq? state 'state-forage-end)       
+       	(wasp-modify-state 
+	 (entity-walk-to-pos w (vec2 (random screen-width) (random screen-height)))	 
+      	 'state-forage-feed))
+      ((eq? state 'state-forage-feed)
+       (if (>= (entity-walk-time w) 1)
+	   (entity-modify-timer (wasp-modify-state w 'state-idle) 0)
+      	   (entity-walk w wasp-speed delta)))
+       
+      (else w)))
+   delta))
