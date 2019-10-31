@@ -498,7 +498,8 @@
   
   (for-each
    (lambda (cell)
-     (when (not (eq? (cell-code cell) cell-code-unbuilt))
+     (when (and (not (eq? (cell-code cell) cell-code-unbuilt))
+		(not (eq? (cell-code cell) cell-code-building)))
 	   (let ((img (cell-img cell)))
 	     (ctx.drawImage
 	      (find-image "sprites/hex-drop.png")
@@ -508,7 +509,8 @@
 
   (for-each
    (lambda (cell)
-     (when (not (eq? (cell-code cell) cell-code-unbuilt))
+     (when (and (not (eq? (cell-code cell) cell-code-unbuilt))
+		(not (eq? (cell-code cell) cell-code-building)))
 	   (let ((img (cell-img cell)))
 	     (ctx.drawImage
 	      img
