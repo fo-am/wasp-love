@@ -64,106 +64,36 @@
       (pluto-response (scheme->json '("hello")))))
 
    (register
-    (req 'player '(played_before age_range))
-    (lambda (played-before age-range)
-      (let* ((id (insert-player db played-before age-range)))
+    (req 'player '())
+    (lambda ()
+      (let* ((id (insert-player db)))
+        (pluto-response (scheme->json id)))))
+   
+   (register
+    (req 'game '(player_id time))
+    (lambda (player_id time)
+      (let* ((id (insert-game db player_id time)))
         (pluto-response (scheme->json (list id))))))
 
    (register
-    (req 'game '(player_id species))
-    (lambda (player_id species)
-      (let* ((id (insert-game db player_id species)))
-        (pluto-response (scheme->json (list id))))))
-
-   (register
-    (req 'click '(game_id
-                  photo_name
-                  crab_name
-                  photo_habitat
-                  crab_habitat
-                  crab_x
-                  crab_y
-                  crab_rot
-                  time_stamp
-                  x_position
-                  y_position
-                  success))
-    (lambda (game_id
-             photo_name
-             crab_name
-             photo_habitat
-             crab_habitat
-             crab_x
-             crab_y
-             crab_rot
-             time_stamp
-             x_position
-             y_position
-             success)
-      (let* ((id (insert-click
-                  db
-                  game_id
-                  photo_name
-                  crab_name
-                  photo_habitat
-                  crab_habitat
-                  (number->string (inexact->exact (round (string->number crab_x))))
-                  (number->string (inexact->exact (round (string->number crab_y))))
-                  crab_rot
-                  time_stamp
-                  x_position
-                  y_position
-                  success)))
-        (pluto-response (scheme->json '())))))
-
-   (register
-    (req 'crab-time '(game_id
-                      photo_name
-                      crab_name
-                      photo_habitat
-                      crab_habitat
-                      time_stamp
-                      success_code))
-    (lambda (game_id
-             photo_name
-             crab_name
-             photo_habitat
-             crab_habitat
-             time_stamp
-             success_code)
-      (let* ((id (insert-crab-time
-                  db
-                  game_id
-                  photo_name
-                  crab_name
-                  photo_habitat
-                  crab_habitat
-                  time_stamp
-                  success_code
-                  )))
-        (pluto-response (scheme->json '())))))
-
-   (register
-    (req 'score '(game_id))
-    (lambda (game_id)
-      (let ((av (get-game-average db (string->number game_id)))
-            (c (get-game-count db (string->number game_id))))
-        (pluto-response
-         (scheme->json (list av
-                             (get-game-rank db game_id av)
-                             (if (not c) 0 c)))))))
-
+    (req 'score '(game_id new_nests num_wasps_hatched cells_built num_reproductives_hatched energy_foraged survival_time))
+    (lambda (game_id new_nests num_wasps_hatched cells_built num_reproductives_hatched energy_foraged survival_time)
+      (update-score db game_id new_nests num_wasps_hatched cells_built num_reproductives_hatched energy_foraged survival_time)
+      (pluto-response
+       (scheme->json
+	(list (get-game-rank db game_id))))))
+	     
    (register
     (req 'hiscores '())
     (lambda ()
       (pluto-response
-       (scheme->json (get-hiscores db)))))
+       (scheme->json (hiscores-select db)))))
 
-   (register
-    (req 'stats '())
-    (lambda ()
-      (pluto-response
-       (scheme->json (get-stats db)))))
+;   (register
+;    (req 'stats '())
+;    (lambda ()
+;      (pluto-response
+;       (scheme->json (get-stats db)))))
 
    (register
     (req 'player-name '(player_id player_name))

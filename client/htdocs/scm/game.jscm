@@ -154,7 +154,13 @@
 	   "jumpy"
 	   (lambda (c)
 	     (button-sound)
-	     (nightjar-game-screen c)))
+	     (server-call-mutate
+	      "player"
+	      '() 
+	      (lambda (c data)
+		(msg data)
+		(nightjar-game-screen c)))
+	     c))
 	  
 	  (rect-button
 	   "ABOUT"
