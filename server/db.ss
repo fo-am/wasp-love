@@ -18,6 +18,23 @@
 (provide (all-defined-out))
 (require "logger.ss")
 
+(define (ms->frac ms)
+  (modulo (inexact->exact (round ms)) 1000))
+
+(define (timestamp-now)
+  (let* ((ms (current-inexact-milliseconds))
+         (t (seconds->date (inexact->exact (round (/ ms 1000))))))
+    (string-append
+     (number->string (date-year t)) "-"
+     (substring (number->string (+ (date-month t) 100)) 1 3) "-"
+     (substring (number->string (+ (date-day t) 100)) 1 3) " "
+     (substring (number->string (+ (date-hour t) 100)) 1 3) ":"
+     (substring (number->string (+ (date-minute t) 100)) 1 3) ":"
+     (substring (number->string (+ (date-second t) 100)) 1 3) "."
+     ;; get fractional second from milliseconds
+     (substring (number->string (+ (ms->frac ms) 1000)) 1 4)
+     )))
+
 (define (setup db)
   (exec/ignore db "create table player ( id integer primary key autoincrement)")
   (exec/ignore db "create table game ( id integer primary key autoincrement, player_id integer, time_stamp varchar, new_nests integer, num_wasps_hatched integer, cells_built integer, num_reproductives_hatched integer, energy_foraged real, survival_time real)")
@@ -27,15 +44,14 @@
 (define (insert-player db)
   (insert db "INSERT INTO player VALUES (NULL)"))
 
-(define (insert-game db player_id new_nests num_wasps_hatched cells_built num_reproductives_hatched energy_foraged survival_time)
+(define (insert-game db player_id)
   (insert
-   db "INSERT INTO game VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)"
-   player_id new_nests num_wasps_hatched cells_built
-   num_reproductives_hatched energy_foraged survival_time))
+   db "INSERT INTO game VALUES (NULL, ?, ?, 0, 0, 0, 0, 0, 0)"
+   player_id (timestamp-now)))
 
 (define (update-score db game_id new_nests num_wasps_hatched cells_built num_reproductives_hatched energy_foraged survival_time)
   (exec/ignore
-   db "update game set new_nests=?, num_wasps_hatched=?, cells_built=?, num_reproctives_hatched=?, energy_foraged=?, survival_time=? where id = ?"
+   db "update game set new_nests=?, num_wasps_hatched=?, cells_built=?, num_reproductives_hatched=?, energy_foraged=?, survival_time=? where id = ?"
    new_nests num_wasps_hatched cells_built
    num_reproductives_hatched energy_foraged survival_time
    game_id))
@@ -75,5 +91,5 @@
     (display s)(newline)
     (if (null? s)
 	999
-	(get-position (cadr s) (get-game-scores db)))))
+	(get-position (vector-ref (cadr s) 0) (get-game-scores db)))))
 

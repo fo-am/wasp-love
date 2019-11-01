@@ -70,9 +70,9 @@
         (pluto-response (scheme->json id)))))
    
    (register
-    (req 'game '(player_id time))
-    (lambda (player_id time)
-      (let* ((id (insert-game db player_id time)))
+    (req 'game '(player_id))
+    (lambda (player_id)
+      (let* ((id (insert-game db player_id)))
         (pluto-response (scheme->json (list id))))))
 
    (register
@@ -81,7 +81,7 @@
       (update-score db game_id new_nests num_wasps_hatched cells_built num_reproductives_hatched energy_foraged survival_time)
       (pluto-response
        (scheme->json
-	(list (get-game-rank db game_id))))))
+	(get-game-rank db game_id)))))
 	     
    (register
     (req 'hiscores '())

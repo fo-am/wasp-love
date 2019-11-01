@@ -27,6 +27,16 @@
 (define event-probability (local-get-param "wasp-game" "event-probability"))
 (define nest-reproductive-threshold (local-get-param "wasp-game" "nest-reproductive-threshold"))
 
+(define (nest-scores new-nests num-wasps-hatched cells-built
+		     num-reproductives-hatched energy-foraged)
+  (list new-nests num-wasps-hatched cells-built
+	num-reproductives-hatched energy-foraged))
+
+(define (nest-scores-new-nests n) (list-ref n 0))
+(define (nest-scores-modify-new-nests n s) (list-replace n 0 s))
+(define (nest-scores-num-wasps-hatched n) (list-ref n 1))
+(define (nest-scores-modify-num-wasps-hatched n s) (list-replace n 1 s))
+
 (define time-between-events
   (/ (- nest-year-length event-start-time) (+ (length (build-wasp-game-events)) 1)))
 
@@ -39,10 +49,10 @@
 	 (< time (* (/ nest-year-length 4) 3))) 'autumn)
    (else 'winter)))
 
-(define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult new-nest-score) 
-  (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult new-nest-score))
+(define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult scores game-id) 
+  (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult scores game-id))
 
-(define (make-new-nest time)
+(define (make-new-nest game-id time)
   (make-nest 
    (string->number (local-get-param "wasp-game" "nest-start-energy"))
    'city 0 
@@ -63,7 +73,9 @@
    (make-info-display
     (list
      ))
-   1 0))
+   1
+   (nest-scores 0 0 0 0 0)
+   game-id))
 
 (define (nest-energy n) (list-ref n 0))
 (define (nest-modify-energy n s) (list-replace n 0 s))
@@ -88,8 +100,9 @@
 (define (nest-modify-info-display n s) (list-replace n 11 s))
 (define (nest-energy-mult n) (list-ref n 12))
 (define (nest-modify-energy-mult n s) (list-replace n 12 s))
-(define (nest-new-nest-score n) (list-ref n 13))
-(define (nest-modify-new-nest-score n s) (list-replace n 13 s))
+(define (nest-scores n) (list-ref n 13))
+(define (nest-modify-scores n s) (list-replace n 13 s))
+(define (nest-game-id n) (list-ref n 14))
 
 (define (nest-wasps-update n delta)
   (map
@@ -407,7 +420,8 @@
 	    (nest-weather n)
 	    (nest-info-display n)
 	    (nest-energy-mult n)
-	    (nest-new-nest-score n))
+	    (nest-scores n)
+	    (nest-game-id n))
 	   (menu-selection menu))
 	  n))))
 
@@ -489,7 +503,8 @@
      (nest-weather n)
      (nest-update-info-text n time)
      (nest-energy-mult n)
-     (nest-new-nest-score n))
+     (nest-scores n)
+     (nest-game-id n))
     time)
    delta))
 
@@ -536,7 +551,7 @@
   (ctx.fillText (string-append "Energy: " (floor (nest-energy n))) 10 50)
   (ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 200 50)
   (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 400 50)
-  (ctx.fillText (string-append "New nests: " (nest-new-nest-score n)) 600 50)
+  (ctx.fillText (string-append "New nests: " (nest-scores n)) 600 50)
   
   (info-display-render (nest-info-display n) ctx)
   (when (nest-event n) (event-render n ctx))

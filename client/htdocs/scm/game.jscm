@@ -20,6 +20,7 @@
 (load "scm/local-storage.jscm")
 
 (define params-version 3)
+(define player-id -1)
 
 (let ((v (local-load "wasp-game-version")))
   (when (or (not v) (< v params-version))
@@ -113,7 +114,41 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (empty-nightjar-data time) (make-new-nest time))
+(define (empty-nightjar-data player-id time) (make-new-nest player-id time))
+
+(define (register-game c player-id)
+  (server-call-mutate
+   "game"
+   (list (list "player_id" player-id)) 
+   (lambda (c game-id)	 
+     (nightjar-game-screen c game-id)))
+  c)
+
+(define (update-scores c)
+  (server-call-mutate
+   "score"
+   (list
+    (list "game_id" (nest-game-id (game-data c)))
+    (list "new_nests" 0)
+    (list "num_wasps_hatched" 0)
+    (list "cells_built" 0)
+    (list "num_reproductives_hatched" 0)
+    (list "energy_foraged" 0)
+    (list "survival_time" (nest-time-of-year (game-data c)))
+    )
+   (lambda (c score-pos)
+     (nightjar-end c)))
+  c)
+
+(define (register c)
+  (if (< player-id 0)
+      (server-call-mutate
+       "player"
+       '() 
+       (lambda (c id)	 
+	 (set! player-id id)
+	 (register-game c player-id)))
+      (register-game c player-id)))
 
 (define (nightjar-intro c)
     (game-modify-timeout
@@ -154,12 +189,7 @@
 	   "jumpy"
 	   (lambda (c)
 	     (button-sound)
-	     (server-call-mutate
-	      "player"
-	      '() 
-	      (lambda (c data)
-		(msg data)
-		(nightjar-game-screen c)))
+	     (register c)
 	     c))
 	  
 	  (rect-button
@@ -205,10 +235,10 @@
          (nightjar-intro game))))
      c)))
 
-(define (nightjar-game-screen c)
+(define (nightjar-game-screen c player-id)
   (game-modify-data
    (lambda (d)
-     (empty-nightjar-data (/ (game-time c) 1000)))
+     (empty-nightjar-data player-id (/ (game-time c) 1000)))
    (game-modify-mouse-hook
     (lambda (state c)
       (game-modify-data
@@ -224,21 +254,21 @@
 	 (lambda (d)
 	   (nest-update (game-data c) (/ t 1000) (game-delta c)))
 	 (if (or (> (nest-time-of-year (game-data c)) nest-year-length)
-		 ;;(< (nest-energy (game-data c)) 0)	    
+		 (<= (nest-energy (game-data c)) 0)	    
 		 (< (length (nest-wasps (game-data c))) 1))	    
-	     (nightjar-end c)
+	     (update-scores c)
 	     c)))
       (game-modify-buttons
        (list
 	(rect-button
-	 "RESTART"
+	 "QUIT"
 	 20
 	 default-button-y
 	 default-button-width default-button-height
 	 "jumpy"
 	 (lambda (c)
 	   (button-sound)
-	   (nightjar-intro c)))
+	   (update-scores c)))
 	) c))))))
 
 (define (nightjar-end c)
