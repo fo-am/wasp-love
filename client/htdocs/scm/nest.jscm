@@ -27,16 +27,6 @@
 (define event-probability (local-get-param "wasp-game" "event-probability"))
 (define nest-reproductive-threshold (local-get-param "wasp-game" "nest-reproductive-threshold"))
 
-(define (nest-scores new-nests num-wasps-hatched cells-built
-		     num-reproductives-hatched energy-foraged)
-  (list new-nests num-wasps-hatched cells-built
-	num-reproductives-hatched energy-foraged))
-
-(define (nest-scores-new-nests n) (list-ref n 0))
-(define (nest-scores-modify-new-nests n s) (list-replace n 0 s))
-(define (nest-scores-num-wasps-hatched n) (list-ref n 1))
-(define (nest-scores-modify-num-wasps-hatched n s) (list-replace n 1 s))
-
 (define time-between-events
   (/ (- nest-year-length event-start-time) (+ (length (build-wasp-game-events)) 1)))
 
@@ -49,8 +39,8 @@
 	 (< time (* (/ nest-year-length 4) 3))) 'autumn)
    (else 'winter)))
 
-(define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult scores game-id) 
-  (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult scores game-id))
+(define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id) 
+  (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id))
 
 (define (make-new-nest game-id time)
   (make-nest 
@@ -74,7 +64,6 @@
     (list
      ))
    1
-   (nest-scores 0 0 0 0 0)
    game-id))
 
 (define (nest-energy n) (list-ref n 0))
@@ -100,9 +89,7 @@
 (define (nest-modify-info-display n s) (list-replace n 11 s))
 (define (nest-energy-mult n) (list-ref n 12))
 (define (nest-modify-energy-mult n s) (list-replace n 12 s))
-(define (nest-scores n) (list-ref n 13))
-(define (nest-modify-scores n s) (list-replace n 13 s))
-(define (nest-game-id n) (list-ref n 14))
+(define (nest-game-id n) (list-ref n 13))
 
 (define (nest-wasps-update n delta)
   (map
@@ -292,6 +279,7 @@
        (let ((energy 
 	      (+ (* nest-forage-benefit (nest-energy-mult n))
 		 (* (rndf) nest-forage-variation))))
+	 (update-scores-energy-foraged! energy)
 	 (nest-add-info 
 	  (nest-modify-energy n (+ (nest-energy n) energy))
 	  (string-append
@@ -309,12 +297,11 @@
 	(string-append "A WASP HAS DIED, " (length (nest-wasps n)) " WASPS LEFT")
 	'allow-dup time))
       ((eq? (wasp-state wasp) 'state-mated)
-       (nest-modify-new-nest-score
-	(nest-add-info 
-	 (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
-	 (string-append "CONGRATS: A NEW NEST HAS BEEN FOUNDED")
-	 'allow-dup time)
-	(+ (nest-new-nest-score n) 1)))       
+       (update-scores-new-nests! 1)
+       (nest-add-info 
+	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
+	(string-append "CONGRATS: A NEW NEST HAS BEEN FOUNDED")
+	'allow-dup time))
       ((eq? (wasp-state wasp) 'state-died-egg)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
@@ -374,7 +361,9 @@
   (let ((e (nest-event n)))
     (if e 
 	;; check an existing event
-	(let ((fn (event-fn e))) 
+	(let ((fn (event-fn e)))
+	  (when (< (event-time-left e) 0)
+		(update-scores-events-survived! 1))
 	  (fn
 	   (nest-modify-event n (if (< (event-time-left e) 0) #f e))
 	   delta
@@ -420,7 +409,6 @@
 	    (nest-weather n)
 	    (nest-info-display n)
 	    (nest-energy-mult n)
-	    (nest-scores n)
 	    (nest-game-id n))
 	   (menu-selection menu))
 	  n))))
@@ -503,7 +491,6 @@
      (nest-weather n)
      (nest-update-info-text n time)
      (nest-energy-mult n)
-     (nest-scores n)
      (nest-game-id n))
     time)
    delta))
@@ -551,7 +538,7 @@
   (ctx.fillText (string-append "Energy: " (floor (nest-energy n))) 10 50)
   (ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 200 50)
   (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 400 50)
-  (ctx.fillText (string-append "New nests: " (nest-scores n)) 600 50)
+  (ctx.fillText (string-append "New nests: " (scores-new-nests)) 600 50)
   
   (info-display-render (nest-info-display n) ctx)
   (when (nest-event n) (event-render n ctx))

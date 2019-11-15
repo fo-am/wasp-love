@@ -431,6 +431,7 @@
 (define (rgba-to-hex r g b a)
   (+ "#" (to-hex r) (to-hex g) (to-hex b) (to-hex a)))
 
+
 (define (text-flashy-render ctx txt x y t)
   (let ((m (ctx.measureText txt))
         (cm 0)
@@ -438,12 +439,17 @@
     (let ((ta (txt.split "")))
       (index-for-each
        (lambda (i c)
-         (let ((col (* 128 (sin (+ (* t 0.01) i)))))
-           (set! ctx.fillStyle (rgb-to-hex col col col)))
-         (set! cm (ctx.measureText c))
-         (ctx.fillText c (+ x pos) y)
-         (set! pos (+ pos cm.width)))
-       ta))))
+	 (set! ctx.fillStyle (rgb-to-hex
+			      (* 255 (sin (+ (* t -0.002) i)))
+			      (* 255 (sin (+ (* t -0.002) i)))
+			      0))
+	 (set! cm (ctx.measureText c))
+         (ctx.fillText c (+ x pos (- (/ screen-width 2) (/ m.width 2))) y)
+	 (set! pos (+ pos cm.width)))
+       ta)))
+  (set! ctx.fillStyle text-col))
+
+
 
 (define (button-text-flashy-render! b t)
   (let ((m (ctx.measureText (button-name b)))
@@ -469,7 +475,7 @@
    ((eq? (button-jitter b) "jumpy") (button-text-jumpy-render! b t))
    ((eq? (button-jitter b) "flashy") (button-text-flashy-render! b t))
    (else
-    (let ((m (ctx.measureText (button-name b))))
+    (let ((m (ctx.measureText (button-name b))))      
       (ctx.fillText
        (button-name b)
        (- (/ (button-w b) 2) (/ m.width 2))
@@ -480,24 +486,24 @@
   (if (in-rect? (button-x b) (button-y b)
                 (button-w b) (button-h b)
                 mx my)
-      (let ((fn (button-callback b)))
-        (list #t (fn c)))
+      (let ((rect-button-fn (button-callback b)))
+        (list #t (rect-button-fn c)))
       (list #f c)))
 
 (define (circle-button-update! b mx my c)
   (if (in-circle? (button-x b) (button-y b)
                   (button-r b) mx my)
-      (let ((fn (button-callback b)))
-        (list #t (fn c)))
+      (let ((circle-button-fn (button-callback b)))
+        (list #t (circle-button-fn c)))
       (list #f c)))
 
 (define (button-update! b e mx my c)
   (if (eq? e "move")
-      (let ((fn (button-mouse-over b)))
-        (if (and fn (in-rect? (button-x b) (button-y b)
-                              (button-w b) (button-h b)
-                              mx my))
-            (list #t (fn c))
+      (let ((button-update-fn (button-mouse-over b)))
+        (if (and button-update-fn (in-rect? (button-x b) (button-y b)
+					    (button-w b) (button-h b)
+					    mx my))
+            (list #t (button-update-fn c))
             (list #f c)))
       (cond
        ((or (eq? (button-type b) "rect-button")
@@ -520,12 +526,13 @@
 (define (image-button-render! ctx t b)
   (ctx.save)
   (ctx.translate (button-x b) (button-y b))
-  (button-text-render! b t)
-  (button-do-jittering b t)
+  ;;(button-do-jittering b t)
   (when (button-drawable b)
         (ctx.drawImage
          (button-drawable b)
          0 0))
+  (set! ctx.fillStyle text-col)
+  (button-text-render! b t)
   (ctx.restore))
 
 (define (animated-button-render! ctx t b)
@@ -654,8 +661,8 @@
     x (game-modify-my y g)))
 
 (define (game-mouse-down g mx my)
-  (let ((fn (game-mouse-hook g)))
-    (fn
+  (let ((game-mouse-down-fn (game-mouse-hook g)))
+    (game-mouse-down-fn
      "down"
      (cadr
       (buttons-update (game-buttons g) "down" mx my
@@ -715,24 +722,24 @@
 (define timeout-time 0)
 
 (define (top-update-game t game)
-  (let ((fn (game-update game)))
+  (let ((game-update-fn (game-update game)))
     (set! timeout-time (+ timeout-time (game-delta game)))
     (when (> timeout-time timeout-trigger)
-          (let ((fn (game-timeout game)))
-            (fn)))
+          (let ((game-timeout-fn (game-timeout game)))
+            (game-timeout-fn)))
     (set! game
           (game-animate-buttons
            (game-modify-time
             t (game-modify-delta
-               (fn t game) (/ (- t (game-time game)) 1000.0)))))))
+               (game-update-fn t game) (/ (- t (game-time game)) 1000.0)))))))
 
 (define (top-render-game ctx game)
-  (let ((fn (game-render game)))
-    (fn ctx)))
+  (let ((top-render-fn (game-render game)))
+    (top-render-fn ctx)))
 
 (define (top-postrender-game ctx game)
-  (let ((fn (game-postrender game)))
-    (fn ctx)))
+  (let ((postrender-fn (game-postrender game)))
+    (postrender-fn ctx)))
 
 (define clear-screen 1)
 

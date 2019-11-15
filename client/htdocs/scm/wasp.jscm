@@ -234,16 +234,20 @@
 	   w))
       ((eq? state 'state-tended-egg)
        (if (> (entity-timer w) wasp-egg-time)
-	   (if (eq? (wasp-type w) 'worker)
-	       (wasp-modify-capabilities
-		(wasp-modify-state w 'state-hatched)
-		default-capabilities)
-	       (entity-modify-bg-image
-		(wasp-modify-capabilities
-		 (wasp-modify-state w 'state-hatched)
-		 repro-capabilities)
-		;; add the glow indicator to the reproductives
-		(find-image "sprites/glow.png")))
+	   (cond
+	    ((eq? (wasp-type w) 'worker)
+	     (update-scores-num-workers-hatched! 1)
+	     (wasp-modify-capabilities
+	      (wasp-modify-state w 'state-hatched)
+	      default-capabilities))
+	    (else
+	     (update-scores-num-reproductives-hatched! 1)
+	     (entity-modify-bg-image
+	      (wasp-modify-capabilities
+	       (wasp-modify-state w 'state-hatched)
+	       repro-capabilities)
+	      ;; add the glow indicator to the reproductives
+	      (find-image "sprites/glow.png"))))
 	   w))
       ((eq? state 'state-hatched) (wasp-start-wandering w nest))
 
@@ -261,7 +265,9 @@
        (if (> (entity-timer w) wasp-build-time)
 	   (wasp-modify-state w 'state-built-cell)
 	   w))
-      ((eq? state 'state-built-cell) (wasp-start-wandering w nest))
+      ((eq? state 'state-built-cell)
+       (update-scores-cells-built! 1)
+       (wasp-start-wandering w nest))
 
       ((eq? state 'state-walking-to-lay)
        (if (>= (entity-walk-time w) 1)
@@ -436,6 +442,7 @@
 (define (wasp-update-wasps wasp wasps)
   (cond
    ((eq? (wasp-state wasp) 'state-laid-egg)
+    (update-scores-num-workers-laid! 1)
     (cons
      (make-egg (entity-walk-to wasp) (wasp-type wasp))
      wasps))

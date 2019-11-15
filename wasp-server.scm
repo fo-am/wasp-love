@@ -76,9 +76,9 @@
         (pluto-response (scheme->json (list id))))))
 
    (register
-    (req 'score '(game_id new_nests num_wasps_hatched cells_built num_reproductives_hatched energy_foraged survival_time))
-    (lambda (game_id new_nests num_wasps_hatched cells_built num_reproductives_hatched energy_foraged survival_time)
-      (update-score db game_id new_nests num_wasps_hatched cells_built num_reproductives_hatched energy_foraged survival_time)
+    (req 'score '(game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time))
+    (lambda (game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time)
+      (update-score db game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time)
       (pluto-response
        (scheme->json
 	(get-game-rank db game_id)))))
@@ -87,13 +87,15 @@
     (req 'hiscores '())
     (lambda ()
       (pluto-response
-       (scheme->json (hiscores-select db)))))
-
-;   (register
-;    (req 'stats '())
-;    (lambda ()
-;      (pluto-response
-;       (scheme->json (get-stats db)))))
+       (scheme->json (map
+		      vector->list
+		      (hiscores-select db))))))
+    
+   (register
+    (req 'rank '(id))
+    (lambda (id)
+      (pluto-response
+       (scheme->json (get-game-rank db id)))))
 
    (register
     (req 'player-name '(player_id player_name))

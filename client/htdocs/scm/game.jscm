@@ -21,6 +21,7 @@
 
 (define params-version 3)
 (define player-id -1)
+(define player-name "???")
 
 (let ((v (local-load "wasp-game-version")))
   (when (or (not v) (< v params-version))
@@ -82,13 +83,17 @@
 (load "scm/manicured-event.jscm")
 (load "scm/ant-event.jscm")
 (load "scm/ants.jscm")
+(load "scm/scores.jscm")
 (load "scm/nest.jscm")
 (load "scm/menu.jscm")
 (load "scm/info.jscm")
 (load "scm/demo.jscm")
 
 (define (button-image)
-  (find-image (choose (list "button-1.png" "button-2.png" "button-3.png"))))
+  (find-image (choose (list "sprites/hex-1.png"
+			    "sprites/hex-2.png"
+			    "sprites/hex-3.png"
+			    "sprites/hex-4.png"))))
 
 (define (small-button-image)
   (find-image (choose (list "button-s1.png"))))
@@ -121,23 +126,35 @@
    "game"
    (list (list "player_id" player-id)) 
    (lambda (c game-id)	 
+     (reset-scores!)
      (nightjar-game-screen c game-id)))
   c)
 
-(define (update-scores c)
+(define (send-update-scores c)
   (server-call-mutate
    "score"
    (list
     (list "game_id" (nest-game-id (game-data c)))
-    (list "new_nests" 0)
-    (list "num_wasps_hatched" 0)
-    (list "cells_built" 0)
-    (list "num_reproductives_hatched" 0)
-    (list "energy_foraged" 0)
+    (list "new_nests" (scores-new-nests))
+    (list "num_workers_laid" (scores-num-workers-laid))
+    (list "num_workers_hatched" (scores-num-workers-hatched))
+    (list "cells_built" (scores-cells-built))
+    (list "events_survived" (scores-events-survived))
+    (list "num_reproductives_hatched" (scores-num-reproductives-hatched))
+    (list "energy_foraged" (scores-energy-foraged))
     (list "survival_time" (nest-time-of-year (game-data c)))
     )
    (lambda (c score-pos)
-     (nightjar-end c)))
+     (if (eq? player-name "???")
+	 (nightjar-enter-name c)
+	 (begin
+	   (server-call-mutate
+	    "rank"
+	    (list (list "id" player-id))
+	    (lambda (game data)
+	      (button-sound)
+	      (nightjar-end game (JSON.parse data))))
+	   c))))
   c)
 
 (define (register c)
@@ -183,7 +200,7 @@
 	  
 	  (rect-button
 	   "PLAY!"
-	   (- default-button-x 200)
+	   (- default-button-x 400)
 	   default-button-y
 	   default-button-width default-button-height
 	   "jumpy"
@@ -193,8 +210,24 @@
 	     c))
 	  
 	  (rect-button
+	   "LEADERBOARD"
+	   default-button-x
+	   default-button-y
+	   default-button-width default-button-height
+	   "jumpy"
+	   (lambda (c)
+	     (button-sound)
+	     (server-call-mutate
+	      "hiscores"
+	      (list)
+	      (lambda (c scores)	      
+		(nightjar-hiscores c (JSON.parse scores))))
+	     c))
+	     
+	  
+	  (rect-button
 	   "ABOUT"
-	   (+ default-button-x 200)
+	   (+ default-button-x 400)
 	   default-button-y
 	   default-button-width default-button-height
 	   "jumpy"
@@ -256,7 +289,7 @@
 	 (if (or (> (nest-time-of-year (game-data c)) nest-year-length)
 		 (<= (nest-energy (game-data c)) 0)	    
 		 (< (length (nest-wasps (game-data c))) 1))	    
-	     (update-scores c)
+	     (send-update-scores c)
 	     c)))
       (game-modify-buttons
        (list
@@ -268,10 +301,12 @@
 	 "jumpy"
 	 (lambda (c)
 	   (button-sound)
-	   (update-scores c)))
+	   (send-update-scores c)))
 	) c))))))
 
-(define (nightjar-end c)
+(define (nightjar-end c rank)
+  (game-modify-mouse-hook
+   (lambda (state c) c)
    (game-modify-render
     (lambda (ctx)
       (set! ctx.fillStyle "#000")      
@@ -279,17 +314,14 @@
       (wrap-text ctx "Game Over" 0 200 1300 100)
       (set! ctx.font "normal 30pt pompiere")
       
-      (let ((n (game-data c)))
-	(ctx.fillText (string-append "Energy: " (floor (nest-energy n))) 500 300)
-	(ctx.fillText (string-append "Time of year: " (Math.floor (nest-time-of-year n))) 500 350)
-	(ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 500 400)
-	(ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 500 450)
-	(ctx.fillText (string-append "Reproductive wasps: " (length (filter (lambda (w) (eq? (wasp-type w) 'repro)) (nest-wasps n)))) 500 500)
-	(ctx.fillText (string-append "Cells: " (length (filter
-							(lambda (c) (not (eq? (cell-code c) cell-code-unbuilt)))
-							(nest-cells n)))) 500 550))
+      (let ((n (game-data c)))		
+	(ctx.fillText (string-append "Built " (scores-cells-built) " nest cells") 500 300)
+	(ctx.fillText (string-append "Laid " (scores-num-workers-laid) " worker eggs and " (scores-num-workers-hatched) " hatched") 500 350)
+	(ctx.fillText (string-append "Survived " (scores-events-survived) " events") 500 400)
+	(ctx.fillText (string-append "Produced " (scores-num-reproductives-hatched) " reproductive adults") 500 450)
+	(ctx.fillText (string-append "Foraged " (floor (scores-energy-foraged)) " energy units") 500 500)
+	(ctx.fillText (string-append "You came " rank) 500 550))      
       
-	
       (set! ctx.globalAlpha 0.5)
       ;;(ctx.drawImage (find-image "foam-logo.png") (- (+ default-button-x 200) 50) 790)
       (set! ctx.globalAlpha 1.0)      
@@ -309,8 +341,145 @@
 	(lambda (c)
 	  (button-sound)
 	  (nightjar-intro game))))
-      c))))
+      c)))))
 
+(define (nightjar-hiscores c scores)
+  (game-modify-render
+   (lambda (ctx)
+     (set! ctx.fillStyle "#000")      
+     (set! ctx.font "normal 75pt pompiere")
+     (wrap-text ctx "Leaderboard" 0 100 1300 100)
+     (set! ctx.font "normal 30pt pompiere")
+     
+     (wrap-text ctx "NAME" -300 180 1000 1)
+     (wrap-text ctx "NEW NESTS" 0 180 1000 1)
+     (wrap-text ctx "SURVIVAL TIME" 300 180 1000 1)
+     
+     (when scores
+	   (index-for-each
+	    (lambda (i e)
+	      (cond
+	       ((zero? i)
+		(set! ctx.font "bold 30pt pompiere")
+		(text-flashy-render ctx (list-ref e 0) -300 (+ 230 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (+ "" (list-ref e 1) " nests") 0 (+ 230 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (+ "" (/ (floor (* 100 (list-ref e 2))) 100) " seconds") 300 (+ 230 (* 45 i)) (game-time c))
+		(set! ctx.font "normal 30pt pompiere"))
+	       (else
+		(wrap-text ctx (list-ref e 0) -300 (+ 230 (* 45 i)) 1000 1)
+		(wrap-text ctx (+ ""  (list-ref e 1) " nests") 0 (+ 230 (* 45 i)) 1000 1)
+		(wrap-text ctx (+ ""  (/ (floor (* 100 (list-ref e 2))) 100) " seconds") 300 (+ 230 (* 45 i)) 1000 1))))
+	    
+	    scores))
+     
+     )
+   (game-modify-update
+    (lambda (t c)
+      c)
+    (game-modify-buttons
+     (list
+      (rect-button
+       "Back"
+       default-button-x
+       default-button-y
+       default-button-width 
+       default-button-height 
+       "jumpy"
+       (lambda (c)
+	 (button-sound)
+	 (nightjar-intro game))))
+     c))))
+
+(define (type-into str ch)
+  (car
+   (foldl
+    (lambda (c r)
+      (if (and (not (cadr r)) (eq? c "?"))
+          (list (string-append (car r) ch) #t)
+          (list (string-append (car r) c) (cadr r))))
+    (list "" #f)
+    (str.split ""))))
+
+(define (type-into-delete str)
+  (car (foldl
+        (lambda (c r)
+          ;;(console.log (list c r))
+          (if (and (not (cadr r)) (not (eq? c "?")))
+              (list (string-append "?" (car r)) #t)
+              (list (string-append c (car r)) (cadr r))))
+        (list "" #f)
+        (reverse (str.split "")))))
+
+(define (type-username ch c)
+  (set! player-name (dbg (type-into (dbg player-name) ch))))
+
+(define (type-delete c)
+  (set! player-name (type-into-delete player-name)))
+
+
+(define (qwertypos-x i)  
+  (cond ((< i 10) i)
+	((and (> i 9) (< i 19)) (- i 10))
+	(else (- i 19))))
+
+(define (qwertypos-y i)  
+  (cond ((< i 10) 0)
+	((and (> i 9) (< i 19)) 1)
+	(else 2)))
+
+(define (nightjar-enter-name c)
+  (game-modify-mouse-hook
+   (lambda (state c) c)
+   (game-modify-update
+    (lambda (t c) c)
+    (game-modify-render
+     (lambda (ctx)
+       (set! ctx.font "normal 30pt open-sans")
+       (wrap-text ctx "Enter your name" 0 200 1000 70)
+       (set! ctx.font "normal 50pt open-sans")
+       (wrap-text ctx player-name 0 280 1000 70)
+       (set! ctx.font "normal 30pt open-sans"))
+
+     (game-modify-buttons
+      (append
+       (index-map
+	(lambda (i ch)
+	  (let ((x (+ 200 (* (qwertypos-x i) 120)))
+		(y (+ 350 (* (qwertypos-y i) 130))))
+	    (image-button ch x y #f
+			  (button-image)
+			  (lambda (c)
+			    (button-sound)
+			    (type-username ch c)
+			    c))))
+	(list "Q" "W" "E" "R" "T" "Y" "U" "I" "O" "P"
+	      "A" "S" "D" "F" "G" "H" "J" "K" "L"
+	      "Z" "X" "C" "V" "B" "N" "M"))
+
+       (list
+	(rect-button "Delete" 900 700 default-button-width default-button-height "jumpy"
+		     (lambda (c)
+		       (button-sound)		      
+		       (type-delete c)
+		       c))
+
+	(rect-button "Done" 1250 700 default-button-width default-button-height "jumpy"
+		     (lambda (c)
+		       (button-sound)
+		       (server-call
+			"player-name"
+			(list
+			 (list "player_id" player-id)
+			 (list "player_name" player-name)))
+		       (server-call-mutate
+                        "rank"
+			(list (list "id" player-id))
+                        (lambda (game data)
+                          (button-sound)
+                          (nightjar-end game (JSON.parse data))))
+		       c))
+	))
+      c)))))
 
 
 (set! ctx.font "normal 75pt pompiere")
