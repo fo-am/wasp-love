@@ -320,7 +320,7 @@
 	(ctx.fillText (string-append "Survived " (scores-events-survived) " events") 500 400)
 	(ctx.fillText (string-append "Produced " (scores-num-reproductives-hatched) " reproductive adults") 500 450)
 	(ctx.fillText (string-append "Foraged " (floor (scores-energy-foraged)) " energy units") 500 500)
-	(ctx.fillText (string-append "You came " rank) 500 550))      
+	(ctx.fillText (string-append "You came " (- rank 1)) 500 550))      
       
       (set! ctx.globalAlpha 0.5)
       ;;(ctx.drawImage (find-image "foam-logo.png") (- (+ default-button-x 200) 50) 790)
