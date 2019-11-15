@@ -1,0 +1,48 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define (nest-scores new-nests num-workers-laid num-workers-hatched
+		     cells-built events-survived
+		     num-reproductives-hatched
+		     energy-foraged)
+  (list new-nests num-workers-laid num-workers-hatched cells-built events-survived
+	num-reproductives-hatched energy-foraged))
+
+(define current-scores (nest-scores 0 0 0 0 0 0 0))
+
+(define (reset-scores!)
+  (set! current-scores (nest-scores 0 0 0 0 0 0 0)))
+
+(define (update-scores i v)
+  (set! current-scores
+	(list-replace
+	 current-scores i (+ (list-ref current-scores i) v))))
+
+(define (update-scores-new-nests! v) (update-scores 0 v))	
+(define (update-scores-num-workers-laid! v) (update-scores 1 v))	
+(define (update-scores-num-workers-hatched! v) (update-scores 2 v))	
+(define (update-scores-cells-built! v) (update-scores 3 v))	
+(define (update-scores-events-survived! v) (update-scores 4 v))	
+(define (update-scores-num-reproductives-hatched! v) (update-scores 5 v))	
+(define (update-scores-energy-foraged! v) (update-scores 6 v))	
+
+(define (scores-new-nests) (list-ref current-scores 0))	
+(define (scores-num-workers-laid) (list-ref current-scores 1))	
+(define (scores-num-workers-hatched) (list-ref current-scores 2))	
+(define (scores-cells-built) (list-ref current-scores 3))	
+(define (scores-events-survived) (list-ref current-scores 4))	
+(define (scores-num-reproductives-hatched) (list-ref current-scores 5))	
+(define (scores-energy-foraged) (list-ref current-scores 6))	    	
