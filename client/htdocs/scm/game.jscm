@@ -352,7 +352,7 @@
      (set! ctx.font "normal 30pt pompiere")
      
      (wrap-text ctx "NAME" -300 180 1000 1)
-     (wrap-text ctx "NEW NESTS" 0 180 1000 1)
+     (wrap-text ctx "NEW NESTS FOUNDED" 0 180 1000 1)
      (wrap-text ctx "SURVIVAL TIME" 300 180 1000 1)
      
      (when scores
