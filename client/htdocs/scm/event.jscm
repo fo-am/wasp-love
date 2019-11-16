@@ -35,6 +35,8 @@
     ((eq? (event-type event) 'wildflower) (storm-update event delta))
     ((eq? (event-type event) 'manicured) (manicured-update event delta))
     ((eq? (event-type event) 'ant-attack) (ant-attack-update event nest delta))
+    ((eq? (event-type event) 'organic) (organic-update event nest delta))
+    ((eq? (event-type event) 'swatted) (swatted-update event nest delta))
     (else event))
    (- (event-time-left event) delta)))
 
@@ -55,6 +57,8 @@
      ((eq? (event-type event) 'wildflower) (wildflower-render ctx event))
      ((eq? (event-type event) 'manicured) (manicured-render ctx event))
      ((eq? (event-type event) 'ant-attack) (ant-attack-render ctx event))
+     ((eq? (event-type event) 'organic) (organic-render ctx event))
+     ((eq? (event-type event) 'swatted) (swatted-render ctx event))
      (else 0))))
 
 ;; if probs add up to less than 1 might return false
@@ -70,13 +74,27 @@
        (else (_ nval (cdr prob-lis))))))
   (_ (rndf) probs))
 
-(define (build-wasp-game-events)
-  (list
-   (storm-builder)
-   (pestcontrol-builder)
-   (wildflower-builder)
-   (manicured-builder)
-   (ant-attack-builder)
-   ))
+(define (build-wasp-game-events location)
+  (if (eq? location "city")
+      (list
+;       (storm-builder)
+;       (ant-attack-builder)
+;       (pestcontrol-builder)
+;       (manicured-builder)
+;       (manicured-builder)
+       (swatted-builder)
 
+       (organic-builder)
+;       (wildflower-builder)
+       )
+      (list
+       (storm-builder)
+       (ant-attack-builder)
+       (ant-attack-builder)
+
+       (wildflower-builder)
+       (organic-builder)
+       (wildflower-builder)
+       (organic-builder)
+       )))
 

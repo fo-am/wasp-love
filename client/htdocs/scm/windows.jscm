@@ -26,7 +26,7 @@
 (define (cloud-render c ctx pos weather)
   (let ((pos (v2add pos (cloud-pos c))))
     (ctx.drawImage
-     (if (eq? weather 'calm) (cloud-img c) (cloud-simg c))
+     (if (eq? weather 'stormy) (cloud-simg c) (cloud-img c))
      (- (vx pos) 200) (vy pos))))
 
 (define (cloud-update c delta dir)
@@ -93,16 +93,16 @@
   (ctx.beginPath)
   (ctx.rect (vx pos) (vy pos) (window-w w) (window-h w))
   (ctx.clip)
-  (if (eq? (window-weather w) 'calm)
-      (set! ctx.fillStyle highlight2-col)
-      (set! ctx.fillStyle "#122748")) ;; inverted highlight2 
+  (if (eq? (window-weather w) 'stormy)
+      (set! ctx.fillStyle "#122748") ;; inverted highlight2 
+      (set! ctx.fillStyle highlight2-col))
   (ctx.fillRect (vx pos) (vy pos) (window-w w) (window-h w))
 
   (for-each 
    (lambda (c)
      (cloud-render c ctx pos (window-weather w)))
    (window-clouds w))
-
+  
   ;; position wasp properly
   (cond
    ((eq? (wasp-state (window-wasp w)) 'state-mating)
@@ -123,7 +123,17 @@
     (entity-render
      (entity-modify-pos
       (window-wasp w) (vadd pos (vec2 150 90))) ctx)))  
-  
+
+  ;; draw swatter 
+  (when (eq? (window-weather w) 'swatted)
+	(ctx.save)
+	(ctx.translate (- (vx pos) 50) (- (vy pos) 100))	
+	(ctx.translate 28 270)	
+	(ctx.rotate (* 0.5 (sin (* (window-time w) 22))))	
+	(ctx.translate -28 -270)	
+	(ctx.drawImage (find-image "sprites/swatted.png") 0 0)
+	(ctx.restore))
+
   ;; draw rain as an animated repeating pattern
   (when (eq? (window-weather w) 'stormy)
 	(let ((pattern-fill

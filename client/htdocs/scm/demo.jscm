@@ -16,7 +16,7 @@
 
 
 (define (make-new-demo)
-  (make-demo (build-list 10 (lambda (_) (make-demo-wasp '())))))
+  (make-demo (build-list 3 (lambda (_) (make-demo-wasp '())))))
 
 (define (make-demo wasps)
   (list wasps))
@@ -37,7 +37,6 @@
     (lambda (wasp)
       (entity-update (demo-wasp-update wasp delta) delta))
     (demo-wasps d))))
-
 
 (define (demo-wasp-update w delta)
   (wasp-update-animation

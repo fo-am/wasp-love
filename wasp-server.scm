@@ -41,7 +41,7 @@
       (display "open existing db")(newline)
       (set! db (open (string->path db-name))))
     (begin
-      (display "makine new db")(newline)
+      (display "making new db")(newline)
       (set! db (open (string->path db-name)))
       (setup db)))
 
@@ -70,9 +70,9 @@
         (pluto-response (scheme->json id)))))
    
    (register
-    (req 'game '(player_id))
-    (lambda (player_id)
-      (let* ((id (insert-game db player_id)))
+    (req 'game '(player_id location))
+    (lambda (player_id location)
+      (let* ((id (insert-game db player_id location)))
         (pluto-response (scheme->json (list id))))))
 
    (register

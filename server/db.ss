@@ -37,17 +37,17 @@
 
 (define (setup db)
   (exec/ignore db "create table player ( id integer primary key autoincrement)")
-  (exec/ignore db "create table game ( id integer primary key autoincrement, player_id integer, time_stamp varchar, new_nests integer, num_workers_laid integer, num_workers_hatched integer, cells_built integer, events_survived integer, num_reproductives_hatched integer, energy_foraged real, survival_time real)")
+  (exec/ignore db "create table game ( id integer primary key autoincrement, player_id integer, location varchar, time_stamp varchar, new_nests integer, num_workers_laid integer, num_workers_hatched integer, cells_built integer, events_survived integer, num_reproductives_hatched integer, energy_foraged real, survival_time real)")
   (exec/ignore db "create table player_name ( id integer primary key autoincrement, player_id integer, player_name text )")
   )
 
 (define (insert-player db)
   (insert db "INSERT INTO player VALUES (NULL)"))
 
-(define (insert-game db player_id)
+(define (insert-game db player_id location)
   (insert
-   db "INSERT INTO game VALUES (NULL, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0)"
-   player_id (timestamp-now)))
+   db "INSERT INTO game VALUES (NULL, ?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0)"
+   player_id location (timestamp-now)))
 
 (define (update-score db game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time)
   (exec/ignore
@@ -64,7 +64,10 @@
 
 ;; get a list of all the scores
 (define (get-game-scores db)
-  (let* ((s (select db "select new_nests from game order by new_nests")))
+  (let* ((s (select db "select g.new_nests from game as g
+                        join player_name as n on g.player_id=n.player_id
+                        where n.player_name != '??'
+                        order by new_nests, survival_time")))
     (if (null? s)
         '()
         (map
@@ -74,7 +77,8 @@
 ;; get the player name/scores ordered for the hiscores list
 (define (hiscores-select db)
   (let ((r (select db "select n.player_name, g.new_nests, g.survival_time from game as g
-                     join player_name as n on g.player_id=n.player_id                     
+                     join player_name as n on g.player_id=n.player_id        
+                     where n.player_name !='???'
                      order by g.new_nests desc, g.survival_time desc limit 10")))
     (if (null? r) '() (cdr r))))
 

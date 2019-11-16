@@ -55,6 +55,7 @@
   (make-param "nest-start-wasps" 2 "wasps")
   (make-param "nest-energy-drain" 0.02 "energy units per sec")
   (make-param "event-start-time" (* 60 2.5) "seconds")
+  (make-param "event-time-between-events" 20 "seconds")
   (make-param "storm-duration" 10 "seconds")  
   (make-param "storm-deadliness" 0.1 "prob per second")
   (make-param "pestcontrol-duration" 10 "seconds")  
@@ -65,6 +66,10 @@
   (make-param "manicured-multiplier" 0.5 "energy reduction")
   (make-param "ant-duration" 10 "seconds")  
   (make-param "ant-number" 50 "ants")  
+  (make-param "organic-duration" 10 "seconds")  
+  (make-param "organic-multiplier" 2.0 "energy boost")
+  (make-param "swatted-duration" 10 "seconds")  
+  (make-param "swatted-deadliness" 0.2 "prob per second")
   ))
 
 (load "scm/ordered-list.jscm")
@@ -82,6 +87,8 @@
 (load "scm/wildflower-event.jscm")
 (load "scm/manicured-event.jscm")
 (load "scm/ant-event.jscm")
+(load "scm/organic-event.jscm")
+(load "scm/swatted-event.jscm")
 (load "scm/ants.jscm")
 (load "scm/scores.jscm")
 (load "scm/nest.jscm")
@@ -119,15 +126,16 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (empty-nightjar-data player-id time) (make-new-nest player-id time))
+(define (empty-nightjar-data player-id location time) (make-new-nest player-id location time))
 
-(define (register-game c player-id)
+(define (register-game c player-id location)
   (server-call-mutate
    "game"
-   (list (list "player_id" player-id)) 
+   (list (list "player_id" player-id)
+	 (list "location" location)) 
    (lambda (c game-id)	 
      (reset-scores!)
-     (nightjar-game-screen c game-id)))
+     (nightjar-game-screen c game-id location)))
   c)
 
 (define (send-update-scores c)
@@ -157,15 +165,15 @@
 	   c))))
   c)
 
-(define (register c)
+(define (register c location)
   (if (< player-id 0)
       (server-call-mutate
        "player"
        '() 
        (lambda (c id)	 
 	 (set! player-id id)
-	 (register-game c player-id)))
-      (register-game c player-id)))
+	 (register-game c player-id location)))
+      (register-game c player-id location)))
 
 (define (nightjar-intro c)
     (game-modify-timeout
@@ -206,8 +214,7 @@
 	   "jumpy"
 	   (lambda (c)
 	     (button-sound)
-	     (register c)
-	     c))
+	     (nightjar-location c)))
 	  
 	  (rect-button
 	   "LEADERBOARD"
@@ -237,6 +244,45 @@
 	  )
 	 c))))))
 
+(define (nightjar-location c)
+  (game-modify-render
+   (lambda (ctx)
+     (demo-render (game-data c) ctx)
+     (set! ctx.fillStyle "#606353")
+     (set! ctx.font "normal 75pt pompiere")
+     (wrap-text ctx "Choose your nest location" 0 200 1300 100)    
+     (set! ctx.font "normal 25pt pompiere")
+     (wrap-text ctx "Different places have different dangers and opportunities" 0 300 800 40)
+     (set! ctx.font "normal 30pt pompiere")
+     )
+	
+   (game-modify-buttons
+    (list
+     
+     (rect-button
+      "CITY"
+      (- default-button-x 200)
+      default-button-y
+      default-button-width default-button-height
+      "jumpy"
+      (lambda (c)
+	(button-sound)
+	(register c "city")
+	c))
+
+     (rect-button
+      "FOREST"
+      (+ default-button-x 200)
+      default-button-y
+      default-button-width default-button-height
+      "jumpy"
+      (lambda (c)
+	(button-sound)
+	(register c "forest")
+	c))
+     )
+    c)))
+
 (define (nightjar-about c)
    (game-modify-render
     (lambda (ctx)
@@ -246,7 +292,7 @@
       (wrap-text ctx "About the wasp game" 0 200 1300 100)
       (set! ctx.font "normal 22pt pompiere")
 
-      (wrap-text ctx "Blah blah" 0 300 800 40)
+      (wrap-text ctx "Please insert text and images about wasp research." 0 300 800 40)
       (set! ctx.font "normal 30pt pompiere")
 
       (set! ctx.globalAlpha 0.5)
@@ -257,7 +303,7 @@
     (game-modify-buttons
      (list
       (rect-button
-       "Back"
+       "BACK"
        default-button-x
        default-button-y
        default-button-width 
@@ -268,10 +314,10 @@
          (nightjar-intro game))))
      c)))
 
-(define (nightjar-game-screen c player-id)
+(define (nightjar-game-screen c player-id location)
   (game-modify-data
    (lambda (d)
-     (empty-nightjar-data player-id (/ (game-time c) 1000)))
+     (empty-nightjar-data player-id location (/ (game-time c) 1000)))
    (game-modify-mouse-hook
     (lambda (state c)
       (game-modify-data
@@ -332,7 +378,7 @@
      (game-modify-buttons
       (list
        (rect-button
-	"Back"
+	"BACK"
 	default-button-x
 	default-button-y
 	default-button-width 
@@ -379,7 +425,7 @@
     (game-modify-buttons
      (list
       (rect-button
-       "Back"
+       "BACK"
        default-button-x
        default-button-y
        default-button-width 
@@ -411,7 +457,7 @@
         (reverse (str.split "")))))
 
 (define (type-username ch c)
-  (set! player-name (dbg (type-into (dbg player-name) ch))))
+  (set! player-name (type-into player-name ch)))
 
 (define (type-delete c)
   (set! player-name (type-into-delete player-name)))
@@ -457,13 +503,13 @@
 	      "Z" "X" "C" "V" "B" "N" "M"))
 
        (list
-	(rect-button "Delete" 900 700 default-button-width default-button-height "jumpy"
+	(rect-button "DELETE" 900 700 default-button-width default-button-height "jumpy"
 		     (lambda (c)
 		       (button-sound)		      
 		       (type-delete c)
 		       c))
 
-	(rect-button "Done" 1250 700 default-button-width default-button-height "jumpy"
+	(rect-button "DONE" 1250 700 default-button-width default-button-height "jumpy"
 		     (lambda (c)
 		       (button-sound)
 		       (server-call
@@ -518,6 +564,7 @@
    "sprites/heart.png"
    "sprites/poison.png"
    "sprites/spray-can.png"
+   "sprites/swatted.png"
    "sprites/lightning.png"
    "sprites/rain.png"
    "sprites/rain2.png"

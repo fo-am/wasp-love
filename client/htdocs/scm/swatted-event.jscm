@@ -14,23 +14,27 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (wildflower-builder)
+(define (swatted-builder)
   (lambda ()
     (make-event 
-     'wildflower (local-get-param "wasp-game" "wildflower-duration")
+     'swatted (local-get-param "wasp-game" "swatted-duration")
      #f 
      (lambda (nest delta state)
        (cond
-	((eq? state 'first) (nest-modify-energy-mult nest (local-get-param "wasp-game" "wildflower-multiplier")))
-	((eq? state 'last) (nest-modify-energy-mult nest 1))
-	(else nest)))
+	((eq? state 'first) (nest-modify-weather nest 'swatted))
+	((eq? state 'last) (nest-modify-weather nest 'calm))
+	(else (nest-decimate
+	       nest
+	       (* (local-get-param "wasp-game" "swatted-deadliness")
+		  delta)
+	       (list 'state-forage 'state-forage-return)))))
      (lambda (nest)
        (nest-wasps-foraging? nest)))))
-       
-(define (wildflower-update event nest delta)
+
+(define (swatted-update event nest delta)
   event)
 
-(define (wildflower-render ctx event)
+(define (swatted-render ctx event)
   ;; explanation text box
   (set! ctx.font "normal 25pt pompiere")
   (set! ctx.fillStyle highlight2-col)
@@ -39,8 +43,7 @@
   (set! ctx.globalAlpha 1.0)
   (set! ctx.fillStyle text-col)
   (set! ctx.font "normal 50pt pompiere")
-
-  (ctx.drawImage (find-image "sprites/wildflowers1.png") 220 390)
-  (ctx.drawImage (find-image "sprites/wildflowers2.png") 830 400)
-  (wrap-text ctx "FORAGERS FOUND A WILDFLOWER GARDEN - NO PESTACIDES = DOUBLE ENERGY!" -145 480 450 70))
+  
+  (wrap-text ctx "OH NO!" -145 480 800 70)
+  (wrap-text ctx "YOUR FORAGERS FOUND A PICNIC AND ARE BEING SWATTED" -145 580 800 70))
 

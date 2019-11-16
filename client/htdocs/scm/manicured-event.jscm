@@ -42,5 +42,5 @@
 
   (ctx.drawImage (find-image "sprites/manicuredgarden1.png") 270 395)
   (ctx.drawImage (find-image "sprites/manicuredgarden2.png") 880 395)
-  (wrap-text ctx "FORAGERS FOUND A MANICURED GARDEN - HALF ENERGY!" -145 480 450 70))
+  (wrap-text ctx "FORAGERS FOUND A MANICURED GARDEN - PESTICIDES = HALF ENERGY!" -145 480 450 70))
 

@@ -24,11 +24,9 @@
 (define nest-forage-variation (local-get-param "wasp-game" "nest-forage-variation"))
 (define nest-energy-drain (local-get-param "wasp-game" "nest-energy-drain"))
 (define event-start-time (string->number (local-get-param "wasp-game" "event-start-time")))
+(define event-time-between-events (string->number (local-get-param "wasp-game" "event-time-between-events")))
 (define event-probability (local-get-param "wasp-game" "event-probability"))
 (define nest-reproductive-threshold (local-get-param "wasp-game" "nest-reproductive-threshold"))
-
-(define time-between-events
-  (/ (- nest-year-length event-start-time) (+ (length (build-wasp-game-events)) 1)))
 
 (define (time->season time)
   (cond
@@ -42,10 +40,10 @@
 (define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id) 
   (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id))
 
-(define (make-new-nest game-id time)
+(define (make-new-nest game-id location time)
   (make-nest 
    (string->number (local-get-param "wasp-game" "nest-start-energy"))
-   'city 0 
+   location 0 
    (build-list
     (string->number (local-get-param "wasp-game" "nest-start-wasps"))
     (lambda (_)
@@ -58,7 +56,7 @@
    (make-window-stack (list))
    #f
    event-start-time
-   (build-wasp-game-events)
+   (build-wasp-game-events location)
    'calm
    (make-info-display
     (list
@@ -352,7 +350,7 @@
 		      (cdr new-events))
 		     ;; set the time for the next event
 		     (+ (nest-next-event-time n)
-			time-between-events)))		
+			event-time-between-events)))		
 		  (nest-modify-next-event-time
 		   (nest-modify-event n #f)
 		   (+ (nest-next-event-time n) 5))))))))) ;; try again in 5 secs
@@ -496,7 +494,9 @@
    delta))
 
 (define (nest-render n ctx)
-  (ctx.drawImage (find-image "backgrounds/temperate-forest.png") 0 0)
+  (if (eq? (nest-location n) "city")
+      (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)
+      (ctx.drawImage (find-image "backgrounds/temperate-forest.png") 0 0))
   
   (for-each
    (lambda (cell)
@@ -539,6 +539,10 @@
   (ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 200 50)
   (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 400 50)
   (ctx.fillText (string-append "New nests: " (scores-new-nests)) 600 50)
+  (let ((t (- (nest-next-event-time n) (nest-time-of-year n))))
+    (when (and (> t 0)
+	       (< t 1000))
+	  (ctx.fillText (string-append "Next event: " (floor t)) 800 50)))
   
   (info-display-render (nest-info-display n) ctx)
   (when (nest-event n) (event-render n ctx))

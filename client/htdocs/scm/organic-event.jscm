@@ -14,23 +14,23 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (wildflower-builder)
+(define (organic-builder)
   (lambda ()
     (make-event 
-     'wildflower (local-get-param "wasp-game" "wildflower-duration")
+     'organic (local-get-param "wasp-game" "organic-duration")
      #f 
      (lambda (nest delta state)
        (cond
-	((eq? state 'first) (nest-modify-energy-mult nest (local-get-param "wasp-game" "wildflower-multiplier")))
+	((eq? state 'first) (nest-modify-energy-mult nest (local-get-param "wasp-game" "organic-multiplier")))
 	((eq? state 'last) (nest-modify-energy-mult nest 1))
 	(else nest)))
      (lambda (nest)
        (nest-wasps-foraging? nest)))))
        
-(define (wildflower-update event nest delta)
+(define (organic-update event nest delta)
   event)
 
-(define (wildflower-render ctx event)
+(define (organic-render ctx event)
   ;; explanation text box
   (set! ctx.font "normal 25pt pompiere")
   (set! ctx.fillStyle highlight2-col)
@@ -42,5 +42,5 @@
 
   (ctx.drawImage (find-image "sprites/wildflowers1.png") 220 390)
   (ctx.drawImage (find-image "sprites/wildflowers2.png") 830 400)
-  (wrap-text ctx "FORAGERS FOUND A WILDFLOWER GARDEN - NO PESTACIDES = DOUBLE ENERGY!" -145 480 450 70))
+  (wrap-text ctx "ORGANIC GARDEN FOUND - NO PESTACIDES = DOUBLE ENERGY!" -145 480 450 70))
 
