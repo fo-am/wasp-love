@@ -19,7 +19,7 @@
 (load "scm/nightjar.jscm")
 (load "scm/local-storage.jscm")
 
-(define params-version 3)
+(define params-version 4)
 (define player-id -1)
 (define player-name "???")
 
@@ -55,7 +55,7 @@
   (make-param "nest-forage-benefit" 20 "energy units")
   (make-param "nest-forage-variation" 5 "energy units")
   (make-param "nest-start-energy" 100 "energy units")
-  (make-param "nest-start-wasps" 2 "wasps")
+  (make-param "nest-start-wasps" 1 "wasps")
   (make-param "nest-energy-drain" 0.02 "energy units per sec")
   (make-param "event-start-time" (* 60 2.5) "seconds")
   (make-param "event-time-between-events" 20 "seconds")
