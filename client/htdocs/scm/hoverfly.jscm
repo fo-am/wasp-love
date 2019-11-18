@@ -1,0 +1,163 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define hoverfly-speed (local-get-param "wasp-game" "hoverfly-speed"))
+(define hoverfly-grub-time (local-get-param "wasp-game" "hoverfly-grub-time"))
+(define hoverfly-lay-time (local-get-param "wasp-game" "hoverfly-lay-time"))
+
+(define hoverfly-animation
+  (list
+   (make-anim-move "hoverfly" "grub" '() (list "1" "2") 8 (vec2 0 0))
+   (make-anim-move "hoverfly" "waggle" '() (list "3" "4" "5" "4" "3" "2" "1" "2") 16 (vec2 0 0))
+   (make-anim-move "hoverfly" "fly" '() (list "1" "2" "3" "4" "5" "4" "3" "2") 32 (vec2 0 0))
+   (make-anim-move "hoverfly" "idle" '() (list "1" "2") 8 (vec2 0 0))
+   ))
+
+(define hoverfly-offscreen (vec2 2000 1000))
+
+(define hoverfly-animation-grub 0)
+(define hoverfly-animation-waggle 1)
+(define hoverfly-animation-fly 2)
+(define hoverfly-animation-idle 3)
+
+(define (make-hoverfly) 
+  (let ((pos hoverfly-offscreen))
+    (append 
+     (make-entity 
+      (generate-entity-id!)
+      "hoverfly" 
+      pos
+      (vec2 300 300)
+      (choose (list "left" "right"))
+      (rndf)
+      (anim-load-frames "7" hoverfly-animation)
+      0 hoverfly-animation-fly #f 0 pos pos 0 0 (vec2 0 0))
+     (list 'state-search 0 #f))))
+
+(define (make-hoverfly-grub pos dest-egg) 
+  (append 
+   (make-entity 
+    (generate-entity-id!)
+    "hoverfly" 
+    pos
+    (vec2 300 300)
+    "left"
+    (rndf)
+    (anim-load-frames "7" hoverfly-animation)
+    0 hoverfly-animation-grub #f -1 pos pos 0 0 (vec2 0 0))
+   (list 'state-grub dest-egg #f)))
+
+(define (hoverfly-state w) (list-ref w (+ entity-size 0)))
+(define (hoverfly-modify-state w s) (list-replace w (+ entity-size 0) s))
+(define (hoverfly-dest-egg a) (list-ref a (+ entity-size 1)))
+(define (hoverfly-modify-dest-egg a s) (list-replace a (+ entity-size 1) s))
+(define (hoverfly-killed-egg a) (list-ref a (+ entity-size 2)))
+(define (hoverfly-modify-killed-egg a s) (list-replace a (+ entity-size 2) s))
+
+;; grub -> leave
+;; search -> occupied cell -> lay egg -> search/leave
+
+;; main state update function, full lifecycle of the hoverfly
+(define (hoverfly-update h delta nest)
+  (hoverfly-update-animation
+   (let ((state (hoverfly-state h)))
+     (cond
+      ((eq? state 'state-grub)
+       (if (> (entity-timer h) hoverfly-grub-time)
+	   (hoverfly-modify-state
+	    ;; flag hoverfly as having killed egg to be picked up later
+	    (hoverfly-modify-killed-egg h #t) 
+	    (if (< (rndf) 1.0) 'state-leave 'state-start-searching))
+	   (if (< (rndf) 0.01)
+	       (entity-modify-timer
+		(hoverfly-modify-state h 'state-waggle)
+		0)
+	       h)))
+      
+      ((eq? state 'state-waggle)
+       (if (> (entity-timer h) 0.5)
+	   (hoverfly-modify-state h 'state-grub)
+	   h))
+      
+      ((eq? state 'state-start-searching)
+       (hoverfly-modify-state
+	(hoverfly-modify-killed-egg h #f) 
+	'state-search))
+      
+      ((eq? state 'state-search)
+       (let ((egg (nest-find-egg nest)))
+	 ;; head to a egg or a random position
+	 (hoverfly-modify-state
+	  (if egg
+	      (hoverfly-modify-dest-egg	       
+	       (entity-walk-to-pos h (entity-pos egg))
+	       (entity-id egg))
+	      (entity-walk-to-pos
+	       h (vec2 (+ 100 (* (rndf) 1000))
+		       (+ 100 (* (rndf) 500)))))
+	  'state-wander)))
+      
+      ((eq? state 'state-wander)
+       (if (>= (entity-walk-time h) 1)
+	   (let ((egg (entity-list-slow-search
+		       (nest-wasps nest)
+		       (hoverfly-dest-egg h))))
+	     ;; check if egg still exists
+	     (if (and egg
+		      ;; is it still an egg?
+		      (or (eq? (wasp-state egg) 'state-egg)
+			  (eq? (wasp-state egg) 'state-tended-egg)))
+		 ;; (if so it can't have moved)		
+		 (entity-modify-timer (hoverfly-modify-state h 'state-laying) 0)
+		 ;; otherwise go back to searching
+		 (hoverfly-modify-state h 'state-search)))
+	   (entity-walk h hoverfly-speed delta)))
+      
+      ((eq? state 'state-laying)
+       (if (> (entity-timer h) hoverfly-lay-time)
+	   (hoverfly-modify-state h 'state-lay)
+	   h))
+
+      ((eq? state 'state-lay)
+       (hoverfly-modify-state h 'state-leave))
+	          
+      ((eq? state 'state-leave)       
+       (entity-walk-to-pos
+	(hoverfly-modify-state h 'state-leaving)
+	hoverfly-offscreen))
+       
+      ((eq? state 'state-leaving)
+       (if (>= (entity-walk-time h) 1)
+	   ;; return to the nest searching
+	   (hoverfly-modify-state h 'state-left)
+	   (entity-walk h hoverfly-speed delta)))
+      
+      (else h)))
+   delta))
+
+;; map the states to the right animation clips
+(define (hoverfly-update-animation w delta)  
+  (let ((state (hoverfly-state w)))
+    (entity-modify-clip 
+     (entity-modify-timer w (+ (entity-timer w) delta))
+     (cond
+      ((eq? state 'state-grub) hoverfly-animation-grub)
+      ((eq? state 'state-waggle) hoverfly-animation-waggle)
+      ((eq? state 'state-laying) hoverfly-animation-idle)
+      ((eq? state 'state-wander) hoverfly-animation-fly)
+      ((eq? state 'state-leave) hoverfly-animation-fly)
+      (else (entity-clip w))))))
+

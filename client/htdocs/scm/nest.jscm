@@ -310,6 +310,11 @@
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
 	(string-append "YOU BROOD IS BEING STOLEN")
 	'stolen-egg time))
+      ((eq? (wasp-state wasp) 'state-eaten-egg)
+       (nest-add-info 
+	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
+	(string-append "YOU BROOD IS BEING EATEN")
+	'eaten-egg time))
       (else r)))
    n
    (nest-wasps n))))

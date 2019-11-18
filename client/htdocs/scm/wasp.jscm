@@ -434,7 +434,8 @@
 	(eq? (wasp-state wasp) 'state-hatched)
 	(eq? (wasp-state wasp) 'state-died-egg)
 	(eq? (wasp-state wasp) 'state-remove-egg)
-	(eq? (wasp-state wasp) 'state-taken-egg))
+	(eq? (wasp-state wasp) 'state-taken-egg)
+	(eq? (wasp-state wasp) 'state-eaten-egg))
     (update-cell (entity-walk-to wasp) cells cell-code-empty))
    (else cells)))
 

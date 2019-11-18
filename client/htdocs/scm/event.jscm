@@ -37,6 +37,7 @@
     ((eq? (event-type event) 'ant-attack) (ant-attack-update event nest delta))
     ((eq? (event-type event) 'organic) (organic-update event nest delta))
     ((eq? (event-type event) 'swatted) (swatted-update event nest delta))
+    ((eq? (event-type event) 'hoverfly) (hoverfly-attack-update event nest delta))
     (else event))
    (- (event-time-left event) delta)))
 
@@ -46,6 +47,8 @@
     (cond
      ((and event (eq? (event-type event) 'ant-attack))
       (ant-attack-render-entities renderer event))
+     ((and event (eq? (event-type event) 'hoverfly))
+      (hoverfly-attack-render-entities renderer event))
      (else renderer))))
 
 (define (event-render nest ctx)
@@ -59,6 +62,7 @@
      ((eq? (event-type event) 'ant-attack) (ant-attack-render ctx event))
      ((eq? (event-type event) 'organic) (organic-render ctx event))
      ((eq? (event-type event) 'swatted) (swatted-render ctx event))
+     ((eq? (event-type event) 'hoverfly) (hoverfly-attack-render ctx event))
      (else 0))))
 
 ;; if probs add up to less than 1 might return false
@@ -82,10 +86,13 @@
 ;       (pestcontrol-builder)
 ;       (manicured-builder)
 ;       (manicured-builder)
-       (swatted-builder)
+;       (swatted-builder)
 
-       (organic-builder)
-;       (wildflower-builder)
+;       (organic-builder)
+					;       (wildflower-builder)
+
+       (hoverfly-attack-builder)
+       (hoverfly-attack-builder)
        )
       (list
        (storm-builder)

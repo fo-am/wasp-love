@@ -34,9 +34,12 @@
  (list
   (make-param "wasp-speed" 300 "pixels per second")
   (make-param "ant-speed" 300 "pixels per second")
+  (make-param "hoverfly-speed" 300 "pixels per second")
   (make-param "wasp-build-time" 5 "seconds")
   (make-param "wasp-laying-time" 5 "seconds")
   (make-param "wasp-egg-time" 20 "seconds") 
+  (make-param "hoverfly-grub-time" 20 "seconds")
+  (make-param "hoverfly-lay-time" 5 "seconds")
   (make-param "wasp-tending-time" 5 "seconds")
   (make-param "wasp-forage-time" 20 "seconds")
   (make-param "wasp-dying-time" 3 "seconds")
@@ -70,6 +73,8 @@
   (make-param "organic-multiplier" 2.0 "energy boost")
   (make-param "swatted-duration" 10 "seconds")  
   (make-param "swatted-deadliness" 0.2 "prob per second")
+  (make-param "hoverfly-attack-duration" 20 "seconds")  
+  (make-param "hoverfly-attack-number" 3 "hoverflies")  
   ))
 
 (load "scm/ordered-list.jscm")
@@ -90,6 +95,8 @@
 (load "scm/organic-event.jscm")
 (load "scm/swatted-event.jscm")
 (load "scm/ants.jscm")
+(load "scm/hoverfly.jscm")
+(load "scm/hoverfly-event.jscm")
 (load "scm/scores.jscm")
 (load "scm/nest.jscm")
 (load "scm/menu.jscm")
@@ -542,6 +549,7 @@
  (append 
   (anim->filenames wasp-animation)
   (anim->filenames ant-animation)
+  (anim->filenames hoverfly-animation)
   (list 
    "sprites/hex.png"
    "sprites/cloud-1.png"
