@@ -19,7 +19,7 @@
 (load "scm/nightjar.jscm")
 (load "scm/local-storage.jscm")
 
-(define params-version 4)
+(define params-version 5)
 (define player-id -1)
 (define player-name "???")
 
@@ -38,7 +38,7 @@
   (make-param "wasp-build-time" 5 "seconds")
   (make-param "wasp-laying-time" 5 "seconds")
   (make-param "wasp-egg-time" 20 "seconds") 
-  (make-param "hoverfly-grub-time" 20 "seconds")
+  (make-param "hoverfly-grub-time" 10 "seconds")
   (make-param "hoverfly-lay-time" 5 "seconds")
   (make-param "wasp-tending-time" 5 "seconds")
   (make-param "wasp-forage-time" 20 "seconds")
