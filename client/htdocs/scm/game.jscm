@@ -340,7 +340,7 @@
 	 (lambda (d)
 	   (nest-update (game-data c) (/ t 1000) (game-delta c)))
 	 (if (or (> (nest-time-of-year (game-data c)) nest-year-length)
-		 (<= (nest-energy (game-data c)) 0)	    
+		 ;; (<= (nest-energy (game-data c)) 0)	    
 		 (< (length (nest-wasps (game-data c))) 1))	    
 	     (send-update-scores c)
 	     c)))
