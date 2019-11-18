@@ -42,5 +42,5 @@
 
   (ctx.drawImage (find-image "sprites/wildflowers1.png") 220 390)
   (ctx.drawImage (find-image "sprites/wildflowers2.png") 830 400)
-  (wrap-text ctx "FORAGERS FOUND A WILDFLOWER GARDEN - NO PESTACIDES = DOUBLE ENERGY!" -145 480 450 70))
+  (wrap-text ctx "FORAGERS FOUND A WILDFLOWER GARDEN - NO PESTICIDES = DOUBLE ENERGY!" -145 480 450 70))
 
