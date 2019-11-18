@@ -81,23 +81,22 @@
 (define (build-wasp-game-events location)
   (if (eq? location "city")
       (list
-;       (storm-builder)
-;       (ant-attack-builder)
-;       (pestcontrol-builder)
-;       (manicured-builder)
-;       (manicured-builder)
-;       (swatted-builder)
-
-;       (organic-builder)
-					;       (wildflower-builder)
-
+       (storm-builder)
+       (ant-attack-builder)
+       (pestcontrol-builder)
+       (manicured-builder)
+       (manicured-builder)
+       (swatted-builder)
        (hoverfly-attack-builder)
-       (hoverfly-attack-builder)
+
+       (organic-builder)
        )
       (list
        (storm-builder)
        (ant-attack-builder)
        (ant-attack-builder)
+       (hoverfly-attack-builder)
+       (hoverfly-attack-builder)
 
        (wildflower-builder)
        (organic-builder)

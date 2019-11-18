@@ -39,26 +39,26 @@
      (make-entity 
       (generate-entity-id!)
       "hoverfly" 
-      pos
+      pos 0
       (vec2 300 300)
       (choose (list "left" "right"))
       (rndf)
       (anim-load-frames "7" hoverfly-animation)
       0 hoverfly-animation-fly #f 0 pos pos 0 0 (vec2 0 0))
-     (list 'state-search 0 #f))))
+     (list 'state-search 0 #f 0))))
 
 (define (make-hoverfly-grub pos dest-egg) 
   (append 
    (make-entity 
     (generate-entity-id!)
     "hoverfly" 
-    pos
+    pos (random 6.2)
     (vec2 300 300)
     "left"
     (rndf)
     (anim-load-frames "7" hoverfly-animation)
     0 hoverfly-animation-grub #f -1 pos pos 0 0 (vec2 0 0))
-   (list 'state-grub dest-egg #f)))
+   (list 'state-grub dest-egg #f (if (< (rndf) 0.5) -5 5))))
 
 (define (hoverfly-state w) (list-ref w (+ entity-size 0)))
 (define (hoverfly-modify-state w s) (list-replace w (+ entity-size 0) s))
@@ -66,6 +66,7 @@
 (define (hoverfly-modify-dest-egg a s) (list-replace a (+ entity-size 1) s))
 (define (hoverfly-killed-egg a) (list-ref a (+ entity-size 2)))
 (define (hoverfly-modify-killed-egg a s) (list-replace a (+ entity-size 2) s))
+(define (hoverfly-rotdir a) (list-ref a (+ entity-size 3)))
 
 ;; grub -> leave
 ;; search -> occupied cell -> lay egg -> search/leave
@@ -77,16 +78,27 @@
      (cond
       ((eq? state 'state-grub)
        (if (> (entity-timer h) hoverfly-grub-time)
-	   (hoverfly-modify-state
-	    ;; flag hoverfly as having killed egg to be picked up later
-	    (hoverfly-modify-killed-egg h #t) 
-	    (if (< (rndf) 1.0) 'state-leave 'state-start-searching))
+	   (entity-modify-rot
+	    (hoverfly-modify-state
+	     ;; flag hoverfly as having killed egg to be picked up later
+	     (hoverfly-modify-killed-egg h #t) 
+	     'state-leave)
+	    0)
 	   (if (< (rndf) 0.01)
 	       (entity-modify-timer
 		(hoverfly-modify-state h 'state-waggle)
 		0)
-	       h)))
-      
+	       (if (zero? (modulo (entity-frame h) 2))
+		   (entity-modify-pos
+		    (entity-modify-rot
+		     h (+ (* delta (hoverfly-rotdir h))
+			  (entity-rot h)))
+		    (v2add
+		     (entity-pos h)
+		     (vec2 (* 1.5 (sin (entity-rot h)))
+			   (* -1.5 (cos (entity-rot h))))))		   
+		   h))))
+            
       ((eq? state 'state-waggle)
        (if (> (entity-timer h) 0.5)
 	   (hoverfly-modify-state h 'state-grub)

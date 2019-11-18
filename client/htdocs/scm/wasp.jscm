@@ -68,7 +68,7 @@
      (make-entity 
       (generate-entity-id!)
       "wasp" 
-      pos
+      pos 0
       (vec2 200 150)
       (choose (list "left" "right"))
       (rndf)
@@ -82,7 +82,7 @@
      (make-entity 
       (generate-entity-id!)
       "wasp" 
-      pos
+      pos 0
       (vec2 200 150)
       (choose (list "left" "right"))
       (rndf)
@@ -95,7 +95,7 @@
    (make-entity 
     (generate-entity-id!)
     "wasp" 
-    pos
+    pos 0
     (vec2 300 300)
     "left"
     (rndf)
@@ -108,7 +108,7 @@
    (make-entity 
     (generate-entity-id!)
     "wasp" 
-    pos
+    pos 0
     (vec2 300 300)
     "left"
     (rndf)

@@ -30,7 +30,7 @@
      (make-entity 
       (generate-entity-id!)
       "ant" 
-      pos
+      pos 0
       (vec2 300 300)
       "left"
       (rndf)

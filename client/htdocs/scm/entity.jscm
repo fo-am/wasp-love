@@ -15,13 +15,13 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define (make-entity id type pos sprite-size facing t sprite-list
+(define (make-entity id type pos rot sprite-size facing t sprite-list
 		     frame clip bg-image depth-plane walk-from
 		     walk-to walk-time timer offset)
-  (list id type pos sprite-size facing t sprite-list frame clip
+  (list id type pos rot sprite-size facing t sprite-list frame clip
 	bg-image depth-plane walk-from walk-to walk-time timer offset))
 
-(define entity-size 16)
+(define entity-size 17)
 
 (define next-entity-id 0)
 (define (generate-entity-id!) 
@@ -32,28 +32,30 @@
 (define (entity-type e) (list-ref e 1))
 (define (entity-pos e) (list-ref e 2))
 (define (entity-modify-pos e p) (list-replace e 2 p))
-(define (entity-sprite-size e) (list-ref e 3))
-(define (entity-facing e) (list-ref e 4))
-(define (entity-modify-facing e v) (list-replace e 4 v))
-(define (entity-t e) (list-ref e 5))
-(define (entity-sprite-list e) (list-ref e 6))
-(define (entity-frame e) (list-ref e 7))
-(define (entity-clip e) (list-ref e 8))
-(define (entity-modify-clip e v) (list-replace e 8 v))
-(define (entity-bg-image e) (list-ref e 9))
-(define (entity-modify-bg-image e s) (list-replace e 9 s))
-(define (entity-depth-plane e) (list-ref e 10))
-(define (entity-modify-depth-plane e s) (list-replace e 10 s))
-(define (entity-walk-from e) (list-ref e 11))
-(define (entity-modify-walk-from e s) (list-replace e 11 s))
-(define (entity-walk-to e) (list-ref e 12))
-(define (entity-modify-walk-to e s) (list-replace e 12 s))
-(define (entity-walk-time e) (list-ref e 13))
-(define (entity-modify-walk-time e s) (list-replace e 13 s))
-(define (entity-timer e) (list-ref e 14))
-(define (entity-modify-timer e s) (list-replace e 14 s))
-(define (entity-offset e) (list-ref e 15))
-(define (entity-modify-offset e v) (list-replace e 15 v))
+(define (entity-rot e) (list-ref e 3))
+(define (entity-modify-rot e p) (list-replace e 3 p))
+(define (entity-sprite-size e) (list-ref e 4))
+(define (entity-facing e) (list-ref e 5))
+(define (entity-modify-facing e v) (list-replace e 5 v))
+(define (entity-t e) (list-ref e 6))
+(define (entity-sprite-list e) (list-ref e 7))
+(define (entity-frame e) (list-ref e 8))
+(define (entity-clip e) (list-ref e 9))
+(define (entity-modify-clip e v) (list-replace e 9 v))
+(define (entity-bg-image e) (list-ref e 10))
+(define (entity-modify-bg-image e s) (list-replace e 10 s))
+(define (entity-depth-plane e) (list-ref e 11))
+(define (entity-modify-depth-plane e s) (list-replace e 11 s))
+(define (entity-walk-from e) (list-ref e 12))
+(define (entity-modify-walk-from e s) (list-replace e 12 s))
+(define (entity-walk-to e) (list-ref e 13))
+(define (entity-modify-walk-to e s) (list-replace e 13 s))
+(define (entity-walk-time e) (list-ref e 14))
+(define (entity-modify-walk-time e s) (list-replace e 14 s))
+(define (entity-timer e) (list-ref e 15))
+(define (entity-modify-timer e s) (list-replace e 15 s))
+(define (entity-offset e) (list-ref e 16))
+(define (entity-modify-offset e v) (list-replace e 16 v))
 
 (define (entity-eq? a b)
   (eq? (entity-id a) (entity-id b)))
@@ -67,8 +69,20 @@
 		     (vx (entity-offset e))))
 	    (posy (+ (- (vy (entity-pos e)) (/ image.height 2))
 		     (vy (entity-offset e)))))
-	(when (entity-bg-image e) (ctx.drawImage (entity-bg-image e) posx posy))
-	(ctx.drawImage image posx posy)))))
+	(cond
+	 ((zero? (entity-rot e))
+	  (when (entity-bg-image e) (ctx.drawImage (entity-bg-image e) posx posy))
+	  (ctx.drawImage image posx posy))
+	 (else
+	  ;; render path for rotation is more complex
+	  (ctx.save)
+	  (ctx.translate posx posy)
+	  (ctx.translate (/ image.width 2) (/ image.height 2))
+	  (ctx.rotate (entity-rot e))
+	  (ctx.translate (/ image.width -2) (/ image.height -2))
+	  (when (entity-bg-image e) (ctx.drawImage (entity-bg-image e) 0 0))
+	  (ctx.drawImage image 0 0)
+	  (ctx.restore)))))))
 
 (define (drop-n n l)
   (cond
@@ -129,6 +143,7 @@
 	(entity-id e)
 	(entity-type e)
 	(entity-pos e)
+	(entity-rot e)
 	(entity-sprite-size e)
 	(entity-facing e)
 	(+ (entity-t e) (* delta speed))
