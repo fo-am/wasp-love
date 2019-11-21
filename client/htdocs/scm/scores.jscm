@@ -17,14 +17,14 @@
 (define (nest-scores new-nests num-workers-laid num-workers-hatched
 		     cells-built events-survived
 		     num-reproductives-hatched
-		     energy-foraged)
+		     energy-foraged forages)
   (list new-nests num-workers-laid num-workers-hatched cells-built events-survived
-	num-reproductives-hatched energy-foraged))
+	num-reproductives-hatched energy-foraged forages))
 
-(define current-scores (nest-scores 0 0 0 0 0 0 0))
+(define current-scores (nest-scores 0 0 0 0 0 0 0 0))
 
 (define (reset-scores!)
-  (set! current-scores (nest-scores 0 0 0 0 0 0 0)))
+  (set! current-scores (nest-scores 0 0 0 0 0 0 0 0)))
 
 (define (update-scores i v)
   (set! current-scores
@@ -38,6 +38,7 @@
 (define (update-scores-events-survived! v) (update-scores 4 v))	
 (define (update-scores-num-reproductives-hatched! v) (update-scores 5 v))	
 (define (update-scores-energy-foraged! v) (update-scores 6 v))	
+(define (update-scores-forages! v) (update-scores 7 v))	
 
 (define (scores-new-nests) (list-ref current-scores 0))	
 (define (scores-num-workers-laid) (list-ref current-scores 1))	
@@ -46,3 +47,4 @@
 (define (scores-events-survived) (list-ref current-scores 4))	
 (define (scores-num-reproductives-hatched) (list-ref current-scores 5))	
 (define (scores-energy-foraged) (list-ref current-scores 6))	    	
+(define (scores-forages) (list-ref current-scores 7))    	

@@ -76,9 +76,9 @@
         (pluto-response (scheme->json (list id))))))
 
    (register
-    (req 'score '(game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time))
-    (lambda (game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time)
-      (update-score db game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time)
+    (req 'score '(game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time forages score))
+    (lambda (game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time forages score)
+      (update-score db game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time forages score)
       (pluto-response
        (scheme->json
 	(get-game-rank db game_id)))))

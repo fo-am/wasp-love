@@ -74,7 +74,8 @@
   (renderer-add-entities renderer (event-data event)))
 
 (define (hoverfly-attack-render ctx event)
-  0)
+  (info-box-render-box ctx)
+  (info-box-render-text ctx "HOVERFLIES ARE SEARCHING FOR EGGS TO PARASITISE!"))
 
 
 

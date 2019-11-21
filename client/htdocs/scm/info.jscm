@@ -22,6 +22,7 @@
 (define (info-text i) (list-ref i 0))
 (define (info-id i) (list-ref i 1))
 (define (info-time i) (list-ref i 2))
+(define (info-modify-time i v) (list-replace i 2 v))
 
 (define (make-info-display items)
   (list items))
@@ -44,27 +45,38 @@
       d (make-info-display
 	 (append (info-display-items d) (list i)))))
 
-(define (info-display-update d time)
+(define (info-display-update d delta)
   (make-info-display
    (filter
     (lambda (i)
-      (< time (+ (info-time i) info-duration)))
-    (info-display-items d))))
+      (< (info-time i) info-duration))
+    (if (not (null? (info-display-items d)))
+	(cons
+	 (info-modify-time
+	  (car (info-display-items d))
+	  (+ (info-time (car (info-display-items d))) delta))
+	 (cdr (info-display-items d)))
+	'()))))
+
+(define info-box-x 100)
+(define info-box-y 650)
+(define info-box-w 1165)
+(define info-box-h 70)
+(define info-box-m -110)
+
+(define (info-box-render-box ctx) 
+  (set! ctx.fillStyle highlight2-col)
+  (ctx.fillRect info-box-x info-box-y info-box-w info-box-h))
+
+(define (info-box-render-text ctx text) 
+  (set! ctx.fillStyle text-col)
+  (set! ctx.font "bold 25pt pompiere")
+  (wrap-text ctx text info-box-m (+ info-box-y 48) info-box-w 30))
 
 (define (info-display-render d ctx)
-  (set! ctx.font "normal 35pt pompiere")
-  (let ((pos 70))
-    (index-for-each
-     (lambda (i item)
-       (let ((height
-	      (wrap-text-height
-	       ctx (info-text item) -445 (+ 50 pos) 700 70)))
-	 (set! ctx.fillStyle highlight2-col)
-	 (set! ctx.globalAlpha 0.8)
-	 (ctx.fillRect 0 (+ 0 pos) 800 height)
-	 (set! ctx.globalAlpha 1.0)
-	 (set! ctx.fillStyle text-col)
-	 (wrap-text ctx (info-text item) -445 (+ 50 pos) 700 70)
-	 (set! pos (+ pos height 10))))
-     (info-display-items d))))
+  (when (not (null? (info-display-items d)))
+	(let ((item (car (info-display-items d))))
+	  (info-box-render-box ctx)
+	  (info-box-render-text ctx (info-text item)))))
+
 

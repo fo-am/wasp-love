@@ -37,8 +37,17 @@
 	 (< time (* (/ nest-year-length 4) 3))) 'autumn)
    (else 'winter)))
 
-(define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id) 
-  (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id))
+(define (time->season-text time)
+  (cond
+   ((< time (/ nest-year-length 4)) "SPRING")
+   ((and (> time (/ nest-year-length 4)) 
+	 (< time (* (/ nest-year-length 4) 2))) "SUMMER")
+   ((and (> time (* (/ nest-year-length 4) 2)) 
+	 (< time (* (/ nest-year-length 4) 3))) "AUTUMN")
+   (else "WINTER")))
+
+(define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id score-popups) 
+  (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id score-popups))
 
 (define (make-new-nest game-id location time)
   (make-nest 
@@ -59,10 +68,10 @@
    (build-wasp-game-events location)
    'calm
    (make-info-display
-    (list
-     ))
+    (list))
    1
-   game-id))
+   game-id
+   '()))
 
 (define (nest-energy n) (list-ref n 0))
 (define (nest-modify-energy n s) (list-replace n 0 s))
@@ -88,6 +97,8 @@
 (define (nest-energy-mult n) (list-ref n 12))
 (define (nest-modify-energy-mult n s) (list-replace n 12 s))
 (define (nest-game-id n) (list-ref n 13))
+(define (nest-score-popups n) (list-ref n 14))
+(define (nest-modify-score-popups n v) (list-replace n 14 v))
 
 (define (nest-wasps-update n delta)
   (map
@@ -170,15 +181,24 @@
    #f
    (shuffle (nest-cells n))))
 
+;; close - too close, too croweded
+;; (define (nest-find-any-cell n)
+;;   (foldl
+;;    (lambda (c r)
+;;      (if (and (not r) (not (nest-wasp-present? n (cell-pos c))))
+;; 	 c r))
+;;    #f
+;;    (shuffle (cells-surrounding-built (nest-cells n)))))
+
 (define (nest-find-any-cell n)
   (foldl
    (lambda (c r)
-     (if (and (not r) (not (nest-wasp-present? n (cell-pos c))))
+     (if (and (not r)
+	      (eq? (cell-code c) cell-code-unbuilt)
+	      (not (nest-wasp-present? n (cell-pos c))))
 	 c r))
    #f
-   (shuffle (cells-surrounding-built (nest-cells n)))))
-
-;;(shuffle (nest-cells n))))
+   (shuffle (nest-cells n))))
 
 (define (in-list? i l)
   (foldl
@@ -271,50 +291,52 @@
        (if (> (entity-timer wasp) (/ wasp-egg-time 2))
 	   (nest-add-info 
 	    r (string-append "DON'T FORGET TO TEND YOUR BROOD")
-	    'tend-warning time)
+	    'tend-warning)
 	   r))
       ((eq? (wasp-state wasp) 'state-forage-end)
        (let ((energy 
 	      (+ (* nest-forage-benefit (nest-energy-mult n))
 		 (* (rndf) nest-forage-variation))))
 	 (update-scores-energy-foraged! energy)
-	 (nest-add-info 
-	  (nest-modify-energy n (+ (nest-energy n) energy))
-	  (string-append
-	   "FORAGER RETURNED WITH A " 
-	   (cond
-	    ((eq? (wasp-carrying wasp) 'spider) "SPIDER")
-	    ((eq? (wasp-carrying wasp) 'caterpillar) "CATERPILLAR")
-	    ((eq? (wasp-carrying wasp) 'fly) "FLY")
-	    (else "???"))
-	   " WORTH " (floor energy) " ENERGY POINTS")
-	  'allow-dup time)))
+	 (update-scores-forages! 1)
+	 (nest-modify-score-popups
+	  (nest-add-info 
+	   (nest-modify-energy n (+ (nest-energy n) energy))
+	   (string-append
+	    "FORAGER RETURNED WITH A " 
+	    (cond
+	     ((eq? (wasp-carrying wasp) 'spider) "SPIDER")
+	     ((eq? (wasp-carrying wasp) 'caterpillar) "CATERPILLAR")
+	     ((eq? (wasp-carrying wasp) 'fly) "FLY")
+	     (else "???"))
+	    " WORTH " (floor energy) " ENERGY POINTS")
+	   'allow-dup)
+	  (score-popups-add (nest-score-popups n) 'foraged "+1"))))
       ((eq? (wasp-state wasp) 'state-died)
-       (nest-add-info 
-	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
-	(string-append "A WASP HAS DIED, " (length (nest-wasps n)) " WASPS LEFT")
-	'allow-dup time))
+       (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
       ((eq? (wasp-state wasp) 'state-mated)
        (update-scores-new-nests! 1)
-       (nest-add-info 
-	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
-	(string-append "CONGRATS: A NEW NEST HAS BEEN FOUNDED")
-	'allow-dup time))
+       (nest-modify-score-popups
+	(nest-add-info 
+	 (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
+	 (string-append "CONGRATS: A NEW NEST HAS BEEN FOUNDED")
+	 'allow-dup)
+	(score-popups-add (nest-score-popups n) 'mated "+10")))
       ((eq? (wasp-state wasp) 'state-died-egg)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
 	(string-append "AN EGG HAS DIED AS IT WAS NOT TENDED")
-	'allow-dup time))
+	'allow-dup))
       ((eq? (wasp-state wasp) 'state-taken-egg)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
 	(string-append "YOU BROOD IS BEING STOLEN")
-	'stolen-egg time))
+	'stolen-egg))
       ((eq? (wasp-state wasp) 'state-eaten-egg)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
 	(string-append "YOU BROOD IS BEING EATEN")
-	'eaten-egg time))
+	'eaten-egg))
       (else r)))
    n
    (nest-wasps n))))
@@ -412,7 +434,8 @@
 	    (nest-weather n)
 	    (nest-info-display n)
 	    (nest-energy-mult n)
-	    (nest-game-id n))
+	    (nest-game-id n)
+	    (nest-score-popups n))
 	   (menu-selection menu))
 	  n))))
 
@@ -445,13 +468,13 @@
      (nest-wasps nest)))
    delta nest))
 
-(define (nest-add-info n text id time)
+(define (nest-add-info n text id)
   (nest-modify-info-display
    n (info-display-add
       (nest-info-display n)
-      (make-info text id time))))
+      (make-info text id 0))))
 
-(define (nest-update-info-text n time)
+(define (nest-update-info-text n delta)
   (info-display-update
    (cond
     ;;((< (length (nest-wasps n)) 2)
@@ -471,7 +494,7 @@
       (nest-info-display n)
       (make-info "IT'S NEARLY THE END OF THE WASP YEAR" 'year-end time)))
     (else (nest-info-display n)))
-   time)))
+   delta)))
 
 (define (nest-update n time delta)
   (nest-update-from-event
@@ -492,21 +515,22 @@
      (nest-next-event-time n)
      (nest-events n)
      (nest-weather n)
-     (nest-update-info-text n time)
+     (nest-update-info-text n delta)
      (nest-energy-mult n)
-     (nest-game-id n))
+     (nest-game-id n)
+     (score-popups-update (nest-score-popups n) delta))
     time)
    delta))
 
-(define (nest-render n ctx)
+(define (nest-render n ctx time)
   (if (eq? (nest-location n) "city")
       (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)
       (ctx.drawImage (find-image "backgrounds/temperate-forest.png") 0 0))
   
   (for-each
    (lambda (cell)
-     (when (and (not (eq? (cell-code cell) cell-code-unbuilt))
-		(not (eq? (cell-code cell) cell-code-building)))
+     (when (or #f (and (not (eq? (cell-code cell) cell-code-unbuilt))
+		       (not (eq? (cell-code cell) cell-code-building))))
 	   (let ((img (cell-img cell)))
 	     (ctx.drawImage
 	      (find-image "sprites/hex-drop.png")
@@ -535,21 +559,19 @@
   (window-stack-render (nest-window-stack n) ctx)
 
   (set! ctx.font "normal 25pt pompiere")
-  (set! ctx.fillStyle "#fff")
-  (set! ctx.globalAlpha 0.8)
-  (ctx.fillRect 0 0 800 70)
-  (set! ctx.globalAlpha 1.0)
-  (set! ctx.fillStyle "#000")
-  (ctx.fillText (string-append "Energy: " (floor (nest-energy n))) 10 50)
-  (ctx.fillText (string-append "Season: " (time->season (nest-time-of-year n))) 200 50)
-  (ctx.fillText (string-append "Wasps: " (length (nest-wasps n))) 400 50)
-  (ctx.fillText (string-append "New nests: " (scores-new-nests)) 600 50)
-  (let ((t (- (nest-next-event-time n) (nest-time-of-year n))))
-    (when (and (> t 0)
-	       (< t 1000))
-	  (ctx.fillText (string-append "Next event: " (floor t)) 800 50)))
-  
+  (set! ctx.fillStyle highlight-col)
+  (ctx.fillRect 0 0 1270 70)
+  (ctx.fillRect 0 630 1265 screen-height)
+  (set! ctx.fillStyle text-col)
+  (ctx.fillText (string-append "ENERGY: " (floor (nest-energy n))) 10 50)
+  (ctx.fillText (string-append "SEASON: " (time->season-text (nest-time-of-year n))) 200 50)
+  (when (not (null? (nest-score-popups n)))
+	(if (zero? (modulo (floor (/ time 100)) 2))
+	    (set! ctx.fillStyle "#fff")
+	    (set! ctx.fillStyle text-col)))
+  (ctx.fillText (string-append "SCORE: " (+ (scores-forages) (* score-per-mating (scores-new-nests)))) 450 50)
   (info-display-render (nest-info-display n) ctx)
   (when (nest-event n) (event-render n ctx))
+  (score-popups-render! (nest-score-popups n) ctx)
   
   (menu-render (nest-menu n)))

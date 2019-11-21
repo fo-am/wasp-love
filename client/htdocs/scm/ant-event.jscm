@@ -52,7 +52,8 @@
   (renderer-add-entities renderer (event-data event)))
 
 (define (ant-attack-render ctx event)
-  0)
+  (info-box-render-box ctx)
+  (info-box-render-text ctx "ANTS HAVE ARRIVED TO STEAL YOUR BROOD!"))
 
 
 

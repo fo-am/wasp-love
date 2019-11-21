@@ -1,0 +1,65 @@
+;; -*- mode: scheme; -*-
+;; Why We Love Wasps Copyright (C) 2019 FoAM Kernow
+;;
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU Affero General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU Affero General Public License for more details.
+;;
+;; You should have received a copy of the GNU Affero General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+(define score-popup-infotext
+  (list "3 plants pollinated!"
+	"Pests removed from ill plant!"
+	"2 plants pollinated!"))
+
+(define score-popup-max-time 5)
+
+(define (score-popup text info time) (list text info time))
+(define (score-popup-text s) (list-ref s 0))
+(define (score-popup-info s) (list-ref s 1))
+(define (score-popup-time s) (list-ref s 2))
+(define (score-popup-modify-time s v) (list-replace s 2 v))
+
+(define (score-popups-add p type text)
+  (cons
+   (score-popup
+    text
+    (if (eq? type 'foraged)
+	(choose score-popup-infotext)
+	"Increased chance of future nests!")
+    0)
+   p))
+
+(define (score-popups-update p delta)
+  (map
+   (lambda (s)
+     (score-popup-modify-time s (+ (score-popup-time s) delta)))  
+   (filter
+    (lambda (s)
+      (< (score-popup-time s) score-popup-max-time))
+    p)))
+  
+(define (score-popups-render! p ctx)
+  (for-each
+   (lambda (s)
+     (ctx.save)
+     (let ((sc (+ 1 (* (score-popup-time s) 0.2))))
+       (ctx.translate 500 100)		 
+       (ctx.scale sc sc)		 
+       (set! ctx.font "normal 25pt pompiere")
+       (set! ctx.fillStyle text-col)
+       (wrap-text ctx (score-popup-text s) (- (/ screen-width 2)) 0 100 30)
+       (set! ctx.font "normal 15pt pompiere")
+       (wrap-text ctx (score-popup-info s) (- (/ screen-width 2)) 40 100 30)
+       (ctx.restore)))
+   p))
+
+
+  

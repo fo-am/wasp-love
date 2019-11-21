@@ -37,7 +37,7 @@
 
 (define (setup db)
   (exec/ignore db "create table player ( id integer primary key autoincrement)")
-  (exec/ignore db "create table game ( id integer primary key autoincrement, player_id integer, location varchar, time_stamp varchar, new_nests integer, num_workers_laid integer, num_workers_hatched integer, cells_built integer, events_survived integer, num_reproductives_hatched integer, energy_foraged real, survival_time real)")
+  (exec/ignore db "create table game ( id integer primary key autoincrement, player_id integer, location varchar, time_stamp varchar, new_nests integer, num_workers_laid integer, num_workers_hatched integer, cells_built integer, events_survived integer, num_reproductives_hatched integer, energy_foraged real, survival_time real, forages integer, score integer)")
   (exec/ignore db "create table player_name ( id integer primary key autoincrement, player_id integer, player_name text )")
   )
 
@@ -46,14 +46,14 @@
 
 (define (insert-game db player_id location)
   (insert
-   db "INSERT INTO game VALUES (NULL, ?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0)"
+   db "INSERT INTO game VALUES (NULL, ?, ?, ?, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)"
    player_id location (timestamp-now)))
 
-(define (update-score db game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time)
+(define (update-score db game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time forages score)
   (exec/ignore
-   db "update game set new_nests=?, num_workers_laid=?, num_workers_hatched=?, cells_built=?, events_survived=?, num_reproductives_hatched=?, energy_foraged=?, survival_time=? where id = ?"
+   db "update game set new_nests=?, num_workers_laid=?, num_workers_hatched=?, cells_built=?, events_survived=?, num_reproductives_hatched=?, energy_foraged=?, survival_time=?, forages=?, score=? where id = ?"
    new_nests num_workers_laid num_workers_hatched cells_built events_survived
-   num_reproductives_hatched energy_foraged survival_time
+   num_reproductives_hatched energy_foraged survival_time forages score
    game_id))
 
 (define (insert-player-name db player_id player_name)
@@ -67,7 +67,7 @@
   (let* ((s (select db "select g.new_nests from game as g
                         join player_name as n on g.player_id=n.player_id
                         where n.player_name != '??'
-                        order by new_nests, survival_time")))
+                        order by score")))
     (if (null? s)
         '()
         (map
@@ -76,10 +76,10 @@
 
 ;; get the player name/scores ordered for the hiscores list
 (define (hiscores-select db)
-  (let ((r (select db "select n.player_name, g.new_nests, g.survival_time from game as g
+  (let ((r (select db "select n.player_name, g.new_nests, g.score from game as g
                      join player_name as n on g.player_id=n.player_id        
                      where n.player_name !='???'
-                     order by g.new_nests desc, g.survival_time desc limit 10")))
+                     order by score desc limit 10")))
     (if (null? r) '() (cdr r))))
 
 (define (get-position v ol)
@@ -91,8 +91,9 @@
   (_ 1 ol))
 
 (define (get-game-rank db game-id)
-  (let ((s (select db "select new_nests from game where id=?" game-id)))
+  (let ((s (select db "select count(*) from game where score >= (select score from game where id = ?)" game-id)))
     (if (null? s)
 	999
-	(get-position (vector-ref (cadr s) 0) (get-game-scores db)))))
+	(vector-ref (cadr s) 0))))
+
 

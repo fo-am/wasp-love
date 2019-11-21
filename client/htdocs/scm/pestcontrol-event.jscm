@@ -85,16 +85,10 @@
      ctx (event-data-attack-psys event)
      ;; pass can pos through as context to use below
      pos))
-    
+  ;; redraw box over spraycan
+  (set! ctx.fillStyle highlight-col)
+  (ctx.fillRect 0 630 1265 screen-height)
   ;; explanation text box
-  (set! ctx.font "normal 25pt pompiere")
-  (set! ctx.fillStyle highlight2-col)
-  (set! ctx.globalAlpha 0.8)
-  (ctx.fillRect 250 400 800 300)
-  (set! ctx.globalAlpha 1.0)
-  (set! ctx.fillStyle text-col)
-  (set! ctx.font "normal 50pt pompiere")
-  
-  (wrap-text ctx "OH NO!" -145 480 800 70)
-  (wrap-text ctx "YOUR NEST IS BEING POISONED BY THE CITY PEST CONTROLLERS" -145 580 800 70))
+  (info-box-render-box ctx)
+  (info-box-render-text ctx "YOUR NEST IS BEING POISONED BY THE CITY PEST CONTROLLERS"))
 
