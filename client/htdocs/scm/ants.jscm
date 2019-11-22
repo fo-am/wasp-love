@@ -22,7 +22,7 @@
    ))
 
 (define ant-animation-walk 0)
-(define ant-offscreen (vec2 2000 1000))
+(define ant-offscreen (vec2 2000 700))
 
 (define (make-ant) 
   (let ((pos ant-offscreen))

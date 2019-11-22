@@ -543,14 +543,14 @@
      (nest-next-event-time n)
      (nest-events n)
      (nest-weather n)
-     (nest-update-info-text n delta)
+     (if (nest-event n) 
+	 (nest-info-display n)
+	 (nest-update-info-text n delta))
      (nest-energy-mult n)
      (nest-game-id n)
      ;; only update popups if there is no event present
      ;; maintains messages to be shown after event is over
-     (if (nest-event n) 
-	 (nest-score-popups n)
-	 (score-popups-update (nest-score-popups n) delta))
+     (score-popups-update (nest-score-popups n) delta)
      (if (>= (nest-end-game-timer n) 0)
 	 (+ (nest-end-game-timer n) delta)	 
 	 (if (nest-check-end-game n)
