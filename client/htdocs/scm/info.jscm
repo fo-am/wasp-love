@@ -14,7 +14,7 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define info-duration 5)
+(define info-duration 7)
 
 (define (make-info text id time)
   (list text id time))

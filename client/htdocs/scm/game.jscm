@@ -581,6 +581,8 @@
    "sprites/manicuredgarden1.png"
    "sprites/manicuredgarden2.png"
    "sprites/ant/pupa-carry.png"
+   "sprites/menu-triangle.png"
+   "sprites/menu-triangle-up.png"
    "backgrounds/temperate-city.png"
    "backgrounds/temperate-forest.png"
    ))

@@ -21,15 +21,17 @@
 
 (define score-popup-max-time 5)
 
-(define (score-popup text info time) (list text info time))
-(define (score-popup-text s) (list-ref s 0))
-(define (score-popup-info s) (list-ref s 1))
-(define (score-popup-time s) (list-ref s 2))
-(define (score-popup-modify-time s v) (list-replace s 2 v))
+(define (score-popup type text info time) (list type text info time))
+(define (score-popup-type s) (list-ref s 0))
+(define (score-popup-text s) (list-ref s 1))
+(define (score-popup-info s) (list-ref s 2))
+(define (score-popup-time s) (list-ref s 3))
+(define (score-popup-modify-time s v) (list-replace s 3 v))
 
 (define (score-popups-add p type text)
   (cons
    (score-popup
+    type
     text
     (if (eq? type 'foraged)
 	(choose score-popup-infotext)
@@ -51,13 +53,15 @@
    (lambda (s)
      (ctx.save)
      (let ((sc (+ 1 (* (score-popup-time s) 0.2))))
-       (ctx.translate 500 100)		 
+       (if (eq? (score-popup-type s) 'energy)
+	   (ctx.translate 100 100)		 
+	   (ctx.translate 500 100))
        (ctx.scale sc sc)		 
        (set! ctx.font "normal 25pt pompiere")
        (set! ctx.fillStyle text-col)
        (wrap-text ctx (score-popup-text s) (- (/ screen-width 2)) 0 100 30)
-       (set! ctx.font "normal 15pt pompiere")
-       (wrap-text ctx (score-popup-info s) (- (/ screen-width 2)) 40 100 30)
+       ;;(set! ctx.font "normal 15pt pompiere")
+       ;;(wrap-text ctx (score-popup-info s) (- (/ screen-width 2)) 40 100 30)
        (ctx.restore)))
    p))
 

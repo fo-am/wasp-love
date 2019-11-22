@@ -58,9 +58,9 @@
     (lambda (_)
       (make-wasp default-capabilities)))
    (build-menu 
-    (vec2 100 100) #f 
+    (vec2 100 100) #f 'up #f 
     (list)
-    #f 0)
+    #f 0 0)
    (generate-cells cell-size-x cell-size-y)
    (make-window-stack (list))
    #f
@@ -283,6 +283,14 @@
 	 wasp))
    (nest-wasps n)))
 
+(define (nest-forage-message wasp)
+  (string-append
+   (cond
+    ((eq? (wasp-carrying wasp) 'spider) (string-append "FORAGER CAUGHT A SPIDER AND POLLINATED " (+ (random 10) 2) " PLANTS"))
+    ((eq? (wasp-carrying wasp) 'caterpillar) (string-append "FORAGER CAUGHT A CATERPILLAR AND SAVED " (+ (random 10) 2) " PLANTS"))
+    ((eq? (wasp-carrying wasp) 'fly) (string-append "FORAGER CAUGHT A FLY AND POLLINATED " (+ (random 10) 2) " PLANTS"))
+    (else "???"))))
+
 (define (nest-update-from-wasps n time)
   (foldl
    (lambda (wasp r)
@@ -295,23 +303,17 @@
 	   r))
       ((eq? (wasp-state wasp) 'state-forage-end)
        (let ((energy 
-	      (+ (* nest-forage-benefit (nest-energy-mult n))
-		 (* (rndf) nest-forage-variation))))
+	      (floor (+ (* nest-forage-benefit (nest-energy-mult n))
+			(* (rndf) nest-forage-variation)))))
 	 (update-scores-energy-foraged! energy)
 	 (update-scores-forages! 1)
 	 (nest-modify-score-popups
-	  (nest-add-info 
-	   (nest-modify-energy n (+ (nest-energy n) energy))
-	   (string-append
-	    "FORAGER RETURNED WITH A " 
-	    (cond
-	     ((eq? (wasp-carrying wasp) 'spider) "SPIDER")
-	     ((eq? (wasp-carrying wasp) 'caterpillar) "CATERPILLAR")
-	     ((eq? (wasp-carrying wasp) 'fly) "FLY")
-	     (else "???"))
-	    " WORTH " (floor energy) " ENERGY POINTS")
-	   'allow-dup)
-	  (score-popups-add (nest-score-popups n) 'foraged "+1"))))
+	  (nest-modify-score-popups
+	   (nest-add-info 
+	    (nest-modify-energy n (+ (nest-energy n) energy))
+	    (nest-forage-message wasp) 'forager-return) 
+	   (score-popups-add (nest-score-popups n) 'foraged "+1"))
+	  (score-popups-add (nest-score-popups n) 'energy (+ "+" energy)))))
       ((eq? (wasp-state wasp) 'state-died)
        (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
       ((eq? (wasp-state wasp) 'state-mated)
@@ -337,6 +339,11 @@
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
 	(string-append "YOU BROOD IS BEING EATEN")
 	'eaten-egg))
+      ((eq? (wasp-state wasp) 'state-remove-egg)
+       (nest-add-info 
+	n ;; already removed in wasp-update-wasps
+	(string-append "A WORKER'S EGG HAS BEEN REMOVED")
+	'worker-egg))
       (else r)))
    n
    (nest-wasps n))))
@@ -419,9 +426,13 @@
 		     ;;(not (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
 		     )
 		(build-menu
-		 (v2add (entity-pos wasp) (vec2 -100 -300)) #t
+		 (menu-munge-location (entity-pos wasp))
+		 (wasp-type wasp)
+		 (menu-calc-direction (entity-pos wasp))
+		 #t		 
 		 (wasp-build-menu-options wasp n) #f 
-		 (entity-id wasp))
+		 (entity-id wasp)
+		 0)
 		;; need to clear the menu to stop it retriggering
 		(if (menu-selection menu)
 		    (menu-clear menu)
@@ -484,15 +495,15 @@
     ((<= (nest-energy n) 0)
      (info-display-add
       (nest-info-display n)
-      (make-info "YOUR NEST HAS NO ENERGY REMAINING" 'no-energy time)))
+      (make-info "YOUR NEST HAS NO ENERGY REMAINING" 'no-energy 0)))
     ((<= (nest-energy n) 20)
      (info-display-add
       (nest-info-display n)
-      (make-info "YOUR NEST HAS LOW ENERGY" 'low-energy time)))
+      (make-info "YOUR NEST HAS LOW ENERGY" 'low-energy 0)))
     ((> (nest-time-of-year n) (- nest-year-length 20))
      (info-display-add
       (nest-info-display n)
-      (make-info "IT'S NEARLY THE END OF THE WASP YEAR" 'year-end time)))
+      (make-info "IT'S NEARLY THE END OF THE WASP YEAR" 'year-end 0)))
     (else (nest-info-display n)))
    delta)))
 
@@ -508,7 +519,7 @@
      (+ (nest-time-of-year n) delta)
      (nest-wasps-update-wasps
       (nest-wasps-update n delta))
-     (nest-menu n)
+     (menu-update (nest-menu n) delta)
      (nest-wasps-update-cells n)
      (nest-update-window-stack n delta)    
      (event-update (nest-event n) n delta)
@@ -518,7 +529,11 @@
      (nest-update-info-text n delta)
      (nest-energy-mult n)
      (nest-game-id n)
-     (score-popups-update (nest-score-popups n) delta))
+     ;; only update popups if there is no event present
+     ;; maintains messages to be shown after event is over
+     (if (nest-event n) 
+	 (nest-score-popups n)
+	 (score-popups-update (nest-score-popups n) delta)))
     time)
    delta))
 
@@ -572,6 +587,5 @@
   (ctx.fillText (string-append "SCORE: " (+ (scores-forages) (* score-per-mating (scores-new-nests)))) 450 50)
   (info-display-render (nest-info-display n) ctx)
   (when (nest-event n) (event-render n ctx))
-  (score-popups-render! (nest-score-popups n) ctx)
-  
+  (score-popups-render! (nest-score-popups n) ctx)  
   (menu-render (nest-menu n)))

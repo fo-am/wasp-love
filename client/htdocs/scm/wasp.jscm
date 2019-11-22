@@ -252,7 +252,7 @@
       ((eq? state 'state-hatched) (wasp-start-wandering w nest))
 
       ((eq? state 'state-idle)
-       (if (> (entity-timer w) 5)
+       (if (and (eq? (wasp-type w) 'queen) (> (entity-timer w) 5))
 	   (wasp-modify-state w 'state-egg-check)
 	   w))
 

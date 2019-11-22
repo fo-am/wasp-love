@@ -15,6 +15,8 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+(define menu-timeout 5)
+
 (define (build-menu-option key text)
   (list key text))
 
@@ -23,18 +25,26 @@
 
 ;; keep menu on screen
 (define (menu-munge-location loc)
-  (if (< (vy loc) 50) (vec2 (vx loc) 50) loc))
+    (vec2
+     (- (vx loc) (/ menu-width 2))
+     (- (vy loc) 50)))
 
-(define (build-menu pos visible options selection entity-id)
-  (list (menu-munge-location pos) visible options selection entity-id))
+(define (menu-calc-direction loc)
+  (if (> (vy loc) 300) 'up 'down))
+
+(define (build-menu pos wasp-type direction visible options selection entity-id time)
+  (list pos wasp-type direction visible options selection entity-id time))
 
 (define (menu-pos m) (list-ref m 0))
-(define (menu-visible m) (list-ref m 1))
-(define (menu-options m) (list-ref m 2))
-(define (menu-selection m) (list-ref m 3))
-(define (menu-entity-id m) (list-ref m 4))
+(define (menu-wasp-type m) (list-ref m 1))
+(define (menu-direction m) (list-ref m 2))
+(define (menu-visible m) (list-ref m 3))
+(define (menu-options m) (list-ref m 4))
+(define (menu-selection m) (list-ref m 5))
+(define (menu-entity-id m) (list-ref m 6))
+(define (menu-time m) (list-ref m 7))
 
-(define (menu-clear m) (build-menu (vec2 0 0) #f '() #f #f))
+(define (menu-clear m) (build-menu (vec2 0 0) #f 'up #f '() #f #f 0))
 
 (define menu-width 250)
 (define menu-height 70)
@@ -42,33 +52,63 @@
 (define (menu-update-click m mx my)
   (if (not (menu-visible m)) 
       m
-      (let ((selection
-	     ;; set selection to the key of the clicked on option
-	     (index-foldl
-	      (lambda (i o r)
-		(if (and (not r) 
-			 (in-rect? 
-			  (vx (menu-pos m)) 
-			  (+ (vy (menu-pos m)) (* (+ i 1) menu-height))
-			  menu-width menu-height
-			  mx my)) (menu-option-key o) r))
-	      #f
-	      (menu-options m))))
-	(build-menu 
-	 (menu-pos m)
-	 (if selection #f (menu-visible m))
-	 (menu-options m)
-	 selection
-	 (menu-entity-id m)))))
+      (let ((offset (if (eq? (menu-direction m) 'down)
+			(+ 50 (* menu-height (+ 1 (length (menu-options m)))))
+			0)))
+	(let ((selection
+	       ;; set selection to the key of the clicked on option
+	       (index-foldl
+		(lambda (i o r)
+		  (if (and (not r) 
+			   (in-rect? 
+			    (vx (menu-pos m)) 
+			    (+ (- (vy (menu-pos m)) (* (+ i 1) menu-height)) offset)
+			    menu-width menu-height
+			    mx my)) (menu-option-key o) r))
+		#f
+		(menu-options m))))
+	  (build-menu 
+	   (menu-pos m)
+	   (menu-wasp-type m)
+	   (menu-direction m)
+	   (if selection #f (menu-visible m))
+	   (menu-options m)
+	   selection
+	   (menu-entity-id m)
+	   (menu-time m))))))
+
+(define (menu-update m delta)
+  (build-menu
+   (menu-pos m)
+   (menu-wasp-type m)
+   (menu-direction m)
+   (if (> (menu-time m) menu-timeout) #f (menu-visible m))
+   (menu-options m)
+   (menu-selection m)
+   (menu-entity-id m)
+   (+ (menu-time m) delta)))
 
 (define (menu-render m)
   (when (menu-visible m)
 	(ctx.save)
 	(ctx.translate (vx (menu-pos m)) (vy (menu-pos m)))
+	(set! ctx.font "normal 20pt pompiere")
+	(if (eq? (menu-direction m) 'down)
+	    (ctx.drawImage (find-image "sprites/menu-triangle-up.png") 0 64)
+	    (ctx.drawImage (find-image "sprites/menu-triangle.png") 0 0))
+
+	(fill-centre-text
+	 ctx (cond
+	      ((eq? (menu-wasp-type m) 'queen) "QUEEN")
+	      ((eq? (menu-wasp-type m) 'worker) "WORKER")
+	      (else "REPRODUCTIVE"))
+	 125 (if (eq? (menu-direction m) 'down) 105 30))
+	(when (eq? (menu-direction m) 'down)
+	      (ctx.translate 0 (+ 50 (* menu-height (+ 1 (length (menu-options m)))))))	 
 	(set! ctx.font "normal 35pt pompiere")
 	(index-for-each
 	 (lambda (i o)
-	   (ctx.translate 0 menu-height)
+	   (ctx.translate 0 (- menu-height))
 	   (set! ctx.fillStyle "#f9e973")
 	   (ctx.fillRect 0 0 menu-width (- menu-height 3))
 	   (set! ctx.fillStyle "#606353")
