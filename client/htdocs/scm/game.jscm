@@ -23,6 +23,7 @@
 (define player-id -1)
 (define player-name "???")
 (define score-per-mating 10)
+(define end-game-time 7)
 
 (let ((v (local-load "wasp-game-version")))
   (when (or (not v) (< v params-version))
@@ -343,9 +344,7 @@
 	(game-modify-data
 	 (lambda (d)
 	   (nest-update (game-data c) (/ t 1000) (game-delta c)))
-	 (if (or (> (nest-time-of-year (game-data c)) nest-year-length)
-		 ;; (<= (nest-energy (game-data c)) 0)	    
-		 (< (length (nest-wasps (game-data c))) 1))	    
+	 (if (> (nest-end-game-timer (game-data c)) end-game-time)
 	     (send-update-scores c)
 	     c)))
       (game-modify-buttons

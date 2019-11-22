@@ -26,7 +26,7 @@
    (make-anim-move "hoverfly" "idle" '() (list "1" "2") 8 (vec2 0 0))
    ))
 
-(define hoverfly-offscreen (vec2 2000 1000))
+(define hoverfly-offscreen (vec2 2000 700))
 
 (define hoverfly-animation-grub 0)
 (define hoverfly-animation-waggle 1)

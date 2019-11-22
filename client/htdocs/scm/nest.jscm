@@ -14,7 +14,7 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define nest-year-length (local-get-param "wasp-game" "nest-year-length"))
+(define nest-year-length (string->number (local-get-param "wasp-game" "nest-year-length")))
 (define nest-forage-cost (local-get-param "wasp-game" "nest-forage-cost"))
 (define nest-build-cell-cost (local-get-param "wasp-game" "nest-build-cell-cost"))
 (define nest-lay-egg-cost (local-get-param "wasp-game" "nest-lay-egg-cost"))
@@ -46,8 +46,8 @@
 	 (< time (* (/ nest-year-length 4) 3))) "AUTUMN")
    (else "WINTER")))
 
-(define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id score-popups) 
-  (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id score-popups))
+(define (make-nest energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id score-popups end-game-timer) 
+  (list energy location time-of-year wasps menu cells window-stack event next-event-time events weather info-display energy-mult game-id score-popups end-game-timer))
 
 (define (make-new-nest game-id location time)
   (make-nest 
@@ -71,7 +71,8 @@
     (list))
    1
    game-id
-   '()))
+   '()
+   -1))
 
 (define (nest-energy n) (list-ref n 0))
 (define (nest-modify-energy n s) (list-replace n 0 s))
@@ -99,6 +100,7 @@
 (define (nest-game-id n) (list-ref n 13))
 (define (nest-score-popups n) (list-ref n 14))
 (define (nest-modify-score-popups n v) (list-replace n 14 v))
+(define (nest-end-game-timer n) (list-ref n 15))
 
 (define (nest-wasps-update n delta)
   (map
@@ -407,48 +409,51 @@
 	    (nest-modify-event n #f)))))
 
 (define (nest-update-mouse n state mx my)
-  (let ((menu (menu-update-click (nest-menu n) mx my)))
-    (let ((wasp (if (menu-selection menu)
-		    #f
-		    (nest-wasps-click n mx my))))
-      (if (nest-can-do-action n (menu-selection menu)) 
-	  (nest-update-from-action
-	   (make-nest
-	    (nest-energy n)
-	    (nest-location n)
-	    (nest-time-of-year n)
-	    (if (menu-selection menu)
-		(nest-update-wasps-from-menu n menu) 
-		(nest-wasps n))
-	    ;; if there is a wasp clicked on, and it's not the current one
-	    (if (and wasp
-		     (not (eq? (wasp-state wasp) 'state-egg))
-		     ;;(not (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
-		     )
-		(build-menu
-		 (menu-munge-location (entity-pos wasp))
-		 (wasp-type wasp)
-		 (menu-calc-direction (entity-pos wasp))
-		 #t		 
-		 (wasp-build-menu-options wasp n) #f 
-		 (entity-id wasp)
-		 0)
-		;; need to clear the menu to stop it retriggering
+  (if (< (nest-end-game-timer n) 0)
+      (let ((menu (menu-update-click (nest-menu n) mx my)))
+	(let ((wasp (if (menu-selection menu)
+			#f
+			(nest-wasps-click n mx my))))
+	  (if (nest-can-do-action n (menu-selection menu)) 
+	      (nest-update-from-action
+	       (make-nest
+		(nest-energy n)
+		(nest-location n)
+		(nest-time-of-year n)
 		(if (menu-selection menu)
-		    (menu-clear menu)
-		    menu))
-	    (nest-cells n)
-	    (nest-window-stack n)
-	    (nest-event n)
-	    (nest-next-event-time n)
-	    (nest-events n)
-	    (nest-weather n)
-	    (nest-info-display n)
-	    (nest-energy-mult n)
-	    (nest-game-id n)
-	    (nest-score-popups n))
-	   (menu-selection menu))
-	  n))))
+		    (nest-update-wasps-from-menu n menu) 
+		    (nest-wasps n))
+		;; if there is a wasp clicked on, and it's not the current one
+		(if (and wasp
+			 (not (eq? (wasp-state wasp) 'state-egg))
+			 ;;(not (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
+			 )
+		    (build-menu
+		     (menu-munge-location (entity-pos wasp))
+		     (wasp-type wasp)
+		     (menu-calc-direction (entity-pos wasp))
+		     #t		 
+		     (wasp-build-menu-options wasp n) #f 
+		     (entity-id wasp)
+		     0)
+		    ;; need to clear the menu to stop it retriggering
+		    (if (menu-selection menu)
+			(menu-clear menu)
+			menu))
+		(nest-cells n)
+		(nest-window-stack n)
+		(nest-event n)
+		(nest-next-event-time n)
+		(nest-events n)
+		(nest-weather n)
+		(nest-info-display n)
+		(nest-energy-mult n)
+		(nest-game-id n)
+		(nest-score-popups n)
+		(nest-end-game-timer n))
+	       (menu-selection menu))
+	      n)))
+      n))  
 
 ;; update just the window stack, and add new ones if required
 (define (nest-update-window-stack nest delta)
@@ -507,6 +512,18 @@
     (else (nest-info-display n)))
    delta)))
 
+(define (nest-check-queens n)
+  (foldl
+   (lambda (w r)
+     (if (and (not r) (eq? (wasp-type w) 'queen)) #t r))
+   #f
+   (nest-wasps n)))
+
+(define (nest-check-end-game n)
+   (or (< (length (nest-wasps n)) 1)      
+       (> (nest-time-of-year n) nest-year-length)
+       (not (nest-check-queens n))))
+
 (define (nest-update n time delta)
   (nest-update-from-event
    (nest-update-from-wasps
@@ -533,7 +550,11 @@
      ;; maintains messages to be shown after event is over
      (if (nest-event n) 
 	 (nest-score-popups n)
-	 (score-popups-update (nest-score-popups n) delta)))
+	 (score-popups-update (nest-score-popups n) delta))
+     (if (>= (nest-end-game-timer n) 0)
+	 (+ (nest-end-game-timer n) delta)	 
+	 (if (nest-check-end-game n)
+	     0 -1)))
     time)
    delta))
 
@@ -576,7 +597,7 @@
   (set! ctx.font "normal 25pt pompiere")
   (set! ctx.fillStyle highlight-col)
   (ctx.fillRect 0 0 1270 70)
-  (ctx.fillRect 0 630 1265 screen-height)
+  (ctx.fillRect 0 630 1265 120)
   (set! ctx.fillStyle text-col)
   (ctx.fillText (string-append "ENERGY: " (floor (nest-energy n))) 10 50)
   (ctx.fillText (string-append "SEASON: " (time->season-text (nest-time-of-year n))) 200 50)
@@ -588,4 +609,33 @@
   (info-display-render (nest-info-display n) ctx)
   (when (nest-event n) (event-render n ctx))
   (score-popups-render! (nest-score-popups n) ctx)  
-  (menu-render (nest-menu n)))
+  (menu-render (nest-menu n))
+  
+  (when (not (nest-check-queens n))
+  	(set! ctx.fillStyle highlight-col)
+  	(ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
+  	(set! ctx.fillStyle text-col)
+  	(set! ctx.font "normal 40pt pompiere")
+  	(fill-centre-text ctx "GAME OVER" (/ screen-width 2) 290)
+  	(set! ctx.font "normal 25pt pompiere")
+  	(fill-centre-text ctx "Your queen wasp has died" (/ screen-width 2) 350))
+
+  (when (< (length (nest-wasps n)) 1)
+	(set! ctx.fillStyle highlight-col)
+	(ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
+	(set! ctx.fillStyle text-col)
+	(set! ctx.font "normal 40pt pompiere")
+	(fill-centre-text ctx "GAME OVER" (/ screen-width 2) 290)
+	(set! ctx.font "normal 25pt pompiere")
+	(fill-centre-text ctx "All your wasps have died out" (/ screen-width 2) 350))
+
+  (when (> (nest-time-of-year n) nest-year-length)
+	(set! ctx.fillStyle highlight-col)
+	(ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
+	(set! ctx.fillStyle text-col)
+	(set! ctx.font "normal 40pt pompiere")
+	(fill-centre-text ctx "GAME OVER" (/ screen-width 2) 290)
+	(set! ctx.font "normal 25pt pompiere")
+	(fill-centre-text ctx "The wasp year is at an end" (/ screen-width 2) 350))
+
+  )
