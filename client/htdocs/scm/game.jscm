@@ -357,7 +357,7 @@
 	 #f
 	 (lambda (c)
 	   (button-sound)
-	   (send-update-scores c)))
+	   (nightjar-intro game)))
 	) c))))))
 
 (define (nightjar-end c rank)
