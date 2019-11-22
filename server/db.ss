@@ -91,9 +91,8 @@
   (_ 1 ol))
 
 (define (get-game-rank db game-id)
-  (let ((s (select db "select count(*) from game as g 
-                       join player_name as n on g.player_id=n.player_id 
-                       where n.player_name !='???' and g.score >= (select score from game where id = ?)" game-id)))
+  (let ((s (select db "select count(*) from game as g join player_name as n on g.player_id=n.player_id where n.player_name !='???' and g.score >= (select score from game where id = ?)" game-id)))
+    (display s)(newline)
     (if (null? s)
 	999
 	(vector-ref (cadr s) 0))))

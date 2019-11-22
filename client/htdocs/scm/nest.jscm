@@ -629,6 +629,15 @@
 	(set! ctx.font "normal 25pt pompiere")
 	(fill-centre-text ctx "All your wasps have died out" (/ screen-width 2) 350))
 
+  (when (and (<= (nest-energy n) 15) (zero? (modulo (floor (/ time 200)) 2)))
+	(set! ctx.fillStyle highlight-col)
+	(ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
+	(set! ctx.fillStyle text-col)
+	(set! ctx.font "normal 40pt pompiere")
+	(fill-centre-text ctx "LOW ENERGY!!" (/ screen-width 2) 290)
+	(set! ctx.font "normal 25pt pompiere")
+	(fill-centre-text ctx "Send foragers out..." (/ screen-width 2) 350))
+  
   (when (> (nest-time-of-year n) nest-year-length)
 	(set! ctx.fillStyle highlight-col)
 	(ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
@@ -638,4 +647,6 @@
 	(set! ctx.font "normal 25pt pompiere")
 	(fill-centre-text ctx "The wasp year is at an end" (/ screen-width 2) 350))
 
+  (set! ctx.font "normal 25pt pompiere")
+  (set! ctx.fillStyle text-col)
   )

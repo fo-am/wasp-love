@@ -94,13 +94,10 @@
       (list
        (storm-builder)
        (ant-attack-builder)
-       (ant-attack-builder)
-       (hoverfly-attack-builder)
        (hoverfly-attack-builder)
 
        (wildflower-builder)
        (organic-builder)
        (wildflower-builder)
-       (organic-builder)
        )))
 
