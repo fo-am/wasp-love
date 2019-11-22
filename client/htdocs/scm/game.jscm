@@ -207,7 +207,7 @@
 	  
 	  (set! ctx.font "normal 75pt pompiere")
 	  
-	  (wrap-text ctx "Why We Love Wasps" 0 200 1300 100)
+	  (wrap-text ctx "WE LOVE WASPS" 0 200 1300 100)
 	  
 	  (set! ctx.font "normal 25pt pompiere")
 	  (wrap-text ctx "Wasps are super..." 0 300 800 40)
@@ -262,7 +262,7 @@
      (demo-render (game-data c) ctx)
      (set! ctx.fillStyle "#606353")
      (set! ctx.font "normal 75pt pompiere")
-     (wrap-text ctx "Choose your nest location" 0 200 1300 100)    
+     (wrap-text ctx "CHOOSE YOUR NEST LOCATION" 0 200 1300 100)    
      (set! ctx.font "normal 25pt pompiere")
      (wrap-text ctx "Different places have different dangers and opportunities" 0 300 800 40)
      (set! ctx.font "normal 30pt pompiere")
@@ -301,7 +301,7 @@
       ;;(ctx.drawImage (find-image "crab2.png") 1240 550)
 
       (set! ctx.font "normal 75pt pompiere")
-      (wrap-text ctx "About the wasp game" 0 200 1300 100)
+      (wrap-text ctx "ABOUT" 0 200 1300 100)
       (set! ctx.font "normal 22pt pompiere")
 
       (wrap-text ctx "Please insert text and images about wasp research." 0 300 800 40)
@@ -367,7 +367,7 @@
     (lambda (ctx)
       (set! ctx.fillStyle "#000")      
       (set! ctx.font "normal 75pt pompiere")
-      (wrap-text ctx "Game Over" 0 200 1300 100)
+      (wrap-text ctx "YOUR SCORES" 0 200 1300 100)
       (set! ctx.font "normal 30pt pompiere")
       
       (let ((n (game-data c)))		
@@ -404,12 +404,13 @@
    (lambda (ctx)
      (set! ctx.fillStyle "#000")      
      (set! ctx.font "normal 75pt pompiere")
-     (wrap-text ctx "Leaderboard" 0 100 1300 100)
+     (wrap-text ctx "LEADERBOARD" 0 100 1300 100)
      (set! ctx.font "normal 30pt pompiere")
      
-     (wrap-text ctx "NAME" -300 180 1000 1)
-     (wrap-text ctx "SCORE" 0 180 1000 1)
-     (wrap-text ctx "NEW NESTS FOUNDED" 300 180 1000 1)
+     (wrap-text ctx "NAME" -500 180 1000 1)
+     (wrap-text ctx "NEW NESTS FOUNDED" -200 180 1000 1)
+     (wrap-text ctx "NEST LOCATION" 200 180 1000 1)
+     (wrap-text ctx "SCORE" 500 180 1000 1)
      
      (when scores
 	   (index-for-each
@@ -417,12 +418,16 @@
 	      (cond
 	       ((zero? i)
 		(set! ctx.font "bold 30pt pompiere")
-		(text-flashy-render ctx (list-ref e 0) -300 (+ 230 (* 45 i)) (game-time c))
-		(text-flashy-render ctx (+ "" (list-ref e 2) " points") 0 (+ 230 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (list-ref e 0) -500 (+ 230 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (+ "" (list-ref e 1) " nests") -200 (+ 230 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (+ "" (list-ref e 3)) 200 (+ 230 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (+ "" (list-ref e 2) " points") 500 (+ 230 (* 45 i)) (game-time c))
 		(set! ctx.font "normal 30pt pompiere"))
 	       (else
-		(wrap-text ctx (list-ref e 0) -300 (+ 230 (* 45 i)) 1000 1)
-		(wrap-text ctx (+ ""  (list-ref e 2) " points") 0 (+ 230 (* 45 i)) 1000 1))))
+		(wrap-text ctx (list-ref e 0) -500 (+ 230 (* 45 i)) 1000 1)
+		(wrap-text ctx (+ "" (list-ref e 1) " nests") -200 (+ 230 (* 45 i)) 1000 1)
+		(wrap-text ctx (+ "" (list-ref e 3)) 200 (+ 230 (* 45 i)) 1000 1)
+		(wrap-text ctx (+ "" (list-ref e 2) " points") 500 (+ 230 (* 45 i)) 1000 1))))
 	    scores)))
    (game-modify-update
     (lambda (t c)

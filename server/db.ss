@@ -76,7 +76,7 @@
 
 ;; get the player name/scores ordered for the hiscores list
 (define (hiscores-select db)
-  (let ((r (select db "select n.player_name, g.new_nests, g.score from game as g
+  (let ((r (select db "select n.player_name, g.new_nests, g.score, g.location from game as g
                      join player_name as n on g.player_id=n.player_id        
                      where n.player_name !='???'
                      order by score desc limit 10")))
