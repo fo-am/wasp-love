@@ -47,13 +47,13 @@
 (define (menu-clear m) (build-menu (vec2 0 0) #f 'up #f '() #f #f 0))
 
 (define menu-width 250)
-(define menu-height 70)
+(define menu-height 60)
 
 (define (menu-update-click m mx my)
   (if (not (menu-visible m)) 
       m
       (let ((offset (if (eq? (menu-direction m) 'down)
-			(+ 50 (* menu-height (+ 1 (length (menu-options m)))))
+			(+ 60 (* menu-height (+ 1 (length (menu-options m)))))
 			0)))
 	(let ((selection
 	       ;; set selection to the key of the clicked on option
@@ -104,8 +104,8 @@
 	      (else "REPRODUCTIVE"))
 	 125 (if (eq? (menu-direction m) 'down) 105 30))
 	(when (eq? (menu-direction m) 'down)
-	      (ctx.translate 0 (+ 50 (* menu-height (+ 1 (length (menu-options m)))))))	 
-	(set! ctx.font "normal 35pt pompiere")
+	      (ctx.translate 0 (+ 60 (* menu-height (+ 1 (length (menu-options m)))))))	 
+	(set! ctx.font "normal 30pt pompiere")
 	(index-for-each
 	 (lambda (i o)
 	   (ctx.translate 0 (- menu-height))

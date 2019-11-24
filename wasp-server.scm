@@ -79,10 +79,10 @@
     (req 'score '(game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time forages score))
     (lambda (game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time forages score)
       (update-score db game_id new_nests num_workers_laid num_workers_hatched cells_built events_survived num_reproductives_hatched energy_foraged survival_time forages score)
-      (pluto-response
-       (scheme->json
-	(get-game-rank db game_id)))))
-	     
+      (let ((rank (get-game-rank db game_id)))
+	(display game_id)(display " ")(display score)(display " ")(display rank)(newline)
+	(pluto-response (scheme->json rank)))))
+   
    (register
     (req 'hiscores '())
     (lambda ()
@@ -91,11 +91,11 @@
 		      vector->list
 		      (hiscores-select db))))))
     
-   (register
-    (req 'rank '(id))
-    (lambda (id)
-      (pluto-response
-       (scheme->json (get-game-rank db id)))))
+   ;(register
+   ; (req 'rank '(id))
+   ; (lambda (id)
+   ;   (pluto-response
+   ;    (scheme->json (get-game-rank db id)))))
 
    (register
     (req 'player-name '(player_id player_name))

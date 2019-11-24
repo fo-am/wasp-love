@@ -26,7 +26,7 @@
    (make-anim-move "hoverfly" "idle" '() (list "1" "2") 8 (vec2 0 0))
    ))
 
-(define hoverfly-offscreen (vec2 2000 700))
+(define hoverfly-offscreen (vec2 1500 100))
 
 (define hoverfly-animation-grub 0)
 (define hoverfly-animation-waggle 1)
@@ -34,7 +34,7 @@
 (define hoverfly-animation-idle 3)
 
 (define (make-hoverfly) 
-  (let ((pos hoverfly-offscreen))
+  (let ((pos (v2add (vec2 0 (random 600)) hoverfly-offscreen)))
     (append 
      (make-entity 
       (generate-entity-id!)
@@ -113,7 +113,7 @@
        (let ((egg (nest-find-egg nest)))
 	 ;; head to a egg or a random position
 	 (hoverfly-modify-state
-	  (if egg
+	  (if (and egg (< (rndf) 0.1))
 	      (hoverfly-modify-dest-egg	       
 	       (entity-walk-to-pos h (entity-pos egg))
 	       (entity-id egg))
@@ -124,18 +124,20 @@
       
       ((eq? state 'state-wander)
        (if (>= (entity-walk-time h) 1)
-	   (let ((egg (entity-list-slow-search
-		       (nest-wasps nest)
-		       (hoverfly-dest-egg h))))
-	     ;; check if egg still exists
-	     (if (and egg
-		      ;; is it still an egg?
-		      (or (eq? (wasp-state egg) 'state-egg)
-			  (eq? (wasp-state egg) 'state-tended-egg)))
-		 ;; (if so it can't have moved)		
-		 (entity-modify-timer (hoverfly-modify-state h 'state-laying) 0)
-		 ;; otherwise go back to searching
-		 (hoverfly-modify-state h 'state-search)))
+	   (if (< (rndf) 0.05)
+	       (hoverfly-modify-state h 'state-leave)
+	       (let ((egg (entity-list-slow-search
+			   (nest-wasps nest)
+			   (hoverfly-dest-egg h))))
+		 ;; check if egg still exists
+		 (if (and egg
+			  ;; is it still an egg?
+			  (or (eq? (wasp-state egg) 'state-egg)
+			      (eq? (wasp-state egg) 'state-tended-egg)))
+		     ;; (if so it can't have moved)		
+		     (entity-modify-timer (hoverfly-modify-state h 'state-laying) 0)
+		     ;; otherwise go back to searching
+		     (hoverfly-modify-state h 'state-search))))
 	   (entity-walk h hoverfly-speed delta)))
       
       ((eq? state 'state-laying)
@@ -144,12 +146,12 @@
 	   h))
 
       ((eq? state 'state-lay)
-       (hoverfly-modify-state h 'state-leave))
-	          
+       (hoverfly-modify-state h	'state-leave))
+			
       ((eq? state 'state-leave)       
        (entity-walk-to-pos
 	(hoverfly-modify-state h 'state-leaving)
-	hoverfly-offscreen))
+	(v2add (vec2 0 (random 600)) hoverfly-offscreen)))
        
       ((eq? state 'state-leaving)
        (if (>= (entity-walk-time h) 1)

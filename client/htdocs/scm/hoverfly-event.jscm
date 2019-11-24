@@ -20,7 +20,7 @@
      (if (eq? (hoverfly-state hoverfly) 'state-lay)
 	 (append
 	  (build-list
-	   3
+	   9
 	   (lambda (_)
 	     (make-hoverfly-grub
 	      (v2add (vec2 (* (crndf) 20) (* (crndf) 20))

@@ -76,6 +76,7 @@
 			(ant-dest-egg a))))
 	     ;; check if egg still exists
 	     (if (and egg
+		      (< (rndf) 0.05) ;; take it one out of 20 times
 		      ;; is it still an egg?
 		      (or (eq? (wasp-state egg) 'state-egg)
 			  (eq? (wasp-state egg) 'state-tended-egg)))
@@ -90,9 +91,14 @@
 		   'state-leave)
 		  ant-offscreen)
 		 ;; otherwise go back to searching
-		 (ant-modify-state a 'state-search)))
+		 (if (< (rndf) 0.5)
+		     (ant-modify-state a 'state-search)
+		     ;; or leave...
+		     (entity-walk-to-pos
+		      (ant-modify-state a 'state-leave)
+		      ant-offscreen))))
 	   (entity-walk a ant-speed delta)))
-
+      
       ((eq? state 'state-leave)
        (if (>= (entity-walk-time a) 1)
 	   ;; return to the nest searching
@@ -100,9 +106,9 @@
 	    (ant-modify-killed-egg
 	     (entity-modify-bg-image a #f)
 	     #f)
-	    'state-search)
+	    'state-gone)
 	   (entity-walk a ant-speed delta)))
-            
+      
       (else a)))
    delta))
 
