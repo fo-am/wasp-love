@@ -882,7 +882,8 @@
 (define ctx (canvas.getContext "2d"))
 
 (define screen-width 1600)
-(define screen-height 900)
+(define screen-height 750)
+(define screen-aspect (/ screen-width screen-height))
 
 (define load-time (js "new Date()"))
 
