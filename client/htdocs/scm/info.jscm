@@ -15,6 +15,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (define info-duration 7)
+(define info-short-duration 2)
 
 (define (make-info text id time)
   (list text id time))
@@ -49,7 +50,10 @@
   (make-info-display
    (filter
     (lambda (i)
-      (< (info-time i) info-duration))
+      (< (info-time i)
+	 (if (> (length (info-display-items d)) 1)
+	     info-short-duration
+	     info-duration)))
     (if (not (null? (info-display-items d)))
 	(cons
 	 (info-modify-time

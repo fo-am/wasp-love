@@ -326,10 +326,11 @@
        (update-scores-new-nests! 1)
        (nest-modify-score-popups
 	(nest-add-info 
-	 (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
-	 (string-append "CONGRATS: A NEW NEST HAS BEEN FOUNDED")
+	 n (string-append "CONGRATS: A NEW NEST HAS BEEN FOUNDED")
 	 'allow-dup)
 	(score-popups-add (nest-score-popups n) 'mated "+10")))
+      ((eq? (wasp-state wasp) 'state-mated)
+       (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
       ((eq? (wasp-state wasp) 'state-died-egg)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
@@ -547,9 +548,7 @@
      (nest-next-event-time n)
      (nest-events n)
      (nest-weather n)
-     (if (nest-event n) 
-	 (nest-info-display n)
-	 (nest-update-info-text n delta))
+     (nest-update-info-text n delta)
      (nest-energy-mult n)
      (nest-game-id n)
      ;; only update popups if there is no event present
@@ -621,8 +620,8 @@
 	    (set! ctx.fillStyle "#fff")
 	    (set! ctx.fillStyle text-col)))
   (ctx.fillText (string-append "SCORE: " (+ (scores-forages) (* score-per-mating (scores-new-nests)))) 450 50)
-  (info-display-render (nest-info-display n) ctx)
   (when (nest-event n) (event-render n ctx))
+  (info-display-render (nest-info-display n) ctx)
   (score-popups-render! (nest-score-popups n) ctx)  
   (menu-render (nest-menu n))
   

@@ -334,11 +334,11 @@
       ((eq? state 'state-disperse)
        (if (> (entity-timer w) wasp-disperse-time)
 	   (wasp-modify-state
-	    w (if (eq? (time->season (nest-time-of-year nest)) 'winter)
+	    w (if (eq? (time->season (nest-time-of-year nest)) 'spring)
 		  'state-start-mating
 		  'state-repro-start-dying))
 	   (entity-walk w wasp-speed delta)))
-
+      
       ;; intermediate state to pick up for scoring
       ((eq? state 'state-start-mating)
        (wasp-modify-state w 'state-mating))
@@ -347,7 +347,7 @@
        (if (> (entity-timer w) wasp-mating-time)
 	   (wasp-modify-state w 'state-mated)
 	   (entity-walk w wasp-speed delta)))
-
+      
       ((eq? state 'state-egg-check)
        (let ((dest-egg (nest-find-worker-egg nest)))
 	 (if dest-egg
@@ -402,7 +402,6 @@
       ((eq? state 'state-forage) (wasp-fly-animation w))
       ((eq? state 'state-forage-return) (wasp-fly-animation w))
       ((eq? state 'state-tending) wasp-animation-tend)
-      ((eq? state 'state-disperse) (wasp-fly-animation w))
       ((eq? state 'state-disperse) (wasp-fly-animation w))
       ;;((eq? state 'state-dying) wasp-animation-egg-tended)
       (else (entity-clip w))))))

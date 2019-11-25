@@ -60,7 +60,7 @@
        (let ((egg (nest-find-egg nest)))
 	 ;; head to a egg or a random position
 	 (ant-modify-state
-	  (if egg
+	  (if (and egg (< (rndf) 0.1))
 	      (ant-modify-dest-egg	       
 	       (entity-walk-to-pos a (entity-pos egg))
 	       (entity-id egg))

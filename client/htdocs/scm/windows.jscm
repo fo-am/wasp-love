@@ -165,9 +165,9 @@
 	     (< (rndf) 0.01))
 	(ctx.drawImage (find-image "sprites/lightning.png")
 		       (vx pos) (vy pos)))
-  
-  (when (eq? (wasp-state (window-wasp w)) 'state-mating)
 
+  (when (eq? (wasp-state (window-wasp w)) 'state-mating)
+	
 	(ctx.save)
 	(ctx.translate (+ (vx pos) 95) (+ (vy pos) 25))
 	(ctx.translate 70 70)
