@@ -15,58 +15,137 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
+(define (make-demo-wasp capabilities) 
+  (let ((pos (vec2 -100 (+ 100 (random 500)))))
+    (append 
+     (make-entity 
+      (generate-entity-id!)
+      "wasp" 
+      pos 0
+      (vec2 200 150)
+      "right"
+      (rndf)
+      (anim-load-frames (choose wasp-anim-variations) wasp-animation)
+      0 wasp-animation-idle #f 0 pos #f 0 0 (vec2 0 0))
+     (list capabilities 'state-idle #f 'queen #f 'repro))))
+
 (define (make-new-demo)
-  (make-demo (build-list 3 (lambda (_) (make-demo-wasp '())))))
+  (make-demo
+   (append (build-list 3 (lambda (_) (make-demo-wasp '())))
+	   (build-list 5 (lambda (_) (make-ant)))
+	   (build-list 1 (lambda (_) (make-hoverfly))))))
 
-(define (make-demo wasps)
-  (list wasps))
+(define (make-demo entities)
+  (list entities))
 
-(define (demo-wasps d) (list-ref d 0))
+(define (demo-entities d) (list-ref d 0))
 
 (define (demo-render d ctx)
   ;; build and render the entity renderer
   (renderer-render!
    (renderer-add-entities
     (renderer (list))
-    (demo-wasps d))
+    (demo-entities d))
    ctx))
 
 (define (demo-update d time delta)
   (make-demo
    (map
-    (lambda (wasp)
-      (entity-update (demo-wasp-update wasp delta) delta))
-    (demo-wasps d))))
+    (lambda (e)
+      (cond
+       ((eq? (entity-type e) "wasp")
+	(entity-update (demo-wasp-update e delta) delta))
+       ((eq? (entity-type e) "ant")
+	(entity-update (demo-ant-update e delta) delta))
+       ((eq? (entity-type e) "hoverfly")
+	(entity-update (demo-hoverfly-update e delta) delta))
+       (else e)))
+    (demo-entities d))))
 
 (define (demo-wasp-update w delta)
   (wasp-update-animation
    (let ((state (wasp-state w)))
      (cond
       ((eq? state 'state-idle)
-       (if (and (> (entity-timer w) 5) (zero? (random 100)))
-	   (wasp-modify-state
-	    (entity-walk-to-pos w (vec2 (random screen-width) (random screen-height)))
-	    (choose (list 'state-take-off 'state-wander)))
+       (if (< (rndf) 0.01)
+	   (wasp-modify-state w 'state-forage-start)
 	   w))
+       
+      ((eq? state 'state-forage-start)
+       (wasp-modify-state
+	(entity-walk-to-pos w (vec2 (+ 3000 (random 1000)) (random 500)))
+	'state-forage))
+      
+      ((eq? state 'state-forage)
+       (if (>= (entity-walk-time w) 1)
+	   (entity-modify-timer
+	    (entity-walk-to-pos
+	     (wasp-modify-carrying
+	      (wasp-modify-state w 'state-forage-return)
+	      (choose wasp-prey-types))
+	     (vec2 (+ -1000 (random 500)) (random 500)))
+	    0)
+	   (entity-walk w wasp-speed delta)))
+      
+      ((eq? state 'state-forage-return)
+       (if (>= (entity-walk-time w) 1)
+	   (entity-modify-timer
+	    (wasp-modify-carrying
+	     (wasp-modify-state w 'state-forage-start)
+	     #f)
+	    0)
+	   (entity-walk w wasp-speed delta)))      
+      
+      (else w)))
+   delta))
+
+(define (demo-ant-update a delta)
+  (ant-update-animation
+   (let ((state (ant-state a)))
+     (cond      
+      ((eq? state 'state-appear)
+       ;; random timer
+       (if (< (rndf) 0.01)
+	   (ant-modify-state a 'state-search)
+	   a))
+      
+      ((eq? state 'state-search)
+       (ant-modify-state
+	(entity-walk-to-pos a (vec2 (- (random 3000) 1000)
+				    (+ (random 200) 500)))
+	'state-wander))
       
       ((eq? state 'state-wander)
-       (if (>= (entity-walk-time w) 1)
-	   (entity-modify-timer (wasp-modify-state w 'state-idle) 0)
-	   (entity-walk w wasp-speed delta)))
-
-      ((eq? state 'state-take-off)
-       (if (>= (entity-walk-time w) 1)
-      	   (entity-modify-timer (wasp-modify-state w 'state-forage-end) 0)
-	   (entity-walk w wasp-speed delta)))
+       (if (>= (entity-walk-time a) 1)
+	   (ant-modify-state a 'state-search)
+	   (entity-walk a ant-speed delta)))
       
-      ((eq? state 'state-forage-end)       
-       	(wasp-modify-state 
-	 (entity-walk-to-pos w (vec2 (random screen-width) (random screen-height)))	 
-      	 'state-forage-feed))
-      ((eq? state 'state-forage-feed)
-       (if (>= (entity-walk-time w) 1)
-	   (entity-modify-timer (wasp-modify-state w 'state-idle) 0)
-      	   (entity-walk w wasp-speed delta)))
-       
-      (else w)))
+      (else a)))
+   delta))
+
+(define (demo-hoverfly-update h delta)
+  (hoverfly-update-animation
+   (let ((state (hoverfly-state h)))
+     (cond
+      
+      ((eq? state 'state-search)
+       (hoverfly-modify-state
+	(entity-walk-to-pos
+	 h (vec2 (- (random 3000) 1000)
+		 (- (random 1000) 500)))
+	'state-wander))
+      
+      ((eq? state 'state-wander)
+       (if (>= (entity-walk-time h) 1)
+	   (entity-modify-timer
+	    (hoverfly-modify-state h 'state-idle)
+	    0)
+	   (entity-walk h hoverfly-speed delta)))
+
+      ((eq? state 'state-idle)
+       (if (>= (entity-timer h) 5)
+	   (hoverfly-modify-state h 'state-search)
+	   h))
+      
+      (else h)))
    delta))

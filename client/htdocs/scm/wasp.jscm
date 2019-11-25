@@ -76,20 +76,6 @@
       0 wasp-animation-idle (find-image "sprites/glow.png") 0 pos #f 0 0 (vec2 0 0))
      (list capabilities 'state-idle #f 'queen #f 'repro))))
 
-(define (make-demo-wasp capabilities) 
-  (let ((pos (vec2 (+ 100 (random 1000)) (+ 100 (random 500)))))
-    (append 
-     (make-entity 
-      (generate-entity-id!)
-      "wasp" 
-      pos 0
-      (vec2 200 150)
-      (choose (list "left" "right"))
-      (rndf)
-      (anim-load-frames (choose wasp-anim-variations) wasp-animation)
-      0 wasp-animation-idle #f 0 pos #f 0 0 (vec2 0 0))
-     (list capabilities 'state-idle #f 'queen #f 'repro))))
-
 (define (make-egg pos parent) 
   (append 
    (make-entity 
@@ -349,9 +335,13 @@
        (if (> (entity-timer w) wasp-disperse-time)
 	   (wasp-modify-state
 	    w (if (eq? (time->season (nest-time-of-year nest)) 'winter)
-		  'state-mating
-		  'state-start-dying))
+		  'state-start-mating
+		  'state-repro-start-dying))
 	   (entity-walk w wasp-speed delta)))
+
+      ;; intermediate state to pick up for scoring
+      ((eq? state 'state-start-mating)
+       (wasp-modify-state w 'state-mating))
       
       ((eq? state 'state-mating)
        (if (> (entity-timer w) wasp-mating-time)
@@ -373,6 +363,8 @@
 	   (entity-walk w wasp-speed delta)))      
       ((eq? state 'state-remove-egg) (wasp-start-wandering w nest))
       
+      ((eq? state 'state-repro-start-dying)
+       (entity-modify-timer (wasp-modify-state w 'state-dying) 0))
       ((eq? state 'state-start-dying)
        (entity-modify-timer (wasp-modify-state w 'state-dying) 0))
       ((eq? state 'state-dying)

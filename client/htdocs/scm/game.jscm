@@ -49,7 +49,7 @@
   (make-param "wasp-mating-time" 20 "seconds")
   (make-param "wasp-reproductive-threshold" 5 "wasps")
   (make-param "nest-year-length" 300 "seconds")
-  (make-param "nest-forage-cost" -5 "energy units")
+  (make-param "nest-forage-cost" 0 "energy units")
   (make-param "nest-build-cell-cost" -10 "energy units")
   (make-param "nest-lay-egg-cost" -10 "energy units")
   (make-param "nest-tend-brood-cost" -10 "energy units")
@@ -294,6 +294,7 @@
    (game-modify-render
     (lambda (ctx)
       ;;(ctx.drawImage (find-image "crab2.png") 1240 550)
+     (demo-render (game-data c) ctx)
 
       (set! ctx.font "normal 75pt pompiere")
       (wrap-text ctx "ABOUT" 0 200 1300 100)
@@ -350,7 +351,7 @@
 	(rect-button
 	 "QUIT"
 	 20
-	 default-button-y
+	 (+ default-button-y 70)
 	 50 default-button-height
 	 #f
 	 (lambda (c)
@@ -397,18 +398,24 @@
 	  (nightjar-intro game))))
       c)))))
 
+(define col1 -350)
+(define col2 -125)
+(define col3 125)
+(define col4 350)
+
 (define (nightjar-hiscores c scores)
   (game-modify-render
    (lambda (ctx)
+     (demo-render (game-data c) ctx)
      (set! ctx.fillStyle "#000")      
      (set! ctx.font "normal 75pt pompiere")
      (wrap-text ctx "LEADERBOARD" 0 100 1300 100)
      (set! ctx.font "normal 30pt pompiere")
      
-     (wrap-text ctx "NAME" -500 180 1000 1)
-     (wrap-text ctx "NEW NESTS FOUNDED" -200 180 1000 1)
-     (wrap-text ctx "NEST LOCATION" 200 180 1000 1)
-     (wrap-text ctx "SCORE" 500 180 1000 1)
+     (wrap-text ctx "NAME" col1 180 1000 1)
+     (wrap-text ctx "NESTS FOUNDED" col2 180 1000 1)
+     (wrap-text ctx "NEST LOCATION" col3 180 1000 1)
+     (wrap-text ctx "SCORE" col4 180 1000 1)
      
      (when scores
 	   (index-for-each
@@ -416,25 +423,22 @@
 	      (cond
 	       ((zero? i)
 		(set! ctx.font "bold 30pt pompiere")
-		(text-flashy-render ctx (list-ref e 0) -500 (+ 230 (* 45 i)) (game-time c))
-		(text-flashy-render ctx (+ "" (list-ref e 1) " nests") -200 (+ 230 (* 45 i)) (game-time c))
-		(text-flashy-render ctx (+ "" (list-ref e 3)) 200 (+ 230 (* 45 i)) (game-time c))
-		(text-flashy-render ctx (+ "" (list-ref e 2) " points") 500 (+ 230 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (list-ref e 0) col1 (+ 230 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (+ "" (list-ref e 1) " nests") col2 (+ 230 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (+ "" (list-ref e 3)) col3 (+ 230 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (+ "" (list-ref e 2) " points") col4 (+ 230 (* 45 i)) (game-time c))
 		(set! ctx.font "normal 30pt pompiere"))
 	       (else
-		(wrap-text ctx (list-ref e 0) -500 (+ 230 (* 45 i)) 1000 1)
-		(wrap-text ctx (+ "" (list-ref e 1) " nests") -200 (+ 230 (* 45 i)) 1000 1)
-		(wrap-text ctx (+ "" (list-ref e 3)) 200 (+ 230 (* 45 i)) 1000 1)
-		(wrap-text ctx (+ "" (list-ref e 2) " points") 500 (+ 230 (* 45 i)) 1000 1))))
+		(wrap-text ctx (list-ref e 0) col1 (+ 230 (* 45 i)) 1000 1)
+		(wrap-text ctx (+ "" (list-ref e 1) " nests") col2 (+ 230 (* 45 i)) 1000 1)
+		(wrap-text ctx (+ "" (list-ref e 3)) col3 (+ 230 (* 45 i)) 1000 1)
+		(wrap-text ctx (+ "" (list-ref e 2) " points") col4 (+ 230 (* 45 i)) 1000 1))))
 	    scores)))
-   (game-modify-update
-    (lambda (t c)
-      c)
-    (game-modify-buttons
-     (list
-      (rect-button
-       "BACK"
-       default-button-x
+   (game-modify-buttons
+    (list
+     (rect-button
+      "BACK"
+      1250
        default-button-y
        default-button-width 
        default-button-height 
@@ -442,7 +446,7 @@
        (lambda (c)
 	 (button-sound)
 	 (nightjar-intro game))))
-     c))))
+    c)))
 
 (define (type-into str ch)
   (car
@@ -511,13 +515,13 @@
 	      "Z" "X" "C" "V" "B" "N" "M"))
 
        (list
-	(rect-button "DELETE" 900 700 default-button-width default-button-height "jumpy"
+	(rect-button "DELETE" 900 default-button-y default-button-width default-button-height "jumpy"
 		     (lambda (c)
 		       (button-sound)		      
 		       (type-delete c)
 		       c))
 
-	(rect-button "DONE" 1250 700 default-button-width default-button-height "jumpy"
+	(rect-button "DONE" 1250 default-button-y default-button-width default-button-height "jumpy"
 		     (lambda (c)
 		       (button-sound)
 		       (server-call

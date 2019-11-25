@@ -318,7 +318,11 @@
 	  (score-popups-add (nest-score-popups n) 'energy (+ "+" energy)))))
       ((eq? (wasp-state wasp) 'state-died)
        (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
-      ((eq? (wasp-state wasp) 'state-mated)
+      ((eq? (wasp-state wasp) 'state-repro-start-dying)
+       (nest-add-info 
+	n (string-append "REPRODUCTIVE WASP DISPERSED TOO EARLY!")
+	'allow-dup))
+      ((eq? (wasp-state wasp) 'state-start-mating)
        (update-scores-new-nests! 1)
        (nest-modify-score-popups
 	(nest-add-info 
@@ -558,6 +562,17 @@
     time)
    delta))
 
+(define (render-info-box heading info)
+  (set! ctx.fillStyle highlight-col)
+  (ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
+  (set! ctx.fillStyle text-col)
+  (set! ctx.font "normal 40pt pompiere")
+  (fill-centre-text ctx heading (/ screen-width 2) 290)
+  (set! ctx.font "normal 25pt pompiere")
+  (fill-centre-text ctx info (/ screen-width 2) 350))
+
+
+
 (define (nest-render n ctx time)
   (if (eq? (nest-location n) "city")
       (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)
@@ -610,42 +625,22 @@
   (when (nest-event n) (event-render n ctx))
   (score-popups-render! (nest-score-popups n) ctx)  
   (menu-render (nest-menu n))
-
+  
+  (when (and (> (nest-time-of-year n) (* nest-year-length 0.75))
+	     (< (nest-time-of-year n) (+ (* nest-year-length 0.75) 7)))		
+	(render-info-box "IT'S WINTER TIME"  "Disperse your reproductive wasps..."))
+  
   (when (and (<= (nest-energy n) 15) (zero? (modulo (floor (/ time 200)) 2)))
-	(set! ctx.fillStyle highlight-col)
-	(ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
-	(set! ctx.fillStyle text-col)
-	(set! ctx.font "normal 40pt pompiere")
-	(fill-centre-text ctx "LOW ENERGY!!" (/ screen-width 2) 290)
-	(set! ctx.font "normal 25pt pompiere")
-	(fill-centre-text ctx "Send foragers out..." (/ screen-width 2) 350))
+	(render-info-box "LOW ENERGY!!" "Send foragers out now..."))
   
   (when (not (nest-check-queens n))
-  	(set! ctx.fillStyle highlight-col)
-  	(ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
-  	(set! ctx.fillStyle text-col)
-  	(set! ctx.font "normal 40pt pompiere")
-  	(fill-centre-text ctx "GAME OVER" (/ screen-width 2) 290)
-  	(set! ctx.font "normal 25pt pompiere")
-  	(fill-centre-text ctx "Your queen wasp has died" (/ screen-width 2) 350))
-
+	(render-info-box "GAME OVER" "Your queen has died."))
+  
   (when (< (length (nest-wasps n)) 1)
-	(set! ctx.fillStyle highlight-col)
-	(ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
-	(set! ctx.fillStyle text-col)
-	(set! ctx.font "normal 40pt pompiere")
-	(fill-centre-text ctx "GAME OVER" (/ screen-width 2) 290)
-	(set! ctx.font "normal 25pt pompiere")
-	(fill-centre-text ctx "All your wasps have died out" (/ screen-width 2) 350))
+	(render-info-box "GAME OVER" "All your wasps have died out"))
 
   (when (> (nest-time-of-year n) nest-year-length)
-	(set! ctx.fillStyle highlight-col)
-	(ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
-	(set! ctx.fillStyle text-col)
-	(set! ctx.font "normal 40pt pompiere")
-	(fill-centre-text ctx "GAME OVER" (/ screen-width 2) 290)
-	(set! ctx.font "normal 25pt pompiere")
-	(fill-centre-text ctx "The wasp year is at an end" (/ screen-width 2) 350))
+	(render-info-box "GAME OVER" "The wasp year is at an end"))
 
   (set! ctx.font "normal 25pt pompiere")
   (set! ctx.fillStyle text-col)
