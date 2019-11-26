@@ -21,10 +21,11 @@
   (list new-nests num-workers-laid num-workers-hatched cells-built events-survived
 	num-reproductives-hatched energy-foraged forages))
 
-(define current-scores (nest-scores 0 0 0 0 0 0 0 0))
+;; add free starting cell
+(define current-scores (nest-scores 0 0 0 1 0 0 0 0))
 
 (define (reset-scores!)
-  (set! current-scores (nest-scores 0 0 0 0 0 0 0 0)))
+  (set! current-scores (nest-scores 0 0 0 1 0 0 0 0)))
 
 (define (update-scores i v)
   (set! current-scores

@@ -125,7 +125,8 @@
       (window-wasp w) (vadd pos (vec2 150 90))) ctx)))  
 
   ;; draw swatter 
-  (when (eq? (window-weather w) 'swatted)
+  (when (and (not (eq? (wasp-state (window-wasp w)) 'state-mating))
+	     (eq? (window-weather w) 'swatted))
 	(ctx.save)
 	(ctx.translate (- (vx pos) 50) (- (vy pos) 100))	
 	(ctx.translate 28 270)	
@@ -161,7 +162,8 @@
 	   (- (vy pos) offy)
 	   (window-w w) (window-h w))))
 
-  (when (and (eq? (window-weather w) 'stormy)
+  (when (and (not (eq? (wasp-state (window-wasp w)) 'state-mating))
+	     (eq? (window-weather w) 'stormy)
 	     (< (rndf) 0.01))
 	(ctx.drawImage (find-image "sprites/lightning.png")
 		       (vx pos) (vy pos)))

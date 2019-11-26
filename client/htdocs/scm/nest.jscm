@@ -566,7 +566,7 @@
    delta))
 
 (define (render-info-box heading info)
-  (set! ctx.fillStyle highlight-col)
+  (set! ctx.fillStyle highlight2-col)
   (ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
   (set! ctx.fillStyle text-col)
   (set! ctx.font "normal 40pt pompiere")
