@@ -510,10 +510,10 @@
      (info-display-add
       (nest-info-display n)
       (make-info "YOUR NEST HAS NO ENERGY REMAINING" 'no-energy 0)))
-    ((<= (nest-energy n) 20)
-     (info-display-add
-      (nest-info-display n)
-      (make-info "YOUR NEST HAS LOW ENERGY" 'low-energy 0)))
+    ;; ((<= (nest-energy n) 20)
+    ;;  (info-display-add
+    ;;   (nest-info-display n)
+    ;;   (make-info "YOUR NEST HAS LOW ENERGY" 'low-energy 0)))
     ((> (nest-time-of-year n) (- nest-year-length 20))
      (info-display-add
       (nest-info-display n)

@@ -428,11 +428,25 @@
 	 cell))
    cells))
 
+(define (check-cells cells)
+  (for-each
+   (lambda (cell)
+     (when (and
+	    (not (eq? (cell-code cell) 0))
+	    (not (eq? (cell-code cell) 1))
+	    (not (eq? (cell-code cell) 2))
+	    (not (eq? (cell-code cell) 3)))
+	   (msg "odd cell code:")
+	   (msg (cell-code cell))))
+   cells))
+  
 ;; update the code for the cells as things hatch etc
 (define (wasp-update-cells wasp cells)
+  (check-cells cells)
   (cond
    ((or (eq? (wasp-state wasp) 'state-laid-egg)
 	(eq? (wasp-state wasp) 'state-laid-repro-egg))
+    (msg "setting cell occupied")
     (update-cell (entity-walk-to wasp) cells cell-code-occupied))
    ((or (eq? (wasp-state wasp) 'state-built-cell)
 	(eq? (wasp-state wasp) 'state-hatched)
@@ -440,6 +454,7 @@
 	(eq? (wasp-state wasp) 'state-remove-egg)
 	(eq? (wasp-state wasp) 'state-taken-egg)
 	(eq? (wasp-state wasp) 'state-eaten-egg))
+    (msg "setting cell empty")
     (update-cell (entity-walk-to wasp) cells cell-code-empty))
    (else cells)))
 

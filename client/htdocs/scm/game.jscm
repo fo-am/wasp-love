@@ -156,8 +156,7 @@
 	 (list "score" (+ (scores-forages) (* score-per-mating (scores-new-nests))))
 	 )
    (lambda (c score-pos)
-     (msg score-pos)
-     (if (eq? player-name "???")
+     (if (or #t (eq? player-name "???"))
 	 (nightjar-enter-name c (JSON.parse score-pos))
 	 (nightjar-end game (JSON.parse score-pos)))))
   
@@ -408,10 +407,10 @@
      (wrap-text ctx "LEADERBOARD" 0 100 1300 100)
      (set! ctx.font "normal 30pt pompiere")
      
-     (wrap-text ctx "NAME" col1 180 1000 1)
-     (wrap-text ctx "NESTS FOUNDED" col2 180 1000 1)
-     (wrap-text ctx "NEST LOCATION" col3 180 1000 1)
-     (wrap-text ctx "SCORE" col4 180 1000 1)
+     (wrap-text ctx "NAME" col1 170 1000 1)
+     (wrap-text ctx "NESTS FOUNDED" col2 170 1000 1)
+     (wrap-text ctx "NEST LOCATION" col3 170 1000 1)
+     (wrap-text ctx "SCORE" col4 170 1000 1)
      
      (when scores
 	   (index-for-each
@@ -419,16 +418,16 @@
 	      (cond
 	       ((zero? i)
 		(set! ctx.font "bold 30pt pompiere")
-		(text-flashy-render ctx (list-ref e 0) col1 (+ 230 (* 45 i)) (game-time c))
-		(text-flashy-render ctx (+ "" (list-ref e 1) " nests") col2 (+ 230 (* 45 i)) (game-time c))
-		(text-flashy-render ctx (+ "" (list-ref e 3)) col3 (+ 230 (* 45 i)) (game-time c))
-		(text-flashy-render ctx (+ "" (list-ref e 2) " points") col4 (+ 230 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (list-ref e 0) col1 (+ 220 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (+ "" (list-ref e 1) " nests") col2 (+ 220 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (+ "" (list-ref e 3)) col3 (+ 220 (* 45 i)) (game-time c))
+		(text-flashy-render ctx (+ "" (list-ref e 2) " points") col4 (+ 220 (* 45 i)) (game-time c))
 		(set! ctx.font "normal 30pt pompiere"))
 	       (else
-		(wrap-text ctx (list-ref e 0) col1 (+ 230 (* 45 i)) 1000 1)
-		(wrap-text ctx (+ "" (list-ref e 1) " nests") col2 (+ 230 (* 45 i)) 1000 1)
-		(wrap-text ctx (+ "" (list-ref e 3)) col3 (+ 230 (* 45 i)) 1000 1)
-		(wrap-text ctx (+ "" (list-ref e 2) " points") col4 (+ 230 (* 45 i)) 1000 1))))
+		(wrap-text ctx (list-ref e 0) col1 (+ 220 (* 45 i)) 1000 1)
+		(wrap-text ctx (+ "" (list-ref e 1) " nests") col2 (+ 220 (* 45 i)) 1000 1)
+		(wrap-text ctx (+ "" (list-ref e 3)) col3 (+ 220 (* 45 i)) 1000 1)
+		(wrap-text ctx (+ "" (list-ref e 2) " points") col4 (+ 220 (* 45 i)) 1000 1))))
 	    scores))
 
      (ctx.drawImage (find-image "sprites/wildflowers1.png") 0 460)
@@ -439,8 +438,8 @@
     (list
      (rect-button
       "BACK"
-      1250
-       default-button-y
+       default-button-x
+       (+ default-button-y 85)
        default-button-width 
        default-button-height 
        "jumpy"
@@ -493,18 +492,21 @@
     (lambda (t c) c)
     (game-modify-render
      (lambda (ctx)
-       (set! ctx.font "normal 30pt open-sans")
-       (wrap-text ctx "Enter your name" 0 200 1000 70)
-       (set! ctx.font "normal 50pt open-sans")
-       (wrap-text ctx player-name 0 280 1000 70)
-       (set! ctx.font "normal 30pt open-sans"))
+       (set! ctx.font "normal 30pt pompiere")
+       (wrap-text ctx "Enter your name for the leaderboard" 0 70 1000 70)
+       (set! ctx.font "normal 50pt pompiere")
+       (wrap-text ctx player-name 0 150 1000 70)
+       (set! ctx.font "normal 30pt pompiere"))
 
      (game-modify-buttons
       (append
        (index-map
 	(lambda (i ch)
-	  (let ((x (+ 200 (* (qwertypos-x i) 120)))
-		(y (+ 350 (* (qwertypos-y i) 130))))
+	  (let ((x (+ (cond ((eq? (qwertypos-y i) 0) 250)
+			    ((eq? (qwertypos-y i) 1) 300)
+			    (else 380))
+		      (* (qwertypos-x i) 120)))
+		(y (+ 220 (* (qwertypos-y i) 130))))
 	    (image-button ch x y #f
 			  (button-image)
 			  (lambda (c)
@@ -516,13 +518,13 @@
 	      "Z" "X" "C" "V" "B" "N" "M"))
 
        (list
-	(rect-button "DELETE" 900 default-button-y default-button-width default-button-height "jumpy"
+	(rect-button "DELETE" (- default-button-x 200) default-button-y default-button-width default-button-height "jumpy"
 		     (lambda (c)
 		       (button-sound)		      
 		       (type-delete c)
 		       c))
 
-	(rect-button "DONE" 1250 default-button-y default-button-width default-button-height "jumpy"
+	(rect-button "DONE"  (+ default-button-x 200) default-button-y default-button-width default-button-height "jumpy"
 		     (lambda (c)
 		       (button-sound)
 		       (server-call
