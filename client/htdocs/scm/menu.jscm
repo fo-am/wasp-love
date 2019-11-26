@@ -93,7 +93,7 @@
   (when (menu-visible m)
 	(ctx.save)
 	(ctx.translate (vx (menu-pos m)) (vy (menu-pos m)))
-	(set! ctx.font "normal 20pt pompiere")
+	(set! ctx.font "normal 18pt pompiere")
 	(if (eq? (menu-direction m) 'down)
 	    (ctx.drawImage (find-image "sprites/menu-triangle-up.png") 0 64)
 	    (ctx.drawImage (find-image "sprites/menu-triangle.png") 0 0))
@@ -103,10 +103,10 @@
 	      ((eq? (menu-wasp-type m) 'queen) "QUEEN")
 	      ((eq? (menu-wasp-type m) 'worker) "WORKER")
 	      (else "REPRODUCTIVE"))
-	 125 (if (eq? (menu-direction m) 'down) 105 30))
+	 125 (if (eq? (menu-direction m) 'down) 110 25))
 	(when (eq? (menu-direction m) 'down)
 	      (ctx.translate 0 (+ 60 (* menu-height (+ 1 (length (menu-options m)))))))	 
-	(set! ctx.font "normal 30pt pompiere")
+	(set! ctx.font "normal 25pt pompiere")
 	(index-for-each
 	 (lambda (i o)
 	   (ctx.translate 0 (- menu-height))
@@ -117,7 +117,7 @@
 	     (ctx.fillText
 	      (menu-option-text o)
 	      (- (/ menu-width 2) (/ m.width 2))
-	      (+ (/ menu-height 2) 15))))
+	      (+ (/ menu-height 2) 13))))
 	 (menu-options m))
 	(ctx.restore))))
 
