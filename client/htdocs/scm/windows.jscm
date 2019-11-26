@@ -225,11 +225,11 @@
   (ctx.fillRect 1265 0 400 750)
   (set! ctx.fillStyle text-col)
   (set! ctx.font "normal 35pt pompiere")
-  (ctx.fillText "FORAGERS" 1355 50)
+  (ctx.fillText "OUTSIDE" 1355 50)
 
   (when (> (length (window-stack-windows s)) 3)
 	(set! ctx.font "normal 20pt pompiere")
-	(ctx.fillText "MORE FORAGERS..." 1350 730))
+	(ctx.fillText "MORE WASPS..." 1350 730))
   
   (index-for-each
    (lambda (i window)

@@ -21,6 +21,7 @@
 
 (js "$.ajaxSetup ({ cache: false })")
 
+(define bg-col "#f5f5f5")
 (define highlight-col "#f9e973")
 (define highlight2-col "#ecd6ba")
 (define text-col "#606353")

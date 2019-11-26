@@ -347,8 +347,8 @@
 	(rect-button
 	 "QUIT"
 	 20
-	 (+ default-button-y 70)
-	 50 default-button-height
+	 (+ default-button-y 85)
+	 60 60
 	 #f
 	 (lambda (c)
 	   (button-sound)

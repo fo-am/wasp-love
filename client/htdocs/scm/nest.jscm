@@ -613,8 +613,8 @@
   (window-stack-render (nest-window-stack n) ctx)
 
   (set! ctx.font "normal 25pt pompiere")
-  (set! ctx.fillStyle highlight-col)
-  (ctx.fillRect 0 0 1270 70)
+  (set! ctx.fillStyle bg-col)
+  ;;(ctx.fillRect 0 0 1265 70)
   (ctx.fillRect 0 630 1265 120)
   (set! ctx.fillStyle text-col)
   (ctx.fillText (string-append "ENERGY: " (floor (nest-energy n))) 10 50)
