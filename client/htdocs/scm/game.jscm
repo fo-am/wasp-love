@@ -207,6 +207,9 @@
 	  (set! ctx.font "normal 25pt pompiere")
 	  (wrap-text ctx "Wasps are super..." 0 300 800 40)
 	  (set! ctx.font "normal 30pt pompiere")
+
+	  (ctx.drawImage (find-image "sprites/wildflowers1.png") 0 460)
+	  (ctx.drawImage (find-image "sprites/wildflowers2.png") 1350 460)
 	  
 	  )
 	
@@ -261,6 +264,8 @@
      (set! ctx.font "normal 25pt pompiere")
      (wrap-text ctx "Different places have different dangers and opportunities" 0 300 800 40)
      (set! ctx.font "normal 30pt pompiere")
+     (ctx.drawImage (find-image "sprites/wildflowers1.png") 0 460)
+     (ctx.drawImage (find-image "sprites/wildflowers2.png") 1350 460)
      )
 	
    (game-modify-buttons
@@ -377,9 +382,9 @@
 	(ctx.fillText (string-append "Foraged " (floor (scores-energy-foraged)) " energy units") 500 500)
 	(ctx.fillText (string-append "You made position " (+ rank 1)) 500 550))      
 
-      ;;(set! ctx.globalAlpha 0.5)
-      ;;(ctx.drawImage (find-image "foam-logo.png") (- (+ default-button-x 200) 50) 790)
-      ;;(set! ctx.globalAlpha 1.0)      
+      (ctx.drawImage (find-image "sprites/wildflowers1.png") 0 460)
+      (ctx.drawImage (find-image "sprites/wildflowers2.png") 1350 460)
+
       )
     (game-modify-update
      (lambda (t c)
@@ -433,7 +438,12 @@
 		(wrap-text ctx (+ "" (list-ref e 1) " nests") col2 (+ 230 (* 45 i)) 1000 1)
 		(wrap-text ctx (+ "" (list-ref e 3)) col3 (+ 230 (* 45 i)) 1000 1)
 		(wrap-text ctx (+ "" (list-ref e 2) " points") col4 (+ 230 (* 45 i)) 1000 1))))
-	    scores)))
+	    scores))
+
+     (ctx.drawImage (find-image "sprites/wildflowers1.png") 0 460)
+     (ctx.drawImage (find-image "sprites/wildflowers2.png") 1350 460)
+
+     )
    (game-modify-buttons
     (list
      (rect-button

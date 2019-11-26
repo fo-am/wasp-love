@@ -334,7 +334,7 @@
       ((eq? state 'state-disperse)
        (if (> (entity-timer w) wasp-disperse-time)
 	   (wasp-modify-state
-	    w (if (eq? (time->season (nest-time-of-year nest)) 'spring)
+	    w (if (eq? (time->season (nest-time-of-year nest)) 'winter)
 		  'state-start-mating
 		  'state-repro-start-dying))
 	   (entity-walk w wasp-speed delta)))

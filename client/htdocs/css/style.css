@@ -9,7 +9,7 @@ html, body {
     font-family: 'pompiere';
     color: #606353;
     font-size:  20;
-    background: #f5f5f5;
+    background: black;
 }
 
 #canvas {
@@ -17,6 +17,7 @@ html, body {
     height: auto;
     min-width: 800px;
     /*background: url(../images/bg.png);*/
+    background: #f5f5f5;
 
     padding: 0;
     margin: auto;
