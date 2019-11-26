@@ -19,7 +19,7 @@
 (load "scm/nightjar.jscm")
 (load "scm/local-storage.jscm")
 
-(define params-version 6)
+(define params-version 7)
 (define player-id -1)
 (define player-name "???")
 (define score-per-mating 10)
@@ -37,12 +37,12 @@
   (make-param "wasp-speed" 300 "pixels per second")
   (make-param "ant-speed" 300 "pixels per second")
   (make-param "hoverfly-speed" 300 "pixels per second")
-  (make-param "wasp-build-time" 2.5 "seconds")
+  (make-param "wasp-build-time" 1 "seconds")
   (make-param "wasp-laying-time" 2.5 "seconds")
-  (make-param "wasp-egg-time" 40 "seconds") 
+  (make-param "wasp-egg-time" 30 "seconds") 
   (make-param "hoverfly-grub-time" 2 "seconds")
   (make-param "hoverfly-lay-time" 5 "seconds")
-  (make-param "wasp-tending-time" 2.5 "seconds")
+  (make-param "wasp-tending-time" 1 "seconds")
   (make-param "wasp-forage-time" 15 "seconds")
   (make-param "wasp-dying-time" 3 "seconds")
   (make-param "wasp-disperse-time" 5 "seconds")
@@ -116,16 +116,7 @@
   (find-image (choose (list "button-s1.png"))))
 
 (define (button-sound)
-  0
-;  (play-sound
-;   (choose
-;    (list
-;     "bubble-1.wav"
-;     "bubble-2.wav"
-;     "bubble-3.wav"
-;     "bubble-7.wav"
-;     )))
-  )
+  (play-sound "button.wav"))
 
 (define default-button-x (- (/ screen-width 2) 170))
 (define default-button-y (+ (/ screen-height 2) 200))
@@ -549,11 +540,29 @@
 (set! ctx.fillStyle "#606353")
 (centre-text ctx "Loading..." 240 240)
 
-;(load-sounds!
-; (list
-;  "found.wav"
-;  ))
-
+(load-sounds!
+ (list
+  "activity-1.wav"
+  "activity-2.wav"
+  "activity-3.wav"
+  "ant-1.wav"
+  "ant-2.wav"
+  "ant-3.wav"
+  "button.wav"
+  "disperse-time.wav"
+  "hatch.wav"
+  "hoverfly-1.wav"
+  "hoverfly-2.wav"
+  "hoverfly-3.wav"
+  "low-energy.wav"
+  "no-energy-click.wav"
+  "score-up.wav"
+  "wasp-landing-1.wav"
+  "wasp-landing-2.wav"
+  "wasp-landing-3.wav"
+  "wasp-takeoff-1.wav"
+  "wasp-takeoff-2.wav"
+  "wasp-takeoff-3.wav"))
 
 (load-images!
  (append 

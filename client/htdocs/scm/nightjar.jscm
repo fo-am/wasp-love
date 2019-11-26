@@ -153,7 +153,9 @@
 (define (play-sound sound)
   (when (game-mute game)
         (let ((snd (find-sound sound)))
-          (snd.play))))
+	  (if snd
+	      (snd.play)
+	      (msg (+ "no sound: " sound))))))
 
 (define (play-sound-looped sound)
   (when (game-mute game)

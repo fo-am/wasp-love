@@ -150,6 +150,7 @@
   (entity-walk-to-pos-offset w (cell-pos dest-cell) next-clip))
 
 (define (wasp-fly-to-forage w nest)
+  (play-sound (choose (list "wasp-takeoff-1.wav" "wasp-takeoff-2.wav" "wasp-takeoff-3.wav")))
   (wasp-modify-state 
    (entity-modify-walk-time 
     (entity-modify-walk-to 
@@ -220,23 +221,25 @@
 	   w))
       ((eq? state 'state-tended-egg)
        (if (> (entity-timer w) wasp-egg-time)
-	   (cond
-	    ((eq? (wasp-type w) 'worker)
-	     (update-scores-num-workers-hatched! 1)
-	     (wasp-modify-capabilities
-	      (wasp-modify-state w 'state-hatched)
-	      default-capabilities))
-	    (else
-	     (update-scores-num-reproductives-hatched! 1)
-	     (entity-modify-bg-image
-	      (wasp-modify-capabilities
-	       (wasp-modify-state w 'state-hatched)
-	       repro-capabilities)
-	      ;; add the glow indicator to the reproductives
-	      (find-image "sprites/glow.png"))))
+	   (begin
+	     (play-sound "hatch.wav")
+	     (cond
+	      ((eq? (wasp-type w) 'worker)
+	       (update-scores-num-workers-hatched! 1)
+	       (wasp-modify-capabilities
+		(wasp-modify-state w 'state-hatched)
+		default-capabilities))
+	      (else
+	       (update-scores-num-reproductives-hatched! 1)
+	       (entity-modify-bg-image
+		(wasp-modify-capabilities
+		 (wasp-modify-state w 'state-hatched)
+		 repro-capabilities)
+		;; add the glow indicator to the reproductives
+		(find-image "sprites/glow.png")))))
 	   w))
       ((eq? state 'state-hatched) (wasp-start-wandering w nest))
-
+      
       ((eq? state 'state-idle)
        (if (and (eq? (wasp-type w) 'queen) (> (entity-timer w) 5))
 	   (wasp-modify-state w 'state-egg-check)
@@ -244,7 +247,9 @@
 
       ((eq? state 'state-walking-to-cell)
        (if (>= (entity-walk-time w) 1)
-	   (entity-modify-timer (wasp-modify-state w 'state-building-cell) 0)
+	   (begin
+	     (play-sound (choose (list "activity-1.wav" "activity-2.wav" "activity-3.wav")))
+	     (entity-modify-timer (wasp-modify-state w 'state-building-cell) 0))
 	   (entity-walk w wasp-speed delta)))
 
       ((eq? state 'state-building-cell) 
@@ -263,11 +268,15 @@
        (if (> (entity-timer w) wasp-laying-time)
 	   (wasp-modify-state w 'state-laid-egg)
 	   w))
-      ((eq? state 'state-laid-egg) (wasp-start-wandering w nest))
-
+      ((eq? state 'state-laid-egg)
+       (play-sound (choose (list "activity-1.wav" "activity-2.wav" "activity-3.wav")))	     
+       (wasp-start-wandering w nest))
+      
       ((eq? state 'state-walking-to-lay-repro)
        (if (>= (entity-walk-time w) 1)
-	   (entity-modify-timer (wasp-modify-state w 'state-laying-repro-egg) 0)
+	   (begin
+	     (play-sound (choose (list "activity-1.wav" "activity-2.wav" "activity-3.wav")))
+	     (entity-modify-timer (wasp-modify-state w 'state-laying-repro-egg) 0))
 	   (entity-walk w wasp-speed delta)))
       ((eq? state 'state-laying-repro-egg) 
        (if (> (entity-timer w) wasp-laying-time)
@@ -305,6 +314,7 @@
 	   (entity-modify-timer (wasp-modify-state w 'state-forage-end) 0)
 	   (entity-walk w wasp-speed delta)))
       ((eq? state 'state-forage-end)       
+       (play-sound (choose (list "wasp-landing-1.wav" "wasp-landing-2.wav" "wasp-landing-3.wav")))
        (wasp-modify-carrying
 	(wasp-modify-state 
 	 (wasp-walk-to-cell
@@ -321,7 +331,9 @@
        
       ((eq? state 'state-walking-to-tend)
        (if (>= (entity-walk-time w) 1)
-	   (entity-modify-timer (wasp-modify-state w 'state-tending) 0)
+	   (begin
+	     (play-sound (choose (list "activity-1.wav" "activity-2.wav" "activity-3.wav")))
+	     (entity-modify-timer (wasp-modify-state w 'state-tending) 0))
 	   (entity-walk w wasp-speed delta)))
       ((eq? state 'state-tending) 
        (if (> (entity-timer w) wasp-tending-time)
@@ -330,6 +342,7 @@
       ((eq? state 'state-tended) (wasp-start-wandering w nest))
 
       ((eq? state 'state-disperse-start)
+       (play-sound (choose (list "wasp-takeoff-1.wav" "wasp-takeoff-2.wav" "wasp-takeoff-3.wav")))
        (wasp-modify-state w 'state-disperse))
       ((eq? state 'state-disperse)
        (if (> (entity-timer w) wasp-disperse-time)

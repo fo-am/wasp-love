@@ -67,6 +67,7 @@
 			    mx my)) (menu-option-key o) r))
 		#f
 		(menu-options m))))
+	  (play-sound "button.wav")
 	  (build-menu 
 	   (menu-pos m)
 	   (menu-wasp-type m)

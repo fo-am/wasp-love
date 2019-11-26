@@ -45,7 +45,7 @@
       (rndf)
       (anim-load-frames "7" hoverfly-animation)
       0 hoverfly-animation-fly #f 0 pos pos 0 0 (vec2 0 0))
-     (list 'state-search 0 #f 0))))
+     (list 'state-start-searching 0 #f 0))))
 
 (define (make-hoverfly-grub pos dest-egg) 
   (append 
@@ -105,6 +105,7 @@
 	   h))
       
       ((eq? state 'state-start-searching)
+       (play-sound (choose (list "hoverfly-1.wav" "hoverfly-2.wav" "hoverfly-3.wav")))
        (hoverfly-modify-state
 	(hoverfly-modify-killed-egg h #f) 
 	'state-search))
@@ -137,7 +138,7 @@
 		     ;; (if so it can't have moved)		
 		     (entity-modify-timer (hoverfly-modify-state h 'state-laying) 0)
 		     ;; otherwise go back to searching
-		     (hoverfly-modify-state h 'state-search))))
+		     (hoverfly-modify-state h 'state-start-searching))))
 	   (entity-walk h hoverfly-speed delta)))
       
       ((eq? state 'state-laying)
@@ -149,13 +150,13 @@
        (hoverfly-modify-state h	'state-leave))
 			
       ((eq? state 'state-leave)       
+       (play-sound (choose (list "hoverfly-1.wav" "hoverfly-2.wav" "hoverfly-3.wav")))
        (entity-walk-to-pos
 	(hoverfly-modify-state h 'state-leaving)
 	(v2add (vec2 0 (random 600)) hoverfly-offscreen)))
        
       ((eq? state 'state-leaving)
        (if (>= (entity-walk-time h) 1)
-	   ;; return to the nest searching
 	   (hoverfly-modify-state h 'state-left)
 	   (entity-walk h hoverfly-speed delta)))
       
