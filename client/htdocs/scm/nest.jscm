@@ -315,7 +315,7 @@
 	   (nest-add-info 
 	    (nest-modify-energy n (+ (nest-energy n) energy))
 	    (nest-forage-message wasp) 'forager-return) 
-	   (score-popups-add (nest-score-popups n) 'foraged "+1" (entity-pos wasp) (vec2 80 50)))
+	   (score-popups-add (nest-score-popups n) 'foraged "+1" (entity-pos wasp) (vec2 1150 50)))
 	  (score-popups-add (nest-score-popups n) 'energy (+ "+" energy) (entity-pos wasp) (vec2 550 50)))))
       ((eq? (wasp-state wasp) 'state-died)
        (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
@@ -330,7 +330,7 @@
 	(nest-add-info 
 	 n (string-append "CONGRATS: A NEW NEST HAS BEEN FOUNDED")
 	 'allow-dup)
-	(score-popups-add (nest-score-popups n) 'mated "+10"  (entity-pos wasp) (vec2 50 50))))
+	(score-popups-add (nest-score-popups n) 'mated "+10"  (entity-pos wasp) (vec2 1150 50))))
       ((eq? (wasp-state wasp) 'state-mated)
        (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
       ((eq? (wasp-state wasp) 'state-died-egg)
@@ -577,6 +577,12 @@
   (fill-centre-text ctx info (/ screen-width 2) 350))
 
 
+(define (render-season x y n time)
+  (ctx.drawImage (find-image "sprites/season.png") x y)
+  (let ((c (floor (+ 127 (* (+ 1 (sin (* time 0.003))) 64)))))
+    (set! ctx.fillStyle (+ "rgba(" c "," c "," c ", 0.5)")))
+  (ctx.fillRect x y (* (/ (nest-time-of-year n) nest-year-length) 300) 56))
+  
 
 (define (nest-render n ctx time)
   (if (eq? (nest-location n) "city")
@@ -621,14 +627,15 @@
 	(if (zero? (modulo (floor (/ time 100)) 2))
 	    (set! ctx.fillStyle "#fff")
 	    (set! ctx.fillStyle text-col)))
-  (ctx.fillText (string-append "SCORE: " (+ (scores-forages) (* score-per-mating (scores-new-nests)))) 50 50)
+  (ctx.fillText (string-append "SCORE: " (+ (scores-forages) (* score-per-mating (scores-new-nests)))) 1100 50)
   (when (score-popups-contain-energy (nest-score-popups n))
 	(if (zero? (modulo (floor (/ time 100)) 2))
 	    (set! ctx.fillStyle "#fff")
 	    (set! ctx.fillStyle text-col)))
   (ctx.fillText (string-append "ENERGY: " (floor (nest-energy n))) 500 50)
+  ;;(ctx.fillText (string-append "SEASON: " (time->season-text (nest-time-of-year n))) 1000 50)
+  (render-season 5 5 n time)
   (set! ctx.fillStyle text-col)
-  (ctx.fillText (string-append "SEASON: " (time->season-text (nest-time-of-year n))) 1000 50)
   (when (and (nest-event n)
 	     (null? (info-display-items (nest-info-display n))))
 	(event-render n ctx))
