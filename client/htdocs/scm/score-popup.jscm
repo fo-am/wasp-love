@@ -19,16 +19,18 @@
 	"Pests removed from ill plant!"
 	"2 plants pollinated!"))
 
-(define score-popup-max-time 5)
+(define score-popup-max-time 3)
 
-(define (score-popup type text info time) (list type text info time))
+(define (score-popup type text info pos dest time) (list type text info pos dest time))
 (define (score-popup-type s) (list-ref s 0))
 (define (score-popup-text s) (list-ref s 1))
 (define (score-popup-info s) (list-ref s 2))
-(define (score-popup-time s) (list-ref s 3))
-(define (score-popup-modify-time s v) (list-replace s 3 v))
+(define (score-popup-pos s) (list-ref s 3))
+(define (score-popup-dest s) (list-ref s 4))
+(define (score-popup-time s) (list-ref s 5))
+(define (score-popup-modify-time s v) (list-replace s 5 v))
 
-(define (score-popups-add p type text)
+(define (score-popups-add p type text pos dest)
   (cons
    (score-popup
     type
@@ -36,8 +38,17 @@
     (if (eq? type 'foraged)
 	(choose score-popup-infotext)
 	"Increased chance of future nests!")
+    pos
+    dest
     0)
    p))
+
+(define (score-popups-contain-energy p)
+  (foldl
+   (lambda (p r)
+     (if (and (not r) (eq? (score-popup-type p) 'energy))
+	 #t r))
+   #f p))
 
 (define (score-popups-update p delta)
   (map
@@ -52,10 +63,11 @@
   (for-each
    (lambda (s)
      (ctx.save)
-     (let ((sc (+ 1 (* (score-popup-time s) 0.2))))
-       (if (eq? (score-popup-type s) 'energy)
-	   (ctx.translate 100 100)		 
-	   (ctx.translate 500 100))
+     (let ((sc (+ 1 (* (score-popup-time s) 0.2)))
+	   (p (v2lerp (score-popup-pos s)
+		      (score-popup-dest s)
+		      (/ (score-popup-time s) score-popup-max-time))))       
+       (ctx.translate (vx p) (vy p))
        (ctx.scale sc sc)		 
        (set! ctx.font "normal 25pt pompiere")
        (set! ctx.fillStyle text-col)

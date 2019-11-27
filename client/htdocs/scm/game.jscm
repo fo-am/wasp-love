@@ -19,7 +19,7 @@
 (load "scm/nightjar.jscm")
 (load "scm/local-storage.jscm")
 
-(define params-version 8)
+(define params-version 9)
 (define player-id -1)
 (define player-name "???")
 (define score-per-mating 10)
@@ -40,7 +40,7 @@
   (make-param "wasp-build-time" 1 "seconds")
   (make-param "wasp-laying-time" 2.5 "seconds")
   (make-param "wasp-egg-time" 20 "seconds") 
-  (make-param "hoverfly-grub-time" 2 "seconds")
+  (make-param "hoverfly-grub-time" 5 "seconds")
   (make-param "hoverfly-lay-time" 5 "seconds")
   (make-param "wasp-tending-time" 1 "seconds")
   (make-param "wasp-forage-time" 15 "seconds")
@@ -75,7 +75,7 @@
   (make-param "organic-multiplier" 2.0 "energy boost")
   (make-param "swatted-duration" 10 "seconds")  
   (make-param "swatted-deadliness" 0.2 "prob per second")
-  (make-param "hoverfly-attack-duration" 40 "seconds")  
+  (make-param "hoverfly-attack-duration" 30 "seconds")  
   (make-param "hoverfly-attack-number" 3 "hoverflies")  
   ))
 
@@ -559,6 +559,7 @@
   "low-energy.wav"
   "no-energy-click.wav"
   "score-up.wav"
+  "score-up-mate.wav"
   "wasp-landing-1.wav"
   "wasp-landing-2.wav"
   "wasp-landing-3.wav"

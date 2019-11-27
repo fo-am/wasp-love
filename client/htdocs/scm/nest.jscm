@@ -303,7 +303,7 @@
 	    r (string-append "DON'T FORGET TO TEND YOUR BROOD")
 	    'tend-warning)
 	   r))
-      ((eq? (wasp-state wasp) 'state-forage-end)
+      ((eq? (wasp-state wasp) 'state-forage-fed)
        (let ((energy 
 	      (floor (+ (* nest-forage-benefit (nest-energy-mult n))
 			(* (rndf) nest-forage-variation)))))
@@ -315,8 +315,8 @@
 	   (nest-add-info 
 	    (nest-modify-energy n (+ (nest-energy n) energy))
 	    (nest-forage-message wasp) 'forager-return) 
-	   (score-popups-add (nest-score-popups n) 'foraged "+1"))
-	  (score-popups-add (nest-score-popups n) 'energy (+ "+" energy)))))
+	   (score-popups-add (nest-score-popups n) 'foraged "+1" (entity-pos wasp) (vec2 80 50)))
+	  (score-popups-add (nest-score-popups n) 'energy (+ "+" energy) (entity-pos wasp) (vec2 550 50)))))
       ((eq? (wasp-state wasp) 'state-died)
        (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
       ((eq? (wasp-state wasp) 'state-repro-start-dying)
@@ -324,13 +324,13 @@
 	n (string-append "REPRODUCTIVE WASP DISPERSED TOO EARLY!")
 	'allow-dup))
       ((eq? (wasp-state wasp) 'state-start-mating)
-       (play-sound "score-up.wav")
+       (play-sound "score-up-mate.wav")
        (update-scores-new-nests! 1)
        (nest-modify-score-popups
 	(nest-add-info 
 	 n (string-append "CONGRATS: A NEW NEST HAS BEEN FOUNDED")
 	 'allow-dup)
-	(score-popups-add (nest-score-popups n) 'mated "+10")))
+	(score-popups-add (nest-score-popups n) 'mated "+10"  (entity-pos wasp) (vec2 50 50))))
       ((eq? (wasp-state wasp) 'state-mated)
        (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
       ((eq? (wasp-state wasp) 'state-died-egg)
@@ -435,14 +435,16 @@
 			 (not (eq? (wasp-state wasp) 'state-egg))
 			 ;;(not (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
 			 )
-		    (build-menu
-		     (menu-munge-location (entity-pos wasp))
-		     (wasp-type wasp)
-		     (menu-calc-direction (entity-pos wasp))
-		     #t		 
-		     (wasp-build-menu-options wasp n) #f 
-		     (entity-id wasp)
-		     0)
+		    (begin
+		      (play-sound "button.wav")
+		      (build-menu
+		       (menu-munge-location (entity-pos wasp))
+		       (wasp-type wasp)
+		       (menu-calc-direction (entity-pos wasp))
+		       #t		 
+		       (wasp-build-menu-options wasp n) #f 
+		       (entity-id wasp)
+		       0))
 		    ;; need to clear the menu to stop it retriggering
 		    (if (menu-selection menu)
 			(menu-clear menu)
@@ -614,13 +616,19 @@
 
   (set! ctx.font "normal 25pt pompiere")
   (set! ctx.fillStyle text-col)
-  (ctx.fillText (string-append "ENERGY: " (floor (nest-energy n))) 10 50)
-  (ctx.fillText (string-append "SEASON: " (time->season-text (nest-time-of-year n))) 200 50)
+  ;; flash score/energy when required
   (when (not (null? (nest-score-popups n)))
 	(if (zero? (modulo (floor (/ time 100)) 2))
 	    (set! ctx.fillStyle "#fff")
 	    (set! ctx.fillStyle text-col)))
-  (ctx.fillText (string-append "SCORE: " (+ (scores-forages) (* score-per-mating (scores-new-nests)))) 450 50)
+  (ctx.fillText (string-append "SCORE: " (+ (scores-forages) (* score-per-mating (scores-new-nests)))) 50 50)
+  (when (score-popups-contain-energy (nest-score-popups n))
+	(if (zero? (modulo (floor (/ time 100)) 2))
+	    (set! ctx.fillStyle "#fff")
+	    (set! ctx.fillStyle text-col)))
+  (ctx.fillText (string-append "ENERGY: " (floor (nest-energy n))) 500 50)
+  (set! ctx.fillStyle text-col)
+  (ctx.fillText (string-append "SEASON: " (time->season-text (nest-time-of-year n))) 1000 50)
   (when (and (nest-event n)
 	     (null? (info-display-items (nest-info-display n))))
 	(event-render n ctx))

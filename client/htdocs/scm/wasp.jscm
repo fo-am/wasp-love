@@ -315,20 +315,20 @@
 	   (entity-walk w wasp-speed delta)))
       ((eq? state 'state-forage-end)       
        (play-sound (choose (list "wasp-landing-1.wav" "wasp-landing-2.wav" "wasp-landing-3.wav")))
-       (wasp-modify-carrying
-	(wasp-modify-state 
-	 (wasp-walk-to-cell
-	  w (or			       
-	     (nest-find-occupied-cell nest)
-	     (nest-find-empty-cell nest)
-	     (nest-find-any-cell nest)) #f)
-	 'state-forage-feed)
-	#f))
+       (wasp-modify-state 
+	(wasp-walk-to-cell
+	 w (or			       
+	    (nest-find-occupied-cell nest)
+	    (nest-find-empty-cell nest)
+	    (nest-find-any-cell nest)) #f)
+	'state-forage-feed))
       ((eq? state 'state-forage-feed)
        (if (>= (entity-walk-time w) 1)
-	   (wasp-start-wandering w nest)
+	   (wasp-modify-state w 'state-forage-fed)
 	   (entity-walk w wasp-speed delta)))
-       
+      ((eq? state 'state-forage-fed)
+       (wasp-modify-carrying (wasp-start-wandering w nest) #f))
+      
       ((eq? state 'state-walking-to-tend)
        (if (>= (entity-walk-time w) 1)
 	   (begin
