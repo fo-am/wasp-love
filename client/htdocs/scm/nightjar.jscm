@@ -60,7 +60,6 @@
   (/ (Math.floor (/ t 10)) 100))
 
 (define image-lib ())
-(define sound-lib ())
 
 (define (load-image-mutate fn filename)
   (let ((image (js "new Image()")))
@@ -123,14 +122,6 @@
      (load-image! fn finished l))
    l))
 
-(define (load-sounds! l)
-  (for-each
-   (lambda (fn)
-     (set! sound-lib
-           (cons (list fn (new Audio (string-append "sounds/" fn)))
-                 sound-lib)))
-   l))
-
 (define (inner_find-image fn l)
   (cond
    ((null? l)
@@ -142,25 +133,52 @@
 (define (find-image fn)
   (inner_find-image fn image-lib))
 
+(define sound-lib ())
+(define max-sound-channels 8)
+
+(define (load-sounds! l)
+  (for-each
+   (lambda (fn)
+     (set! sound-lib
+           (cons (list fn 0 (build-list max-sound-channels (lambda (_) (new Audio (string-append "sounds/" fn)))))
+                 sound-lib)))
+   l))
+
+(define (sound-fn s) (list-ref s 0))
+(define (sound-next-channel s) (list-ref s 1))
+(define (sound-sounds s) (list-ref s 2))
+
+(define (inc-sound s)
+  (list-replace s 1 (modulo (+ 1 (sound-next-channel s))
+			    max-sound-channels)))
+
 (define (inner_find-sound fn l)
   (cond
-   ((null? l) #f)
-   ((eq? (car (car l)) fn) (cadr (car l)))
+   ((null? l) (msg fn) #f)
+   ((eq? (sound-fn (car l)) fn) (car l))
    (else (inner_find-sound fn (cdr l)))))
 
+(define (inner_inc-sound fn l)
+  (cond
+   ((null? l) '())
+   ((eq? (car (car l)) fn) (cons (inc-sound (car l)) (cdr l)))
+   (else (cons (car l) (inner_inc-sound fn (cdr l))))))
+
 (define (find-sound fn)
-  (inner_find-sound fn sound-lib))
+  (set! sound-lib (inner_inc-sound fn sound-lib))
+  (inner-find-sound fn sound-lib))
 
 (define (play-sound sound)
   (when (game-mute game)
-        (let ((snd (find-sound sound)))
+	(let ((snd (find-sound sound)))
 	  (if snd
-	      (snd.play)
+	      (let ((s (list-ref (sound-sounds snd)
+				 (sound-next-channel snd))))
+		(s.play))
 	      (msg (+ "no sound: " sound))))))
 
 (define (play-sound-looped sound)
   (when (game-mute game)
-        (msg sound)
         (let ((snd (find-sound sound)))
           (if (eq? (js "typeof snd.loop") "boolean")
               (set! snd.loop true)

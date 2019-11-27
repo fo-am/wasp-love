@@ -17,15 +17,26 @@
 (define (nest-scores new-nests num-workers-laid num-workers-hatched
 		     cells-built events-survived
 		     num-reproductives-hatched
-		     energy-foraged forages)
+		     energy-foraged forages max-wasps)
   (list new-nests num-workers-laid num-workers-hatched cells-built events-survived
-	num-reproductives-hatched energy-foraged forages))
+	num-reproductives-hatched energy-foraged forages max-wasps))
 
 ;; add free starting cell
-(define current-scores (nest-scores 0 0 0 1 0 0 0 0))
+(define current-scores (nest-scores 0 0 0 1 0 0 0 0 1))
+;; (define current-scores (nest-scores
+;; 			2  ;; new nests
+;; 			8  ;; num workers laid
+;; 			8  ;; num workers hatched
+;; 			10 ;; cells built 
+;; 			3  ;; events survived
+;; 			3  ;; num-reproductives hatched
+;; 			1000 ;; energy foraged
+;; 			5 ;; forages
+;; 			5 ;; max wasps
+;; 			))
 
 (define (reset-scores!)
-  (set! current-scores (nest-scores 0 0 0 1 0 0 0 0)))
+  (set! current-scores (nest-scores 0 0 0 1 0 0 0 0 0)))
 
 (define (update-scores i v)
   (set! current-scores
@@ -40,6 +51,10 @@
 (define (update-scores-num-reproductives-hatched! v) (update-scores 5 v))	
 (define (update-scores-energy-foraged! v) (update-scores 6 v))	
 (define (update-scores-forages! v) (update-scores 7 v))	
+(define (update-scores-max-wasps! v)
+  (when (> v (scores-max-wasps))
+	(msg (list "max wasps now: " v))
+	(set! current-scores (list-replace current-scores 8 v))))
 
 (define (scores-new-nests) (list-ref current-scores 0))	
 (define (scores-num-workers-laid) (list-ref current-scores 1))	
@@ -49,3 +64,30 @@
 (define (scores-num-reproductives-hatched) (list-ref current-scores 5))	
 (define (scores-energy-foraged) (list-ref current-scores 6))	    	
 (define (scores-forages) (list-ref current-scores 7))    	
+(define (scores-max-wasps) (list-ref current-scores 8))    	
+
+(define (scores-analysis)
+  (cond
+   ((> (scores-new-nests) 0)
+    "Your wasps were succesful, and you founded new nests - well done!")
+   ((> (scores-num-reproductives-hatched) 0)
+    "Tip: Remember that reproductive wasps need to be dispersed at the right time of year!")
+   ;; no repros --------------------------  
+   ((< (scores-cells-built) 2)
+    "Tip: Enlarge your nest by building cells so you can raise more wasps.")
+   ((< (scores-num-workers-laid) 3)
+    "Tip: You need to create more workers to help you out.")
+   ((< (scores-max-wasps) 5)
+    "Tip: You need more than five wasps at any time to lay reproductive wasps.")   
+   ;; had plenty of cells and wasps, so more generic -----------------
+   ;; more then 2 workers died as eggs
+   ((> (- (scores-num-workers-laid) (scores-num-workers-hatched)) 2)
+    "Tip: You need to tend your brood more often.")
+   ((< (scores-forages) 3)
+    "Tip: Send more workers out to forage and collect energy for you.")
+   ((> (scores-events-survived) 2)
+    "Tip: To maximise your points, you need to lay some reproductive wasps in order to create new nests.")   
+   (else
+    "Sometimes bad things happen to good wasp nests!"))
+  )
+

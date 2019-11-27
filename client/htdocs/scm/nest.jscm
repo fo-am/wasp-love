@@ -294,6 +294,7 @@
     (else "???"))))
 
 (define (nest-update-from-wasps n time)
+  (update-scores-max-wasps! (length (nest-wasps n)))
   (foldl
    (lambda (wasp r)
      (cond
