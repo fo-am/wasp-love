@@ -105,7 +105,7 @@
 	   h))
       
       ((eq? state 'state-start-searching)
-       (play-sound (choose (list "hoverfly-1.wav" "hoverfly-2.wav" "hoverfly-3.wav")))
+       (when (< (rndf) 0.2) (play-sound (choose (list "hoverfly-1.wav" "hoverfly-2.wav" "hoverfly-3.wav"))))
        (hoverfly-modify-state
 	(hoverfly-modify-killed-egg h #f) 
 	'state-search))

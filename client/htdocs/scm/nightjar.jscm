@@ -122,17 +122,14 @@
      (load-image! fn finished l))
    l))
 
-(define (inner_find-image fn l)
-  (cond
-   ((null? l)
-    ;;(msg "couldn't find")(msg fn)
-    #f)
-   ((eq? (car (car l)) fn) (cadr (car l)))
-   (else (inner_find-image fn (cdr l)))))
-
 (define (find-image fn)
-  (inner_find-image fn image-lib))
-
+  (foldl
+   (lambda (i r)
+     (if (and (not r) (eq? (car i) fn))
+	 (cadr i) r))
+   #f
+   image-lib))
+  
 (define sound-lib ())
 (define max-sound-channels 8)
 
@@ -152,21 +149,21 @@
   (list-replace s 1 (modulo (+ 1 (sound-next-channel s))
 			    max-sound-channels)))
 
-(define (inner_find-sound fn l)
-  (cond
-   ((null? l) (msg fn) #f)
-   ((eq? (sound-fn (car l)) fn) (car l))
-   (else (inner_find-sound fn (cdr l)))))
-
-(define (inner_inc-sound fn l)
-  (cond
-   ((null? l) '())
-   ((eq? (car (car l)) fn) (cons (inc-sound (car l)) (cdr l)))
-   (else (cons (car l) (inner_inc-sound fn (cdr l))))))
+(define (inner-inc-sound fn l)
+  (map
+   (lambda (s)
+     (if (eq? (car s) fn)
+	 (inc-sound s) s))
+   l))
 
 (define (find-sound fn)
-  (set! sound-lib (inner_inc-sound fn sound-lib))
-  (inner-find-sound fn sound-lib))
+  (set! sound-lib (inner-inc-sound fn sound-lib))
+  (foldl
+   (lambda (i r)
+     (if (and (not r) (eq? (sound-fn i) fn))
+	 i r))
+   #f
+   sound-lib))
 
 (define (play-sound sound)
   (when (game-mute game)

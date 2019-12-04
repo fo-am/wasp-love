@@ -101,7 +101,7 @@
 	(fill-centre-text
 	 ctx (cond
 	      ((eq? (menu-wasp-type m) 'queen) "QUEEN")
-	      ((eq? (menu-wasp-type m) 'worker) "WORKER")
+	      ((eq? (menu-wasp-type m) 'female) "WORKER")
 	      (else "REPRODUCTIVE"))
 	 125 (if (eq? (menu-direction m) 'down) 110 25))
 	(when (eq? (menu-direction m) 'down)

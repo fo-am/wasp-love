@@ -56,7 +56,7 @@
    (build-list
     (string->number (local-get-param "wasp-game" "nest-start-wasps"))
     (lambda (_)
-      (make-wasp default-capabilities)))
+      (make-wasp queen-capabilities)))
    (build-menu 
     (vec2 100 100) #f 'up #f 
     (list)
@@ -246,11 +246,11 @@
    #f
    (shuffle (nest-wasps n))))
 
-(define (nest-find-worker-egg n)
+(define (nest-find-male-egg n)
   (foldl
    (lambda (w r)
      (if (and (not r)
-	      (eq? (wasp-parent w) 'worker)
+	      (eq? (wasp-type w) 'male)
 	      (or (eq? (wasp-state w) 'state-egg)
 		  (eq? (wasp-state w) 'state-tended-egg)))
 	 w r))
@@ -298,7 +298,8 @@
   (foldl
    (lambda (wasp r)
      (cond
-      ((eq? (wasp-state wasp) 'state-egg)
+      ((and (eq? (wasp-state wasp) 'state-egg)
+	    (not (eq? (wasp-type wasp) 'male)))
        (if (> (entity-timer wasp) (/ wasp-egg-time 2))
 	   (nest-add-info 
 	    r (string-append "DON'T FORGET TO TEND YOUR BROOD")
@@ -335,10 +336,11 @@
       ((eq? (wasp-state wasp) 'state-mated)
        (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
       ((eq? (wasp-state wasp) 'state-died-egg)
-       (nest-add-info 
-	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
-	(string-append "AN EGG HAS DIED AS IT WAS NOT TENDED")
-	'allow-dup))
+       (nest-modify-wasps
+	(if (eq? (wasp-type wasp) 'male)
+	    (nest-add-info n "A MALE EGG HAS BEEN REMOVED AS IT IS USELESS" 'allow-dup)
+	    (nest-add-info n "AN EGG HAS DIED AS IT WAS NOT TENDED" 'allow-dup))
+	(entity-list-remove (nest-wasps n) wasp)))   
       ((eq? (wasp-state wasp) 'state-taken-egg)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
@@ -352,8 +354,8 @@
       ((eq? (wasp-state wasp) 'state-remove-egg)
        (nest-add-info 
 	n ;; already removed in wasp-update-wasps
-	(string-append "A WORKER'S EGG HAS BEEN REMOVED")
-	'worker-egg))
+	(string-append "A MALE EGG HAS BEEN REMOVED AS IT IS USELESS")
+	'male-egg))
       (else r)))
    n
    (nest-wasps n))))
@@ -362,7 +364,8 @@
   (cond
    ((eq? action 'forage) nest-forage-cost)
    ((eq? action 'build-cell) nest-build-cell-cost)
-   ((eq? action 'lay-egg) nest-lay-egg-cost)
+   ((eq? action 'lay-female-egg) nest-lay-egg-cost)
+   ((eq? action 'lay-male-egg) nest-lay-egg-cost)
    ((eq? action 'tend-brood) nest-tend-brood-cost)
    ((eq? action 'defend-nest) nest-defend-nest-cost)
    (else 0)))

@@ -59,7 +59,8 @@
       ((eq? state 'state-search)
        (let ((egg (nest-find-egg nest)))
 	 ;; head to a egg or a random position
-	 (play-sound (choose (list "ant-1.wav" "ant-2.wav" "ant-3.wav")))
+	 (when (< (rndf) 0.1)
+	       (play-sound (choose (list "ant-1.wav" "ant-2.wav" "ant-3.wav"))))
 	 (ant-modify-state
 	  (if (and egg (< (rndf) 0.1))
 	      (ant-modify-dest-egg	       

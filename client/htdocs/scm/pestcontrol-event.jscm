@@ -60,7 +60,8 @@
 	;; anything inside the nest, basically
 	(list 'state-idle
 	      'state-building-cell
-	      'state-laying-egg
+	      'state-laying-female-egg
+	      'state-laying-male-egg
 	      'state-laying-repro-egg
 	      'state-tending-egg)))
      (lambda (nest)

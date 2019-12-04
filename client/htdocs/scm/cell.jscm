@@ -143,3 +143,34 @@
    (lambda (index)
      (list-ref cells index))
    (cells-optimal-candidate-indexes cells)))
+
+(define (update-cell-pos pos cells code)
+  (map
+   (lambda (cell)
+     (if (and (eq? (vx pos) (vx (cell-pos cell)))
+	      (eq? (vy pos) (vy (cell-pos cell))))
+	 (cell-modify-code cell code)
+	 cell))
+   cells))
+
+(define (pos->cell-code pos cells)
+  (foldl
+   (lambda (cell r)
+     (if (and (eq? (vx pos) (vx (cell-pos cell)))
+	      (eq? (vy pos) (vy (cell-pos cell))))
+	 (cell-code cell)
+	 r))
+   #f
+   cells))
+
+(define (check-cells cells)
+  (for-each
+   (lambda (cell)
+     (when (and
+	    (not (eq? (cell-code cell) 0))
+	    (not (eq? (cell-code cell) 1))
+	    (not (eq? (cell-code cell) 2))
+	    (not (eq? (cell-code cell) 3)))
+	   (msg "odd cell code:")
+	   (msg (cell-code cell))))
+   cells))

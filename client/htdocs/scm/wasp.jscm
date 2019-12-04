@@ -14,7 +14,8 @@
 ;; You should have received a copy of the GNU Affero General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define default-capabilities (list 'forage 'lay-egg 'lay-repro-egg 'tend-brood 'build-cell))
+(define queen-capabilities (list 'forage 'lay-female-egg 'lay-repro-egg 'tend-brood 'build-cell))
+(define worker-capabilities (list 'forage 'lay-male-egg 'tend-brood 'build-cell))
 (define repro-capabilities (list 'disperse))
 
 (define wasp-speed (local-get-param "wasp-game" "wasp-speed"))
@@ -76,7 +77,7 @@
       0 wasp-animation-idle (find-image "sprites/glow.png") 0 pos #f 0 0 (vec2 0 0))
      (list capabilities 'state-idle #f 'queen #f 'repro))))
 
-(define (make-egg pos parent) 
+(define (make-female-egg pos parent) 
   (append 
    (make-entity 
     (generate-entity-id!)
@@ -87,7 +88,20 @@
     (rndf)
     (anim-load-frames (choose wasp-anim-variations) wasp-animation)
     0 wasp-animation-egg #f -1 pos pos 0 0 (vec2 0 0))
-   (list '() 'state-egg #f 'worker #f parent)))
+   (list '() 'state-egg #f 'female #f parent)))
+
+(define (make-male-egg pos parent) 
+  (append 
+   (make-entity 
+    (generate-entity-id!)
+    "wasp" 
+    pos 0
+    (vec2 300 300)
+    "left"
+    (rndf)
+    (anim-load-frames (choose wasp-anim-variations) wasp-animation)
+    0 wasp-animation-egg #f -1 pos pos 0 0 (vec2 0 0))
+   (list '() 'state-egg #f 'male #f parent)))
 
 (define (make-repro-egg pos parent) 
   (append 
@@ -126,8 +140,10 @@
      (cond
       ((eq? c 'forage) 
        (cons (build-menu-option c "FORAGE") r))
-      ((and (eq? c 'lay-egg) (nest-find-empty-cell n)) 
-       (cons (build-menu-option c "LAY BROOD") r))
+      ((and (eq? c 'lay-female-egg) (nest-find-empty-cell n)) 
+       (cons (build-menu-option c "LAY FEMALE EGG") r))
+      ((and (eq? c 'lay-male-egg) (nest-find-empty-cell n)) 
+       (cons (build-menu-option c "LAY MALE EGG") r))
       ((and (eq? c 'lay-repro-egg)
 	    (nest-find-empty-cell n)
 	    (> (length (nest-wasps n)) wasp-reproductive-threshold))
@@ -176,13 +192,21 @@
 	   (wasp-walk-to-cell w dest-cell wasp-animation-build) 
 	   'state-walking-to-cell)
 	  w)))
-   ((eq? menu-code 'lay-egg) 
+   ((eq? menu-code 'lay-female-egg) 
     (let ((dest-cell (nest-find-empty-cell nest)))
       ;; it's possible we coundn't find any free cells
       (if dest-cell
 	  (wasp-modify-state
 	   (wasp-walk-to-cell w dest-cell wasp-animation-lay) 
-	   'state-walking-to-lay)
+	   'state-walking-to-lay-female)
+	  w)))
+   ((eq? menu-code 'lay-male-egg) 
+    (let ((dest-cell (nest-find-empty-cell nest)))
+      ;; it's possible we coundn't find any free cells
+      (if dest-cell
+	  (wasp-modify-state
+	   (wasp-walk-to-cell w dest-cell wasp-animation-lay) 
+	   'state-walking-to-lay-male)
 	  w)))
    ((eq? menu-code 'lay-repro-egg) 
     (let ((dest-cell (nest-find-empty-cell nest)))
@@ -224,11 +248,11 @@
 	   (begin
 	     (play-sound "hatch.wav")
 	     (cond
-	      ((eq? (wasp-type w) 'worker)
+	      ((eq? (wasp-type w) 'female)
 	       (update-scores-num-workers-hatched! 1)
 	       (wasp-modify-capabilities
 		(wasp-modify-state w 'state-hatched)
-		default-capabilities))
+		worker-capabilities))
 	      (else
 	       (update-scores-num-reproductives-hatched! 1)
 	       (entity-modify-bg-image
@@ -239,12 +263,15 @@
 		(find-image "sprites/glow.png")))))
 	   w))
       ((eq? state 'state-hatched) (wasp-start-wandering w nest))
+
+      ((eq? state 'state-male-removed)
+       (wasp-modify-state w 'state-died-egg))
       
       ((eq? state 'state-idle)
-       (if (and (eq? (wasp-type w) 'queen) (> (entity-timer w) 5))
+       (if (> (entity-timer w) 5)
 	   (wasp-modify-state w 'state-egg-check)
 	   w))
-
+      
       ((eq? state 'state-walking-to-cell)
        (if (>= (entity-walk-time w) 1)
 	   (begin
@@ -260,15 +287,27 @@
        (update-scores-cells-built! 1)
        (wasp-start-wandering w nest))
 
-      ((eq? state 'state-walking-to-lay)
+      ((eq? state 'state-walking-to-lay-female)
        (if (>= (entity-walk-time w) 1)
-	   (entity-modify-timer (wasp-modify-state w 'state-laying-egg) 0)
+	   (entity-modify-timer (wasp-modify-state w 'state-laying-female-egg) 0)
 	   (entity-walk w wasp-speed delta)))
-      ((eq? state 'state-laying-egg) 
+      ((eq? state 'state-laying-female-egg) 
        (if (> (entity-timer w) wasp-laying-time)
-	   (wasp-modify-state w 'state-laid-egg)
+	   (wasp-modify-state w 'state-laid-female-egg)
 	   w))
-      ((eq? state 'state-laid-egg)
+      ((eq? state 'state-laid-female-egg)
+       (play-sound (choose (list "activity-1.wav" "activity-2.wav" "activity-3.wav")))	     
+       (wasp-start-wandering w nest))
+
+      ((eq? state 'state-walking-to-lay-male)
+       (if (>= (entity-walk-time w) 1)
+	   (entity-modify-timer (wasp-modify-state w 'state-laying-male-egg) 0)
+	   (entity-walk w wasp-speed delta)))
+      ((eq? state 'state-laying-male-egg) 
+       (if (> (entity-timer w) wasp-laying-time)
+	   (wasp-modify-state w 'state-laid-male-egg)
+	   w))
+      ((eq? state 'state-laid-male-egg)
        (play-sound (choose (list "activity-1.wav" "activity-2.wav" "activity-3.wav")))	     
        (wasp-start-wandering w nest))
       
@@ -340,7 +379,7 @@
 	   (wasp-modify-state w 'state-tended)
 	   w))
       ((eq? state 'state-tended) (wasp-start-wandering w nest))
-
+      
       ((eq? state 'state-disperse-start)
        (play-sound (choose (list "wasp-takeoff-1.wav" "wasp-takeoff-2.wav" "wasp-takeoff-3.wav")))
        (wasp-modify-state w 'state-disperse))
@@ -362,8 +401,12 @@
 	   (entity-walk w wasp-speed delta)))
       
       ((eq? state 'state-egg-check)
-       (let ((dest-egg (nest-find-worker-egg nest)))
-	 (if dest-egg
+       (let ((dest-egg (nest-find-male-egg nest)))
+	 ;; there is a male egg...
+	 (if (and dest-egg
+		  ;; if we didn't lay it
+		  (not (eq? (wasp-parent dest-egg)
+			    (entity-id w))))
 	     (wasp-modify-tending-id
 	      (entity-walk-to-pos 
 	       (wasp-modify-state w 'state-walking-to-remove)
@@ -375,7 +418,7 @@
 	   (wasp-modify-state w 'state-remove-egg)
 	   (entity-walk w wasp-speed delta)))      
       ((eq? state 'state-remove-egg) (wasp-start-wandering w nest))
-      
+
       ((eq? state 'state-repro-start-dying)
        (entity-modify-timer (wasp-modify-state w 'state-dying) 0))
       ((eq? state 'state-start-dying)
@@ -406,8 +449,11 @@
       ((eq? state 'state-walking-to-cell) wasp-animation-walk)
       ((eq? state 'state-walking-to-tend) wasp-animation-walk)
       ((eq? state 'state-building-cell) wasp-animation-build)
-      ((eq? state 'state-walking-to-lay) wasp-animation-walk)
-      ((eq? state 'state-laying-egg) wasp-animation-lay)
+      ((eq? state 'state-walking-to-lay-male) wasp-animation-walk)
+      ((eq? state 'state-walking-to-lay-female) wasp-animation-walk)
+      ((eq? state 'state-walking-to-lay-repro) wasp-animation-walk)
+      ((eq? state 'state-laying-female-egg) wasp-animation-lay)
+      ((eq? state 'state-laying-male-egg) wasp-animation-lay)
       ((eq? state 'state-laying-repro-egg) wasp-animation-lay)
       ((eq? state 'state-wander) wasp-animation-walk)
       ((eq? state 'state-take-off) (wasp-fly-animation w))
@@ -418,57 +464,70 @@
       ((eq? state 'state-disperse) (wasp-fly-animation w))
       ;;((eq? state 'state-dying) wasp-animation-egg-tended)
       (else (entity-clip w))))))
-
-(define (update-cell pos cells code)
-  (map
-   (lambda (cell)
-     (if (and (eq? (vx pos) (vx (cell-pos cell)))
-	      (eq? (vy pos) (vy (cell-pos cell))))
-	 (cell-modify-code cell code)
-	 cell))
-   cells))
-
-(define (check-cells cells)
-  (for-each
-   (lambda (cell)
-     (when (and
-	    (not (eq? (cell-code cell) 0))
-	    (not (eq? (cell-code cell) 1))
-	    (not (eq? (cell-code cell) 2))
-	    (not (eq? (cell-code cell) 3)))
-	   (msg "odd cell code:")
-	   (msg (cell-code cell))))
-   cells))
   
 ;; update the code for the cells as things hatch etc
 (define (wasp-update-cells wasp cells)
   (check-cells cells)
   (cond
-   ((or (eq? (wasp-state wasp) 'state-laid-egg)
+   ;; laying egg
+   ((or (eq? (wasp-state wasp) 'state-laid-female-egg)
+	(eq? (wasp-state wasp) 'state-laid-male-egg)
 	(eq? (wasp-state wasp) 'state-laid-repro-egg))
-    (msg "setting cell occupied")
-    (update-cell (entity-walk-to wasp) cells cell-code-occupied))
-   ((or (eq? (wasp-state wasp) 'state-built-cell)
-	(eq? (wasp-state wasp) 'state-hatched)
-	(eq? (wasp-state wasp) 'state-died-egg)
-	(eq? (wasp-state wasp) 'state-remove-egg)
-	(eq? (wasp-state wasp) 'state-taken-egg)
-	(eq? (wasp-state wasp) 'state-eaten-egg))
-    (msg "setting cell empty")
-    (update-cell (entity-walk-to wasp) cells cell-code-empty))
+    (cond
+     ((eq? (pos->cell-code (entity-walk-to wasp) cells) cell-code-empty)
+      (update-cell-pos (entity-walk-to wasp) cells cell-code-occupied))
+     (else
+      (msg "trying to lay in a cell which is not built?")
+      (msg (entity-walk-to wasp))
+      (msg (wasp-state wasp))
+      (msg (pos->cell-code (entity-walk-to wasp) cells))
+      cells)))
+      
+   ;; building cell
+   ((eq? (wasp-state wasp) 'state-built-cell)
+    (cond
+     ((eq? (pos->cell-code (entity-walk-to wasp) cells) cell-code-unbuilt)	
+      (update-cell-pos (entity-walk-to wasp) cells cell-code-empty))
+     (else
+      (msg "trying to build a cell which is already built?")
+      (msg (entity-walk-to wasp))
+      (msg (wasp-state wasp))
+      (msg (pos->cell-code (entity-walk-to wasp) cells))
+      cells)))
+
+   ;; empty cell as egg removed/hatched/died etc
+   ((or
+     (eq? (wasp-state wasp) 'state-hatched)
+     (eq? (wasp-state wasp) 'state-died-egg)
+     (eq? (wasp-state wasp) 'state-remove-egg)
+     (eq? (wasp-state wasp) 'state-taken-egg)
+     (eq? (wasp-state wasp) 'state-eaten-egg))
+    (cond
+     ((eq? (pos->cell-code (entity-walk-to wasp) cells) cell-code-occupied)	
+      (update-cell-pos (entity-walk-to wasp) cells cell-code-empty))
+     (else
+      (msg "trying to empty a cell which is not occuped?")
+      (msg (entity-walk-to wasp))
+      (msg (wasp-state wasp))
+      (msg (pos->cell-code (entity-walk-to wasp) cells))
+      cells)))     
    (else cells)))
 
 ;; update new wasps mainly - could be much simpler
 (define (wasp-update-wasps wasp wasps)
   (cond
-   ((eq? (wasp-state wasp) 'state-laid-egg)
+   ((eq? (wasp-state wasp) 'state-laid-female-egg)
     (update-scores-num-workers-laid! 1)
     (cons
-     (make-egg (entity-walk-to wasp) (wasp-type wasp))
+     (make-female-egg (entity-walk-to wasp) (entity-id wasp))
+     wasps))
+   ((eq? (wasp-state wasp) 'state-laid-male-egg)
+    (cons
+     (make-male-egg (entity-walk-to wasp) (entity-id wasp))
      wasps))
    ((eq? (wasp-state wasp) 'state-laid-repro-egg)
     (cons
-     (make-repro-egg (entity-walk-to wasp) (wasp-type wasp))
+     (make-repro-egg (entity-walk-to wasp) (entity-id wasp))
      wasps))
    ((eq? (wasp-state wasp) 'state-tended)
     (entity-list-modify 
@@ -476,7 +535,12 @@
      (lambda (other)
        ;; switch the egg to tended state...
        (if (eq? (wasp-state other) 'state-egg)
-	   (wasp-modify-state other 'state-tended-egg)
+	   (if (eq? (wasp-type other) 'male)
+	       ;; if the wasp is the parent of this egg
+	       (if (eq? (entity-id wasp) (wasp-parent other))
+		   other ;; silently don't tend
+		   (wasp-modify-state other 'state-male-removed))
+	       (wasp-modify-state other 'state-tended-egg))
 	   other))))
    ((eq? (wasp-state wasp) 'state-remove-egg)
     (entity-list-remove-id wasps (wasp-tending-id wasp)))
