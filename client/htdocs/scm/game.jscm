@@ -118,7 +118,7 @@
 (define (button-sound)
   (play-sound "button.wav"))
 
-(define default-button-x (- (/ screen-width 2) 170))
+(define default-button-x (- (/ screen-width 2) 150))
 (define default-button-y (+ (/ screen-height 2) 200))
 (define default-button-width 300)
 (define default-button-height 80)
