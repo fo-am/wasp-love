@@ -318,7 +318,7 @@
 	    (nest-modify-energy n (+ (nest-energy n) energy))
 	    (nest-forage-message wasp) 'forager-return) 
 	   (score-popups-add (nest-score-popups n) 'foraged "+1" (entity-pos wasp) (vec2 1150 50)))
-	  (score-popups-add (nest-score-popups n) 'energy (+ "+" energy) (entity-pos wasp) (vec2 550 50)))))
+	  (score-popups-add (nest-score-popups n) 'energy (+ "+" energy) (entity-pos wasp) (vec2 750 50)))))
       ((eq? (wasp-state wasp) 'state-died)
        (nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp)))
       ((eq? (wasp-state wasp) 'state-repro-start-dying)
@@ -590,8 +590,8 @@
 
 (define (nest-render n ctx time)
   (if (eq? (nest-location n) "city")
-      (ctx.drawImage (find-image "backgrounds/temperate-city.png") 0 0)
-      (ctx.drawImage (find-image "backgrounds/temperate-forest.png") 0 0))
+      (ctx.drawImage (find-image "backgrounds/temperate-city.png") 15 0)
+      (ctx.drawImage (find-image "backgrounds/temperate-forest.png") 15 0))
   
   (for-each
    (lambda (cell)
@@ -636,9 +636,9 @@
 	(if (zero? (modulo (floor (/ time 100)) 2))
 	    (set! ctx.fillStyle "#fff")
 	    (set! ctx.fillStyle text-col)))
-  (ctx.fillText (string-append "ENERGY: " (floor (nest-energy n))) 500 50)
-  ;;(ctx.fillText (string-append "SEASON: " (time->season-text (nest-time-of-year n))) 1000 50)
-  (render-season 5 5 n time)
+  (ctx.fillText (string-append "ENERGY: " (floor (nest-energy n))) 700 50)
+  (ctx.fillText (string-append "TIME OF YEAR: ") 10 50)
+  (render-season 180 7 n time)
   (set! ctx.fillStyle text-col)
   (when (and (nest-event n)
 	     (null? (info-display-items (nest-info-display n))))

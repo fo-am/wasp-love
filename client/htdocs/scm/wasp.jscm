@@ -74,7 +74,7 @@
       (choose (list "left" "right"))
       (rndf)
       (anim-load-frames (choose wasp-anim-variations) wasp-animation)
-      0 wasp-animation-idle (find-image "sprites/glow.png") 0 pos #f 0 0 (vec2 0 0))
+      0 wasp-animation-idle (find-image "sprites/queen-glow.png") 0 pos #f 0 0 (vec2 0 0))
      (list capabilities 'state-idle #f 'queen #f 'repro))))
 
 (define (make-female-egg pos parent) 
