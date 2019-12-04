@@ -194,7 +194,7 @@
 	  (wrap-text ctx "COULD YOU BE A WASP?" 0 200 1300 100)
 	  
 	  (set! ctx.font "normal 25pt pompiere")
-	  (wrap-text ctx "Wasps are super..." 0 300 800 40)
+	  (wrap-text ctx "v0.1" 0 300 800 40)
 	  (set! ctx.font "normal 30pt pompiere")
 
 	  (ctx.drawImage (find-image "sprites/wildflowers1.png") 0 460)
