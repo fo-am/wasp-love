@@ -252,33 +252,34 @@
      (set! ctx.fillStyle "#606353")
      (set! ctx.font "normal 75pt pompiere")
      (wrap-text ctx "CHOOSE YOUR NEST LOCATION" 0 200 1300 100)    
-     (set! ctx.font "normal 25pt pompiere")
-     (wrap-text ctx "Different places have different dangers and opportunities" 0 300 800 40)
+     (set! ctx.font "normal 39pt pompiere")
+     (wrap-text ctx "Different places have different dangers and opportunities. Life is easier in the forest than in the city." 0 300 1000 60)     
      (set! ctx.font "normal 30pt pompiere")
      (ctx.drawImage (find-image "sprites/wildflowers1.png") 0 460)
      (ctx.drawImage (find-image "sprites/wildflowers2.png") 1350 460)
+     (set! ctx.font "bold 40pt pompiere")
      )
 	
    (game-modify-buttons
     (list
      
-     (rect-button
+     (image-button
       "CITY"
-      (- default-button-x 200)
+      1000 
       default-button-y
-      default-button-width default-button-height
       "jumpy"
+      (find-image "city-button.png")
       (lambda (c)
 	(button-sound)
 	(register c "city")
 	c))
 
-     (rect-button
+     (image-button
       "FOREST"
-      (+ default-button-x 200)
+      580
       default-button-y
-      default-button-width default-button-height
       "jumpy"
+      (find-image "forest-button.png") 
       (lambda (c)
 	(button-sound)
 	(register c "forest")
@@ -674,6 +675,8 @@
    "backgrounds/temperate-forest.png"
    "wasp.jpg"
    "logos.png"
+   "city-button.png"
+   "forest-button.png"
    ))
  (lambda ()
    (msg "loaded...")

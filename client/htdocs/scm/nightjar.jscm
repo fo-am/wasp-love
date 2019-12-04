@@ -550,6 +550,7 @@
          (button-drawable b)
          0 0))
   (set! ctx.fillStyle text-col)
+  ;;(set! ctx.fillStyle "#000")
   (button-text-render! b t)
   (ctx.restore))
 
