@@ -43,7 +43,7 @@
    (make-anim-move "wasp" "flycat" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32 (vec2 0 0))
    (make-anim-move "wasp" "flyspider" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32 (vec2 0 0))
    (make-anim-move "wasp" "flyfly" wasp-anim-variations (list "1" "2" "3" "4" "5" "4" "3" "2") 32 (vec2 0 0))
-   (make-anim-move "wasp" "lay" wasp-anim-variations (list "1" "2" "3" "4") 8 (vec2 70 -50))
+   (make-anim-move "wasp" "lay" wasp-anim-variations (list "1" "2" "3" "4" "3" "4" "3" "4" "3" "2") 8 (vec2 60 -50))
    (make-anim-move "wasp" "tend" wasp-anim-variations (list "1" "2") 8 (vec2 -50 -20))
    ))
 

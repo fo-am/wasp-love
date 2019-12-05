@@ -78,7 +78,7 @@
 (define (hiscores-select db)
   (let ((r (select db "select n.player_name, g.new_nests, g.score, g.location from game as g
                      join player_name as n on g.player_id=n.player_id        
-                     where n.player_name !='???'
+                     where n.player_name !='???' and g.time_stamp > (select datetime('now', '-7 day'))
                      order by score desc limit 10")))
     (if (null? r) '() (cdr r))))
 
@@ -91,7 +91,10 @@
   (_ 1 ol))
 
 (define (get-game-rank db game-id)
-  (let ((s (select db "select count(*) from game as g join player_name as n on g.player_id=n.player_id where n.player_name !='???' and g.score > (select score from game where id = ?)" game-id)))
+  (let ((s (select db "select count(*) from game as g 
+                       join player_name as n on g.player_id=n.player_id 
+                       where n.player_name !='???' and g.score > (select score from game where id = ?) and 
+                       g.time_stamp > (select datetime('now', '-7 day'))" game-id)))
     (if (null? s)
 	999
 	(vector-ref (cadr s) 0))))

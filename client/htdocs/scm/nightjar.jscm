@@ -420,14 +420,14 @@
         (ctx.translate (* 2.5 (sin (+ (* (button-offs b) 10) (* t 0.004)))) 0)))
 
 
-(define (button-text-jumpy-render! b t)
+(define (button-text-jumpy-render! b t offs)
   (let ((m (ctx.measureText (button-name b)))
         (cm (ctx.measureText "w"))
         (pos 0)
         (txt (button-name b)))
     (let ((ta (txt.split ""))
           (x (- (/ (button-w b) 2) (/ m.width 2)))
-          (y (+ (/ (button-h b) 2) 15)))
+          (y (+ (/ (button-h b) 2) offs)))
       (index-for-each
        (lambda (i c)
          (set! cm (ctx.measureText c))
@@ -469,14 +469,14 @@
 
 
 
-(define (button-text-flashy-render! b t)
+(define (button-text-flashy-render! b t offs)
   (let ((m (ctx.measureText (button-name b)))
         (cm (ctx.measureText "w"))
         (txt (button-name b))
         (pos 0))
     (let ((ta (txt.split ""))
           (x (- (/ (button-w b) 2) (/ m.width 2)))
-          (y (+ (/ (button-h b) 2) 5)))
+          (y (+ (/ (button-h b) 2) offs)))
       (index-for-each
        (lambda (i c)
          (set! ctx.fillStyle (rgb-to-hex
@@ -488,16 +488,16 @@
          (ctx.fillText c (+ x pos) y))
        ta))))
 
-(define (button-text-render! b t)
+(define (button-text-render! b t offs)
   (cond
-   ((eq? (button-jitter b) "jumpy") (button-text-jumpy-render! b t))
-   ((eq? (button-jitter b) "flashy") (button-text-flashy-render! b t))
+   ((eq? (button-jitter b) "jumpy") (button-text-jumpy-render! b t offs))
+   ((eq? (button-jitter b) "flashy") (button-text-flashy-render! b t offs))
    (else
     (let ((m (ctx.measureText (button-name b))))      
       (ctx.fillText
        (button-name b)
        (- (/ (button-w b) 2) (/ m.width 2))
-       (+ (/ (button-h b) 2) 15))))))
+       (+ (/ (button-h b) 2) offs))))))
 
 
 (define (rect-button-update! b mx my c)
@@ -537,7 +537,7 @@
   (set! ctx.fillStyle highlight-col)
   (ctx.fillRect 0 0 (button-w b) (button-h b))
   (set! ctx.fillStyle text-col)
-  (button-text-render! b t)
+  (button-text-render! b t 15)
   (button-do-jittering b t)
   (ctx.restore))
 
@@ -551,7 +551,7 @@
          0 0))
   (set! ctx.fillStyle text-col)
   ;;(set! ctx.fillStyle "#000")
-  (button-text-render! b t)
+  (button-text-render! b t 25)
   (ctx.restore))
 
 (define (animated-button-render! ctx t b)
@@ -566,7 +566,7 @@
   (ctx.drawImage
    (button-drawable b)
    0 0)
-  (button-text-render! b t)
+  (button-text-render! b t 15)
   (ctx.restore))
 
 (define (circle-button-render! ctx t b)

@@ -194,7 +194,7 @@
 	  (wrap-text ctx "COULD YOU BE A WASP?" 0 200 1300 100)
 	  
 	  (set! ctx.font "normal 25pt pompiere")
-	  (wrap-text ctx "v0.1" 0 300 800 40)
+	  (wrap-text ctx "Build a nest, grow your colony, and see if you make it through the year." 0 300 800 40)
 	  (set! ctx.font "normal 30pt pompiere")
 
 	  (ctx.drawImage (find-image "sprites/wildflowers1.png") 0 460)
@@ -257,7 +257,7 @@
      (set! ctx.font "normal 30pt pompiere")
      (ctx.drawImage (find-image "sprites/wildflowers1.png") 0 460)
      (ctx.drawImage (find-image "sprites/wildflowers2.png") 1350 460)
-     (set! ctx.font "bold 40pt pompiere")
+     (set! ctx.font "bold 50pt pompiere")
      )
 	
    (game-modify-buttons
@@ -407,6 +407,8 @@
 	(if (< rank 9)
 	    (fill-centre-text ctx (string-append "You are position " (+ rank 1) " on the leaderboard!") (/ screen-width 2) 400)
 	    (fill-centre-text ctx (string-append "You are position " (+ rank 1) " - try again for a top ten leaderboard position...")  (/ screen-width 2) 400))
+
+	
 	
 	
 ;	(ctx.fillText (string-append "Other statistics: " (scores-new-nests)) 500 250)	
@@ -422,8 +424,10 @@
 	
 	)
       
-
-    
+      (let ((frame (+ (modulo (floor (/ (game-time c) 100)) 2) 1)))
+	(ctx.drawImage (find-image (string-append "sprites/wasp/right/2-idle-" frame ".png")) 100 100)
+	(ctx.drawImage (find-image (string-append "sprites/wasp/left/5-idle-" frame ".png")) 1120 100))
+      
       (ctx.drawImage (find-image "sprites/wildflowers1.png") 0 460)
       (ctx.drawImage (find-image "sprites/wildflowers2.png") 1350 460)
 
