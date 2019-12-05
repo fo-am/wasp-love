@@ -737,7 +737,7 @@
           b))
     (game-buttons game))))
 
-(define timeout-trigger (* 2 60))
+(define timeout-trigger (* 5 60))
 (define timeout-time 0)
 
 (define (top-update-game t game)
