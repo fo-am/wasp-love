@@ -69,12 +69,13 @@
 (define info-box-m -110)
 
 (define (info-box-render-box ctx) 
-  (set! ctx.fillStyle highlight2-col)
-  (ctx.fillRect info-box-x info-box-y info-box-w info-box-h))
+  ;;(set! ctx.fillStyle highlight2-col)
+  ;;(ctx.fillRect info-box-x info-box-y info-box-w info-box-h)
+  0)
 
 (define (info-box-render-text ctx text) 
   (set! ctx.fillStyle text-col)
-  (set! ctx.font "bold 25pt pompiere")
+  (set! ctx.font "bold 30pt pompiere")
   (wrap-text ctx text info-box-m (+ info-box-y 48) info-box-w 30))
 
 (define (info-display-render d ctx)
