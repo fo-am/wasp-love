@@ -23,7 +23,7 @@
 (define (pestcontrol-builder)
   (lambda ()
     (make-event 
-     'attack (local-get-param "wasp-game" "pestcontrol-duration")
+     'pest-control (local-get-param "wasp-game" "pestcontrol-duration")
      (event-data-attack
       spray-can-start-pos	  
       (particle-system-modify-update-hook

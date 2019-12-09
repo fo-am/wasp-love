@@ -30,7 +30,7 @@
 (define (event-update event nest delta)
   (event-modify-time-left
    (cond
-    ((eq? (event-type event) 'attack) (pestcontrol-update event delta))
+    ((eq? (event-type event) 'pest-control) (pestcontrol-update event delta))
     ((eq? (event-type event) 'storm) (storm-update event delta))
     ((eq? (event-type event) 'wildflower) (storm-update event delta))
     ((eq? (event-type event) 'manicured) (manicured-update event delta))
@@ -55,7 +55,7 @@
   (let ((event (nest-event nest)))    
     ;; event specific background animation
     (cond
-     ((eq? (event-type event) 'attack) (pestcontrol-render ctx event))
+     ((eq? (event-type event) 'pest-control) (pestcontrol-render ctx event))
      ((eq? (event-type event) 'storm) (storm-render ctx event))
      ((eq? (event-type event) 'wildflower) (wildflower-render ctx event))
      ((eq? (event-type event) 'manicured) (manicured-render ctx event))
