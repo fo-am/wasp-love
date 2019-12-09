@@ -366,6 +366,7 @@
    ((eq? action 'build-cell) nest-build-cell-cost)
    ((eq? action 'lay-female-egg) nest-lay-egg-cost)
    ((eq? action 'lay-male-egg) nest-lay-egg-cost)
+   ((eq? action 'lay-repro-egg) nest-lay-egg-cost)
    ((eq? action 'tend-brood) nest-tend-brood-cost)
    ((eq? action 'defend-nest) nest-defend-nest-cost)
    (else 0)))
@@ -516,10 +517,10 @@
      (info-display-add
       (nest-info-display n)
       (make-info "YOUR NEST HAS NO ENERGY REMAINING" 'no-energy 0)))
-    ;; ((<= (nest-energy n) 20)
-    ;;  (info-display-add
-    ;;   (nest-info-display n)
-    ;;   (make-info "YOUR NEST HAS LOW ENERGY" 'low-energy 0)))
+    ((<= (nest-energy n) 20)
+     (info-display-add
+      (nest-info-display n)
+      (make-info "SEND FORAGERS OUT FOR MORE ENERGY" 'low-energy 0)))
     ((> (nest-time-of-year n) (- nest-year-length 20))
      (info-display-add
       (nest-info-display n)
@@ -657,7 +658,11 @@
 	(render-info-box "IT'S WINTER TIME"  "Disperse your reproductive wasps..."))
   
   (when (and (<= (nest-energy n) 15) (zero? (modulo (floor (/ time 500)) 2)))
-	(render-info-box "LOW ENERGY!!" "Send foragers out now..."))
+	(set! ctx.fillStyle highlight-col)
+	(ctx.fillRect 600 0 300 60)
+	(set! ctx.fillStyle text-col)
+	(set! ctx.font "normal 30pt pompiere")
+	(fill-centre-text ctx "LOW ENERGY!!" 750 45))
   
   (when (not (nest-check-queens n))
 	(render-info-box "GAME OVER" "Your queen has died."))
