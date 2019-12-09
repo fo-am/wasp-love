@@ -38,9 +38,6 @@
 
 (define (wildflower-render ctx event)
   ;; explanation text box
-  (info-box-render-box ctx)
-  (ctx.drawImage (find-image "sprites/wildflowers1.png") 70 500)
-  (ctx.drawImage (find-image "sprites/wildflowers2.png") 1100 500)
   (info-box-render-text ctx "FORAGERS FOUND A WILDFLOWER GARDEN - NO PESTICIDES = X2 ENERGY!"))
 
 
