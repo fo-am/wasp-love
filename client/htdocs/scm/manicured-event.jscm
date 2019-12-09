@@ -21,8 +21,14 @@
      #f 
      (lambda (nest delta state)
        (cond
-	((eq? state 'first) (nest-modify-energy-mult nest (local-get-param "wasp-game" "manicured-multiplier")))
-	((eq? state 'last) (nest-modify-energy-mult nest 1))
+	((eq? state 'first)
+	 (nest-modify-energy-mult
+	  (nest-modify-weather nest 'manicured)
+	  (local-get-param "wasp-game" "manicured-multiplier")))
+	((eq? state 'last)
+	 (nest-modify-energy-mult
+	  (nest-modify-weather nest 'calm)
+	  1))
 	(else nest)))
      (lambda (nest)
        (nest-wasps-foraging? nest)))))
@@ -33,7 +39,5 @@
 (define (manicured-render ctx event)
   ;; explanation text box
   (info-box-render-box ctx)
-  (ctx.drawImage (find-image "sprites/manicuredgarden1.png") 110 440)
-  (ctx.drawImage (find-image "sprites/manicuredgarden2.png") 1090 440)
   (info-box-render-text ctx "FORAGERS FOUND A MANICURED GARDEN - PESTICIDES = HALF ENERGY!" -145 480 450 70))
 

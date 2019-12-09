@@ -62,9 +62,9 @@
 	 (cdr (info-display-items d)))
 	'()))))
 
-(define info-box-x 100)
-(define info-box-y 655)
-(define info-box-w 1130)
+(define info-box-x 0)
+(define info-box-y 60)
+(define info-box-w 1265)
 (define info-box-h 70)
 (define info-box-m -110)
 

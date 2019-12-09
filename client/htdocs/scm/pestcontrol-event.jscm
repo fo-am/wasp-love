@@ -86,9 +86,6 @@
      ctx (event-data-attack-psys event)
      ;; pass can pos through as context to use below
      pos))
-  ;; redraw box over spraycan
-  (set! ctx.fillStyle highlight-col)
-  (ctx.fillRect 0 630 1265 120)
   ;; explanation text box
   (info-box-render-box ctx)
   (info-box-render-text ctx "YOUR NEST IS BEING POISONED BY THE CITY PEST CONTROLLERS"))

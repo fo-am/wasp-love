@@ -21,12 +21,18 @@
      #f 
      (lambda (nest delta state)
        (cond
-	((eq? state 'first) (nest-modify-energy-mult nest (local-get-param "wasp-game" "wildflower-multiplier")))
-	((eq? state 'last) (nest-modify-energy-mult nest 1))
+	((eq? state 'first)
+	 (nest-modify-energy-mult
+	  (nest-modify-weather nest 'wildflower)
+	  (local-get-param "wasp-game" "wildflower-multiplier")))
+	((eq? state 'last)
+	 (nest-modify-energy-mult
+	  (nest-modify-weather nest 'calm)
+	  1))
 	(else nest)))
      (lambda (nest)
        (nest-wasps-foraging? nest)))))
-       
+
 (define (wildflower-update event nest delta)
   event)
 

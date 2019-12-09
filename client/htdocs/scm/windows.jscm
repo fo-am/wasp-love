@@ -41,16 +41,18 @@
    (cloud-simg c)
    ))
 
-(define (make-window wasp env clouds w h weather time)
-  (list wasp env clouds w h weather time))
+(define (make-window wasp env clouds manicured wildflower w h weather time)
+  (list wasp env clouds manicured wildflower w h weather time))
 (define (window-wasp w) (list-ref w 0))
 (define (window-modify-wasp w s) (list-replace w 0 s))
 (define (window-env w) (list-ref w 1))
 (define (window-clouds w) (list-ref w 2))
-(define (window-w w) (list-ref w 3))
-(define (window-h w) (list-ref w 4))
-(define (window-weather w) (list-ref w 5))
-(define (window-time w) (list-ref w 6))
+(define (window-manicured w) (list-ref w 3))
+(define (window-wildflower w) (list-ref w 4))
+(define (window-w w) (list-ref w 5))
+(define (window-h w) (list-ref w 6))
+(define (window-weather w) (list-ref w 7))
+(define (window-time w) (list-ref w 8))
 
 (define (build-window wasp)
   (make-window
@@ -68,8 +70,28 @@
 		  (- (+ 50 (random 50)))
 		  (find-image (string-append "sprites/cloud-" v ".png"))
 		  (find-image (string-append "sprites/scloud-" v ".png")))))
+   ;; manicured
+   (build-list
+    5
+    (lambda (i)
+      (let ((image (find-image (choose (list "sprites/out-manicuredgarden1.png"
+					     "sprites/out-manicuredgarden2.png")))))
+	(make-cloud (vec2 (* i 100) 45)
+		    -125		 
+		    image image))))
+   ;; wildflower
+   (build-list
+    5
+    (lambda (_)
+      (let ((image (find-image (choose (list "sprites/out-wildflowers1.png"
+					     "sprites/out-wildflowers2.png"
+					     "sprites/wildflowers1.png"
+					     "sprites/wildflowers2.png")))))
+	(make-cloud (vec2 (random 400) (+ 40 (random 50)))
+		    (- (+ 100 (random 50)))		 
+		    image image))))
    300 200 'calm 0))
-  
+
 (define (window-update w delta nest)
   (make-window
    (window-wasp w)
@@ -81,6 +103,18 @@
 	(lambda (cloud)
 	  (cloud-update cloud delta (entity-facing (window-wasp w))))
 	(window-clouds w)))
+   (if (eq? (wasp-state (window-wasp w)) 'state-mating)
+       (window-manicured w)
+       (map 
+	(lambda (cloud)
+	  (cloud-update cloud delta (entity-facing (window-wasp w))))
+	(window-manicured w)))
+   (if (eq? (wasp-state (window-wasp w)) 'state-mating)
+       (window-wildflower w)
+       (map 
+	(lambda (cloud)
+	  (cloud-update cloud delta (entity-facing (window-wasp w))))
+	(window-wildflower w)))
    (window-w w)
    (window-h w)
    ;; get current weather from nest here
@@ -102,6 +136,18 @@
    (lambda (c)
      (cloud-render c ctx pos (window-weather w)))
    (window-clouds w))
+  
+  (when (eq? (window-weather w) 'wildflower)
+	(for-each 
+	 (lambda (c)
+	   (cloud-render c ctx pos (window-weather w)))
+	 (window-wildflower w)))
+
+  (when (eq? (window-weather w) 'manicured)
+	(for-each 
+	 (lambda (c)
+	   (cloud-render c ctx pos (window-weather w)))
+	 (window-manicured w)))
   
   ;; position wasp properly
   (cond
