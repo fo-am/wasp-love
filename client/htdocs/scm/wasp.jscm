@@ -251,20 +251,22 @@
        (if (> (entity-timer w) wasp-egg-time)
 	   (begin
 	     (play-sound "hatch.wav")
-	     (cond
-	      ((eq? (wasp-type w) 'female)
-	       (update-scores-num-workers-hatched! 1)
-	       (wasp-modify-capabilities
-		(wasp-modify-state w 'state-hatched)
-		worker-capabilities))
-	      (else
-	       (update-scores-num-reproductives-hatched! 1)
-	       (entity-modify-bg-image
+	     (entity-modify-depth-plane
+	      (cond
+	       ((eq? (wasp-type w) 'female)
+		(update-scores-num-workers-hatched! 1)
 		(wasp-modify-capabilities
 		 (wasp-modify-state w 'state-hatched)
-		 repro-capabilities)
-		;; add the glow indicator to the reproductives
-		(find-image "sprites/glow.png")))))
+		 worker-capabilities))
+	       (else
+		(update-scores-num-reproductives-hatched! 1)
+		(entity-modify-bg-image
+		 (wasp-modify-capabilities
+		  (wasp-modify-state w 'state-hatched)
+		  repro-capabilities)
+		 ;; add the glow indicator to the reproductives
+		 (find-image "sprites/glow.png"))))
+	      0))
 	   w))
       ((eq? state 'state-hatched) (wasp-start-wandering w nest))
 
