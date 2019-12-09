@@ -19,7 +19,7 @@
 (load "scm/nightjar.jscm")
 (load "scm/local-storage.jscm")
 
-(define params-version 9)
+(define params-version 10)
 (define player-id -1)
 (define player-name "???")
 (define score-per-mating 10)

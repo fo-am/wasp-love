@@ -114,7 +114,7 @@
        (let ((egg (nest-find-egg nest)))
 	 ;; head to a egg or a random position
 	 (hoverfly-modify-state
-	  (if (and egg (< (rndf) 0.1))
+	  (if (and egg (< (rndf) 0.2))
 	      (hoverfly-modify-dest-egg	       
 	       (entity-walk-to-pos h (entity-pos egg))
 	       (entity-id egg))

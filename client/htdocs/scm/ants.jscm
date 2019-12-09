@@ -62,7 +62,7 @@
 	 (when (< (rndf) 0.1)
 	       (play-sound (choose (list "ant-1.wav" "ant-2.wav" "ant-3.wav"))))
 	 (ant-modify-state
-	  (if (and egg (< (rndf) 0.1))
+	  (if (and egg (< (rndf) 0.2))
 	      (ant-modify-dest-egg	       
 	       (entity-walk-to-pos a (entity-pos egg))
 	       (entity-id egg))
