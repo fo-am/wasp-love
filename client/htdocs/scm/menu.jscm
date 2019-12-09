@@ -89,35 +89,50 @@
    (menu-entity-id m)
    (+ (menu-time m) delta)))
 
+(define queen-col highlight-col)
+(define worker-col "#c7c7c7")
+(define repro-col highlight2-col)
+
 (define (menu-render m)
   (when (menu-visible m)
 	(ctx.save)
 	(ctx.translate (vx (menu-pos m)) (vy (menu-pos m)))
 	(set! ctx.font "normal 18pt pompiere")
-	(if (eq? (menu-direction m) 'down)
-	    (ctx.drawImage (find-image "sprites/menu-triangle-up.png") 0 64)
-	    (ctx.drawImage (find-image "sprites/menu-triangle.png") 0 0))
-
-	(fill-centre-text
-	 ctx (cond
-	      ((eq? (menu-wasp-type m) 'queen) "QUEEN")
-	      ((eq? (menu-wasp-type m) 'female) "WORKER")
-	      (else "REPRODUCTIVE"))
-	 125 (if (eq? (menu-direction m) 'down) 110 25))
-	(when (eq? (menu-direction m) 'down)
-	      (ctx.translate 0 (+ 60 (* menu-height (+ 1 (length (menu-options m)))))))	 
-	(set! ctx.font "normal 25pt pompiere")
-	(index-for-each
-	 (lambda (i o)
-	   (ctx.translate 0 (- menu-height))
-	   (set! ctx.fillStyle "#f9e973")
-	   (ctx.fillRect 0 0 menu-width (- menu-height 3))
-	   (set! ctx.fillStyle "#606353")
-	   (let ((m (ctx.measureText (menu-option-text o))))
-	     (ctx.fillText
-	      (menu-option-text o)
-	      (- (/ menu-width 2) (/ m.width 2))
-	      (+ (/ menu-height 2) 13))))
-	 (menu-options m))
-	(ctx.restore))))
+	(set! ctx.fillStyle text-col)
+	(let ((menu-col (cond
+			 ((eq? (menu-wasp-type m) 'queen) queen-col)
+			 ((eq? (menu-wasp-type m) 'female) worker-col)
+			 (else repro-col)))
+	      (menu-arrow (cond
+			   ((eq? (menu-wasp-type m) 'queen) "")
+			   ((eq? (menu-wasp-type m) 'female) "-worker")
+			   (else "-repro"))))
+	  
+	  
+	  (if (eq? (menu-direction m) 'down)
+	      (ctx.drawImage (find-image (string-append "sprites/menu-triangle-up" menu-arrow ".png")) 0 64)
+	      (ctx.drawImage (find-image (string-append "sprites/menu-triangle" menu-arrow ".png")) 0 0))
+	  
+	  (fill-centre-text
+	   ctx (cond
+		((eq? (menu-wasp-type m) 'queen) "QUEEN")
+		((eq? (menu-wasp-type m) 'female) "WORKER")
+		(else "REPRODUCTIVE"))
+	   125 (if (eq? (menu-direction m) 'down) 110 25))
+	  (when (eq? (menu-direction m) 'down)
+		(ctx.translate 0 (+ 60 (* menu-height (+ 1 (length (menu-options m)))))))	 
+	  (set! ctx.font "normal 25pt pompiere")
+	  (index-for-each
+	   (lambda (i o)
+	     (ctx.translate 0 (- menu-height))
+	     (set! ctx.fillStyle menu-col)
+	     (ctx.fillRect 0 0 menu-width (- menu-height 3))
+	     (set! ctx.fillStyle "#606353")
+	     (let ((m (ctx.measureText (menu-option-text o))))
+	       (ctx.fillText
+		(menu-option-text o)
+		(- (/ menu-width 2) (/ m.width 2))
+		(+ (/ menu-height 2) 13))))
+	   (menu-options m))
+	  (ctx.restore))))
 
