@@ -90,14 +90,21 @@
        (hoverfly-attack-builder)
 
        (organic-builder)
+       (organic-builder)
        )
       (list
-       (storm-builder)
-       (ant-attack-builder)
-       (hoverfly-attack-builder)
+;       (storm-builder)
+;       (ant-attack-builder)
+;       (hoverfly-attack-builder)
 
-       (wildflower-builder)
-       (organic-builder)
-       (wildflower-builder)
+       (manicured-builder)
+       (manicured-builder)
+       (manicured-builder)
+       (manicured-builder)
+
+       
+;       (wildflower-builder)
+;       (wildflower-builder)
+;       (wildflower-builder)
        )))
 

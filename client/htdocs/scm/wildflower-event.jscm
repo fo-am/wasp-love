@@ -38,6 +38,6 @@
 
 (define (wildflower-render ctx event)
   ;; explanation text box
-  (info-box-render-text ctx "FORAGERS FOUND A WILDFLOWER GARDEN - NO PESTICIDES = X2 ENERGY!"))
+  (info-box-render-text ctx "FORAGERS FOUND A WILDFLOWER PATCH - X2 ENERGY!"))
 
 

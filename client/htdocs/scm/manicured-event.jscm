@@ -39,5 +39,5 @@
 (define (manicured-render ctx event)
   ;; explanation text box
   (info-box-render-box ctx)
-  (info-box-render-text ctx "FORAGERS FOUND A MANICURED GARDEN - PESTICIDES = HALF ENERGY!" -145 480 450 70))
+  (info-box-render-text ctx "FORAGERS FOUND A MANICURED GARDEN WITH PESTICIDES - HALF ENERGY!" -145 480 450 70))
 

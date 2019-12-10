@@ -39,6 +39,6 @@
 (define (organic-render ctx event)
   ;; explanation text box
   (info-box-render-box ctx)
-  (info-box-render-text ctx "FORAGERS FOUND AN ORGANIC GARDEN - NO PESTICIDES = X2 ENERGY!"))
+  (info-box-render-text ctx "FORAGERS FOUND AN ORGANIC GARDEN WITH NO PESTICIDES - X2 ENERGY!"))
 
 

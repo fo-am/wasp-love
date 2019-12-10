@@ -72,22 +72,24 @@
 		  (find-image (string-append "sprites/scloud-" v ".png")))))
    ;; manicured
    (build-list
-    5
+    3
     (lambda (i)
-      (let ((image (find-image (choose (list "sprites/out-manicuredgarden1.png"
-					     "sprites/out-manicuredgarden2.png")))))
-	(make-cloud (vec2 (* i 100) 45)
+      (let ((image (find-image (choose (list "sprites/manicuredgarden1.png"
+					     "sprites/manicuredgarden2.png"
+					     "sprites/manicuredgarden2.png")))))
+	(make-cloud (vec2 (* i 150) 0)
 		    -125		 
 		    image image))))
    ;; wildflower
    (build-list
-    5
+    4
     (lambda (_)
-      (let ((image (find-image (choose (list "sprites/out-wildflowers1.png"
-					     "sprites/out-wildflowers2.png"
-					     "sprites/wildflowers1.png"
-					     "sprites/wildflowers2.png")))))
-	(make-cloud (vec2 (random 400) (+ 40 (random 50)))
+      (let ((image (find-image (choose (list "sprites/wildflowers1.png"
+					     "sprites/wildflowers2.png"
+					     "sprites/wildflowers3.png"
+					     "sprites/wildflowers4.png")))))
+	(make-cloud (vec2 (random 400)
+			  (+ (random 100) -50))
 		    (- (+ 100 (random 50)))		 
 		    image image))))
    300 200 'calm 0))
