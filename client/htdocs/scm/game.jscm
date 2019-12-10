@@ -202,9 +202,9 @@
 	   "jumpy"
 	   (lambda (c)
 	     (button-sound)
-	     (nightjar-location c)
+	     ;;(nightjar-location c)
 	     ;;(nightjar-enter-name c 1)
-	     ;;(nightjar-end c 99)
+	     (nightjar-end c 99)
 	     ))
 	  
 	  (rect-button
@@ -414,7 +414,7 @@
 	
 	)
       
-      (let ((frame (+ (modulo (floor (/ (game-time c) 100)) 2) 1)))
+      (let ((frame (+ (modulo (floor (/ (game-time c) 300)) 2) 1)))
 	(ctx.drawImage (find-image (string-append "sprites/wasp/right/2-idle-" frame ".png")) 100 100)
 	(ctx.drawImage (find-image (string-append "sprites/wasp/left/5-idle-" frame ".png")) 1120 100))
       
