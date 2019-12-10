@@ -641,15 +641,14 @@
   (set! ctx.fillStyle text-col)
   (ctx.fillText (string-append "TIME OF YEAR: ") 10 50)
   (render-season 180 7 n time)
-  (when
-   (or
-    (and (nest-event n)
-	 (null? (info-display-items (nest-info-display n))))
-    ;; we want to see pest control at all times
-    (and (nest-event n)
-	 (eq? (event-type (nest-event n)) 'pest-control)))
-   (event-render n ctx))
-  (info-display-render (nest-info-display n) ctx)
+  (if
+   (or (and (nest-event n)
+	    (null? (info-display-items (nest-info-display n))))
+       ;; we want to see pest control at all times
+       (and (nest-event n)
+	    (eq? (event-type (nest-event n)) 'pest-control)))
+   (event-render n ctx)
+   (info-display-render (nest-info-display n) ctx))
   (score-popups-render! (nest-score-popups n) ctx)  
   (menu-render (nest-menu n))
   
