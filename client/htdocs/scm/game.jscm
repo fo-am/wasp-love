@@ -178,12 +178,12 @@
 	  (demo-render (game-data c) ctx)
 	  (set! ctx.fillStyle "#606353")
 	  
-	  (set! ctx.font "normal 75pt pompiere")
+	  (set! ctx.font "normal 120pt pompiere")
 	  
-	  (wrap-text ctx "COULD YOU BE A WASP?" 0 200 1300 100)
+	  (wrap-text ctx "COULD YOU BE A WASP?" 0 200 2000 100)
 	  
-	  (set! ctx.font "normal 25pt pompiere")
-	  (wrap-text ctx "Build a nest, grow your colony, and see if you make it through the year." 0 300 800 40)
+	  (set! ctx.font "normal 60pt pompiere")
+	  (wrap-text ctx "Build a nest, grow your colony, and see if you make it through the year." 0 340 1200 100)
 	  (set! ctx.font "normal 30pt pompiere")
 
 	  (ctx.drawImage (find-image "sprites/wildflowers1.png") 0 460)
