@@ -93,18 +93,12 @@
        (organic-builder)
        )
       (list
-;       (storm-builder)
-;       (ant-attack-builder)
-;       (hoverfly-attack-builder)
+       (storm-builder)
+       (ant-attack-builder)
+       (hoverfly-attack-builder)
 
-       (manicured-builder)
-       (manicured-builder)
-       (manicured-builder)
-       (manicured-builder)
-
-       
-;       (wildflower-builder)
-;       (wildflower-builder)
-;       (wildflower-builder)
+       (wildflower-builder)
+       (wildflower-builder)
+       (wildflower-builder)
        )))
 

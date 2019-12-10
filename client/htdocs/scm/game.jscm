@@ -289,7 +289,9 @@
       
       (wrap-text-left ctx "In this game you play as a wasp – see if you can build your nest and grow your colony in the face of unexpected hazards. Once you have a big enough colony you’ll get the option to lay eggs that turn into reproductive wasps. Make sure you disperse these special wasps in winter so they can find a mate and start their own colonies…" 300 150 1000 40)
 
-      (wrap-text-left ctx "The game is based on the European paper wasp (Polistes dominula) using scientific research that has helped us understand the complex lives of these fascinating animals." 300 330 530 40)
+      (wrap-text-left ctx "The game is based on the European paper wasp         (                              ) using scientific research that has helped us understand the complex lives of these fascinating animals." 300 330 530 40)
+      (set! ctx.font "italic 25pt pompiere")
+      (wrap-text ctx "Polistes dominula" -400 370 530 40)
 
       (set! ctx.font "normal 30pt pompiere")
 

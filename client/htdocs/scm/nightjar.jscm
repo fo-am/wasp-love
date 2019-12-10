@@ -273,7 +273,6 @@
                   (cdr words) test-line y))))))))
   (wrap-text-left-inner (text.split " ") "" y))
 
-
 (define (sprite x y image timer)
   (list x y image timer))
 

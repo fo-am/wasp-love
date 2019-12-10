@@ -546,10 +546,10 @@
   (nest-update-from-event
    (nest-update-from-wasps
     (make-nest
-     (- (nest-energy n)
-	(* delta
-	   (length (nest-wasps n))
-	   nest-energy-drain)) ;; per wasp drain 
+     (max 0 (- (nest-energy n)
+	       (* delta
+		  (length (nest-wasps n))
+		  nest-energy-drain))) ;; per wasp drain 
      (nest-location n)
      (+ (nest-time-of-year n) delta)
      (nest-wasps-update-wasps

@@ -16,8 +16,9 @@ html, body {
     width: 100%; /* 100% causes slider sometimes */
     height: auto;
     min-width: 800px;
-    /*background: url(../images/bg.png);*/
-    background: #f5f5f5;
+    background: url(../images/bg.jpg);
+    background-size: 100% 100%;
+    /*background: #f5f5f5;*/
 
     padding: 0;
     margin: auto;

@@ -64,7 +64,7 @@
 
 ;; the only time we make wasps (without being eggs) is the initial queen(s)
 (define (make-wasp capabilities) 
-  (let ((pos (vec2 (+ 100 (random 1000)) (+ 100 (random 500)))))
+  (let ((pos (vec2 (+ 100 (random 1000)) (+ 200 (random 500)))))
     (append 
      (make-entity 
       (generate-entity-id!)
