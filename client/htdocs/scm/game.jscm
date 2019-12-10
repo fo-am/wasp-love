@@ -147,9 +147,7 @@
 	 (list "score" (+ (scores-forages) (* score-per-mating (scores-new-nests))))
 	 )
    (lambda (c score-pos)
-     (if (eq? player-name "???")
-	 (nightjar-enter-name c (JSON.parse score-pos))
-	 (nightjar-end game (JSON.parse score-pos)))))  
+     (nightjar-enter-name c (JSON.parse score-pos))))
   c)
 
 (define (register c location)
