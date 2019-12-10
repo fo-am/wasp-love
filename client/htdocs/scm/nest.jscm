@@ -574,12 +574,12 @@
 
 (define (render-info-box heading info)
   (set! ctx.fillStyle highlight2-col)
-  (ctx.fillRect (- (/ screen-width 2) 300) 200 600 200)
+  (ctx.fillRect (- (/ screen-width 2) 450) 200 600 200)
   (set! ctx.fillStyle text-col)
   (set! ctx.font "normal 40pt pompiere")
-  (fill-centre-text ctx heading (/ screen-width 2) 290)
+  (fill-centre-text ctx heading (- (/ screen-width 2) 150) 290)
   (set! ctx.font "normal 25pt pompiere")
-  (fill-centre-text ctx info (/ screen-width 2) 350))
+  (fill-centre-text ctx info (- (/ screen-width 2) 150) 350))
 
 
 (define (render-season x y n time)

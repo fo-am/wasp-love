@@ -66,7 +66,7 @@
 (define info-box-y 60)
 (define info-box-w 1265)
 (define info-box-h 70)
-(define info-box-m -110)
+(define info-box-m -140)
 
 (define (info-box-render-box ctx) 
   ;;(set! ctx.fillStyle highlight2-col)
