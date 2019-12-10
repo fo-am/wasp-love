@@ -90,7 +90,7 @@
    (+ (menu-time m) delta)))
 
 (define queen-col highlight-col)
-(define worker-col "#c7c7c7")
+(define worker-col "#c4ed91")
 (define repro-col highlight2-col)
 
 (define (menu-render m)
