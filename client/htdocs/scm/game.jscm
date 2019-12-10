@@ -202,9 +202,9 @@
 	   "jumpy"
 	   (lambda (c)
 	     (button-sound)
-	     ;;(nightjar-location c)
+	     (nightjar-location c)
 	     ;;(nightjar-enter-name c 1)
-	     (nightjar-end c 99)
+	     ;;(nightjar-end c 99)
 	     ))
 	  
 	  (rect-button
