@@ -671,7 +671,7 @@
 	(render-info-box "GAME OVER" "All your wasps have died out"))
 
   (when (> (nest-time-of-year n) nest-year-length)
-	(render-info-box "GAME OVER" "The wasp year is at an end"))
+	(render-info-box "WELL DONE!" "You have reached then end of the wasp year"))
 
   (set! ctx.font "normal 25pt pompiere")
   (set! ctx.fillStyle text-col)
