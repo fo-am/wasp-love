@@ -63,7 +63,7 @@
 	'()))))
 
 (define info-box-x 0)
-(define info-box-y 60)
+(define info-box-y 80)
 (define info-box-w 1265)
 (define info-box-h 70)
 (define info-box-m -140)
