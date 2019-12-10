@@ -106,15 +106,6 @@
 (load "scm/demo.jscm")
 (load "scm/score-popup.jscm")
 
-(define (button-image)
-  (find-image (choose (list "sprites/hex-1.png"
-			    "sprites/hex-2.png"
-			    "sprites/hex-3.png"
-			    "sprites/hex-4.png"))))
-
-(define (small-button-image)
-  (find-image (choose (list "button-s1.png"))))
-
 (define (button-sound)
   (play-sound "button.wav"))
 
@@ -214,6 +205,7 @@
 	   (lambda (c)
 	     (button-sound)
 	     (nightjar-location c)
+	     ;;(nightjar-enter-name c 1)
 	     ;;(nightjar-end c 99)
 	     ))
 	  
@@ -573,9 +565,10 @@
 			    ((eq? (qwertypos-y i) 1) 300)
 			    (else 380))
 		      (* (qwertypos-x i) 120)))
-		(y (+ 220 (* (qwertypos-y i) 130))))
+		(y (+ 220 (* (qwertypos-y i) 130)))
+		(img (find-image "sprites/hex-b-1.png")))
 	    (image-button ch x y #f
-			  (button-image)
+			  img
 			  (lambda (c)
 			    (button-sound)
 			    (type-username ch c)
@@ -657,6 +650,7 @@
    "sprites/hex-2.png"
    "sprites/hex-3.png"
    "sprites/hex-4.png"
+   "sprites/hex-b-1.png"
    "sprites/hex-drop.png"
    "sprites/heart.png"
    "sprites/poison.png"
