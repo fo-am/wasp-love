@@ -336,7 +336,7 @@
 
       (set! ctx.font "normal 25pt pompiere")
       
-      (wrap-text-left ctx "Wasps are JUST as important as other insects - they are nature’s pest-controllers and pollinators. This game is about social wasps - to succeed as a social species, you need team work, division of labour and perseverance. Most of the individuals in a social wasp nest are non-reproductive workers. Being a worker in a wasp society is all about being altruistic - you help the colony in order to pass on your genes carried by the relatives you help raise." 300 80 1000 40)
+      (wrap-text-left ctx "Wasps are JUST as important as other insects - they are nature's pest-controllers and pollinators. This game is about social wasps - to succeed as a social species, you need team work, division of labour and perseverance. Most of the individuals in a social wasp nest are non-reproductive workers. Being a worker in a wasp society is all about being altruistic - you help the colony in order to pass on your genes carried by the relatives you help raise." 300 80 1000 40)
 
       (wrap-text-left ctx "By studying what makes wasps cooperate we can learn how and why social life evolves. Workers and queens are mutually dependent on each other, like cogs in the same finely-tuned machine. It is incredible that such complexity can evolve." 300 300 490 40)
 
