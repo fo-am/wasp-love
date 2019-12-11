@@ -289,14 +289,63 @@
       
       (wrap-text-left ctx "In this game you play as a wasp – see if you can build your nest and grow your colony in the face of unexpected hazards. Once you have a big enough colony you’ll get the option to lay eggs that turn into reproductive wasps. Make sure you disperse these special wasps in winter so they can find a mate and start their own colonies…" 300 150 1000 40)
 
-      (wrap-text-left ctx "The game is based on the 'European paper wasp' using scientific research that has helped us understand the complex lives of these fascinating animals." 300 330 530 40)
+      (wrap-text-left ctx "The game is based on the 'European paper wasp' using scientific research that has helped us understand the complex lives of these fascinating animals." 300 350 530 40)
 
       (set! ctx.font "normal 30pt pompiere")
 
-      (ctx.drawImage (find-image "logos.png") 300 470)
+      (ctx.drawImage (find-image "logos.png") 300 510)
 
       ;;(set! ctx.globalAlpha 0.5)
-      (ctx.drawImage (find-image "wasp.jpg") 860 270)
+      (ctx.drawImage (find-image "wasp.jpg") 860 290)
+      ;;(set! ctx.globalAlpha 1.0)      
+
+      (ctx.drawImage (find-image "title-wildflowers1.png") -50 290)
+      (ctx.drawImage (find-image "title-wildflowers2.png") 1280 330)
+      
+      )
+
+    (game-modify-buttons
+     (list
+      (rect-button
+       "BACK"
+       (- default-button-x 200)
+       (+ default-button-y 50)
+       default-button-width 
+       default-button-height 
+       "jumpy"
+       (lambda (c)
+         (button-sound)
+         (nightjar-intro c)))
+      (rect-button
+       "WHY WASPS?"
+       (+ default-button-x 200)
+       (+ default-button-y 50)
+       default-button-width 
+       default-button-height 
+       "jumpy"
+       (lambda (c)
+         (button-sound)
+         (nightjar-about2 c))))
+     c)))
+
+(define (nightjar-about2 c)
+   (game-modify-render
+    (lambda (ctx)
+      ;;(ctx.drawImage (find-image "crab2.png") 1240 550)
+     (demo-render (game-data c) ctx)
+
+      (set! ctx.font "normal 25pt pompiere")
+      
+      (wrap-text-left ctx "Wasps are JUST as important as other insects - they are nature’s pest-controllers and pollinators. This game is about social wasps - to succeed as a social species, you need team work, division of labour and perseverance. Most of the individuals in a social wasp nest are non-reproductive workers. Being a worker in a wasp society is all about being altruistic - you help the colony in order to pass on your genes carried by the relatives you help raise." 300 80 1000 40)
+
+      (wrap-text-left ctx "By studying what makes wasps cooperate we can learn how and why social life evolves. Workers and queens are mutually dependent on each other, like cogs in the same finely-tuned machine. It is incredible that such complexity can evolve." 300 300 490 40)
+
+      (wrap-text-left ctx "Dr. Seirian Sumner, University College London" 760 580 600 40)
+
+      (set! ctx.font "normal 30pt pompiere")
+
+      ;;(set! ctx.globalAlpha 0.5)
+      (ctx.drawImage (find-image "seirian.jpg") 800 270)
       ;;(set! ctx.globalAlpha 1.0)      
 
       (ctx.drawImage (find-image "title-wildflowers1.png") -50 290)
@@ -309,14 +358,15 @@
       (rect-button
        "BACK"
        default-button-x
-       default-button-y
+       (+ default-button-y 50)
        default-button-width 
        default-button-height 
        "jumpy"
        (lambda (c)
          (button-sound)
-         (nightjar-intro game))))
+         (nightjar-intro c))))
      c)))
+
 
 (define (nightjar-game-screen c player-id location)
   (game-modify-data
@@ -685,6 +735,7 @@
    "logos.png"
    "city-button.png"
    "forest-button.png"
+   "seirian.jpg"
    ))
  (lambda ()
    (msg "loaded...")
