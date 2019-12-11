@@ -26,7 +26,7 @@
 (define event-start-time (string->number (local-get-param "wasp-game" "event-start-time")))
 (define event-time-between-events (string->number (local-get-param "wasp-game" "event-time-between-events")))
 (define event-probability (local-get-param "wasp-game" "event-probability"))
-(define nest-reproductive-threshold (local-get-param "wasp-game" "nest-reproductive-threshold"))
+(define nest-reproductive-threshold (string->number (local-get-param "wasp-game" "nest-reproductive-threshold")))
 
 (define (time->season time)
   (cond
@@ -296,7 +296,6 @@
     (else "???"))))
 
 (define (nest-update-from-wasps n time)
-  (update-scores-max-wasps! (length (nest-wasps n)))
   (foldl
    (lambda (wasp r)
      (cond
@@ -359,7 +358,16 @@
 	(string-append "A SNEAKY EGG LAID BY A WORKER HAS BEEN REMOVED")
 	'male-egg))
       (else r)))
-   n
+   ;; update nest size things
+   (cond
+    ((and (< (scores-max-wasps) nest-reproductive-threshold)
+	  (>= (length (nest-wasps n)) nest-reproductive-threshold))
+     ;; tripped the threshold for the first time
+     (update-scores-max-wasps! (length (nest-wasps n)))     
+     (nest-add-info n "YOUR COLONY IS NOW BIG ENOUGH - YOU CAN START LAYING REPRODUCTIVE EGGS" 'threshold-reached))
+    (else
+     (update-scores-max-wasps! (length (nest-wasps n)))     
+     n))   
    (nest-wasps n))))
 
 (define (nest-energy-for-action action)
