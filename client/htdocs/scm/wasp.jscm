@@ -145,7 +145,7 @@
        (cons (build-menu-option c "LAY WORKER EGG") r))
       ((and (eq? c 'lay-male-egg) (nest-find-empty-cell n)
 	    (nest-can-do-action n c)) 
-       (cons (build-menu-option c "LAY MALE EGG") r))
+       (cons (build-menu-option c "LAY SNEAKY EGG") r))
       ((and (eq? c 'lay-repro-egg)
 	    (nest-find-empty-cell n)
 	    (nest-can-do-action n c)
