@@ -345,12 +345,12 @@
       ((eq? (wasp-state wasp) 'state-taken-egg)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
-	(string-append "YOU BROOD IS BEING STOLEN")
+	(string-append "YOUR BROOD IS BEING STOLEN, THERE'S NOTHING YOU CAN DO")
 	'stolen-egg))
       ((eq? (wasp-state wasp) 'state-eaten-egg)
        (nest-add-info 
 	(nest-modify-wasps n (entity-list-remove (nest-wasps n) wasp))
-	(string-append "YOU BROOD IS BEING EATEN")
+	(string-append "YOUR BROOD IS BEING EATEN, THERE'S NOTHING YOU CAN DO")
 	'eaten-egg))
       ((eq? (wasp-state wasp) 'state-remove-egg)
        (nest-add-info 

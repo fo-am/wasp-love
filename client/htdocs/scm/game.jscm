@@ -180,7 +180,7 @@
 	  
 	  (set! ctx.font "normal 120pt pompiere")
 	  
-	  (wrap-text ctx "COULD YOU BE A WASP?" 0 200 2000 100)
+	  (wrap-text ctx "The #wasplove game" 0 200 1500 100)
 	  
 	  (set! ctx.font "normal 60pt pompiere")
 	  (wrap-text ctx "Build a nest, grow your colony, and see if you make it through the year." 0 340 1200 100)
@@ -196,7 +196,7 @@
 	  
 	  (rect-button
 	   "PLAY!"
-	   (- default-button-x 400)
+	   (- default-button-x 350)
 	   default-button-y
 	   default-button-width default-button-height
 	   "jumpy"
@@ -225,7 +225,7 @@
 	  
 	  (rect-button
 	   "HOW TO PLAY"
-	   (+ default-button-x 400)
+	   (+ default-button-x 350)
 	   default-button-y
 	   default-button-width default-button-height
 	   "jumpy"
