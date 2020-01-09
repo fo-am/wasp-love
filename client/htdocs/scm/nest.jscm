@@ -448,6 +448,10 @@
 		;; if there is a wasp clicked on, and it's not the current one
 		(if (and wasp
 			 (not (eq? (wasp-state wasp) 'state-egg))
+			 ;; prevent sending a wasp to forage before it
+			 ;; has returned it's existing prey to the nest
+			 (not (eq? (wasp-state wasp) 'state-forage-end))
+			 (not (eq? (wasp-state wasp) 'state-forage-feed))			 
 			 ;;(not (eq? (entity-id wasp) (menu-entity-id (nest-menu n))))
 			 )
 		    (begin
