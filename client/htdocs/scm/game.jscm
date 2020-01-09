@@ -180,7 +180,7 @@
 	  
 	  (set! ctx.font "normal 120pt pompiere")
 	  
-	  (wrap-text ctx "The #wasplove game" 0 200 1500 100)
+	  (wrap-text ctx "THE #WASPLOVE GAME" 0 200 1500 100)
 	  
 	  (set! ctx.font "normal 60pt pompiere")
 	  (wrap-text ctx "Build a nest, grow your colony, and see if you make it through the year." 0 340 1200 100)
@@ -700,6 +700,7 @@
    "sprites/hex-b-1.png"
    "sprites/hex-drop.png"
    "sprites/heart.png"
+   "sprites/heart-particle.png"
    "sprites/poison.png"
    "sprites/spray-can.png"
    "sprites/swatted.png"

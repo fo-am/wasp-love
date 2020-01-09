@@ -53,7 +53,6 @@
 (define (update-scores-forages! v) (update-scores 7 v))	
 (define (update-scores-max-wasps! v)
   (when (> v (scores-max-wasps))
-	(msg (list "max wasps now: " v))
 	(set! current-scores (list-replace current-scores 8 v))))
 
 (define (scores-new-nests) (list-ref current-scores 0))	

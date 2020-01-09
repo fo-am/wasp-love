@@ -41,8 +41,8 @@
    (cloud-simg c)
    ))
 
-(define (make-window wasp env clouds manicured wildflower w h weather time)
-  (list wasp env clouds manicured wildflower w h weather time))
+(define (make-window wasp env clouds manicured wildflower w h weather time hearts)
+  (list wasp env clouds manicured wildflower w h weather time hearts))
 (define (window-wasp w) (list-ref w 0))
 (define (window-modify-wasp w s) (list-replace w 0 s))
 (define (window-env w) (list-ref w 1))
@@ -53,6 +53,7 @@
 (define (window-h w) (list-ref w 6))
 (define (window-weather w) (list-ref w 7))
 (define (window-time w) (list-ref w 8))
+(define (window-hearts w) (list-ref w 9))
 
 (define (build-window wasp)
   (make-window
@@ -92,7 +93,29 @@
 			  (+ (random 100) -50))
 		    (- (+ 100 (random 50)))		 
 		    image image))))
-   300 200 'calm 0))
+   300 200 'calm 0
+   
+   (particle-system-modify-update-hook
+    ;; animation
+    (lambda (context p s r u)
+      (let ((dir (list-ref u 0))
+	    (init (list-ref u 1)))
+	(if (zero? init)
+	    ;; set to root position first
+	    (list context s r (list dir))
+	    ;; disappear gradually
+	    (if (< (rndf) 0.005)
+		(list (vec2 10000 10000) s r (list dir))
+		(list (v2add p dir) s r (list dir))))))
+    ;; setup
+    (particle-system-init
+     (lambda (i)
+       (list
+	(vec2 0 0) (vec2 1 1) 0 (list (vmul (srndvec) 4) 0)))
+     (build-particle-system
+      50 (list (find-image "sprites/heart-particle.png")))))
+   
+   ))
 
 (define (window-update w delta nest)
   (make-window
@@ -121,7 +144,8 @@
    (window-h w)
    ;; get current weather from nest here
    (nest-weather nest)
-   (+ (window-time w) delta)))
+   (+ (window-time w) delta)
+   (window-hearts w)))
 
 (define (window-render w ctx pos)
   ;; set up clipping
@@ -238,7 +262,15 @@
 	
 	)
   
-  (ctx.restore))
+  (ctx.restore)
+  )
+
+(define (window-postrender w ctx pos)
+  (when (eq? (wasp-state (window-wasp w)) 'state-mating)
+	;; render the particle system outside the clipping rect
+	(particle-system-render
+	 ctx (window-hearts w)
+	 (vadd pos (vec2 130 90)))))
 
 (define (make-window-stack windows)
   (list windows))
@@ -265,7 +297,9 @@
     (lambda (window r)
       ;; remove dead wasps at the same time as updating...
       (if (or (eq? (wasp-state (window-wasp window)) 'state-died)
-	      (eq? (wasp-state (window-wasp window)) 'state-mated))
+	      (eq? (wasp-state (window-wasp window)) 'state-mated)
+	      ;; dodgy workaround for rare bug where foraging wasp is missing from nest??
+	      (not (entity-list-slow-search (nest-wasps nest) (entity-id (window-wasp window)))))
 	  r (append r (list (window-update window delta nest)))))
     '()
     (window-stack-windows s))))
@@ -285,6 +319,13 @@
    (lambda (i window)
      (when (< i 3)
 	   (window-render window ctx (vec2 1285 (+ (* i 210) 70)))))
+   (window-stack-windows s))
+
+  ;; post render for particles
+  (index-for-each
+   (lambda (i window)
+     (when (< i 3)
+	   (window-postrender window ctx (vec2 1285 (+ (* i 210) 70)))))
    (window-stack-windows s)))
 
 
