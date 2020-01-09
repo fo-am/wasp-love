@@ -50,7 +50,7 @@
 	       (list
 		(find-image "sprites/hex-1.png")
 		(find-image "sprites/hex-2.png")
-		(find-image "sprites/hex-3.png")
+		;;(find-image "sprites/hex-3.png")
 		(find-image "sprites/hex-4.png")
 		)))))))))
 
