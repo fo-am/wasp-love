@@ -24,6 +24,8 @@
 (define player-name "???")
 (define score-per-mating 10)
 (define end-game-time 7)
+(define installation-mode #f)
+;(define installation-mode #t)
 
 (let ((v (local-load "wasp-game-version")))
   (when (or (not v) (< v params-version))
@@ -335,12 +337,12 @@
       (demo-render (game-data c) ctx)
       (set! ctx.font "normal 25pt pompiere")
       (wrap-text-left ctx "Wasps are JUST as important as other insects - they are nature's pest-controllers and pollinators. This game is about social wasps - to succeed as a social species, you need team work, division of labour and perseverance. Most of the individuals in a social wasp nest are non-reproductive workers. Being a worker in a wasp society is all about being altruistic - you help the colony in order to pass on your genes carried by the relatives you help raise." 300 80 1000 40)
-      (wrap-text-left ctx "By studying what makes wasps cooperate we can learn how and why social life evolves. Workers and queens are mutually dependent on each other, like cogs in the same finely-tuned machine. It is incredible that such complexity can evolve." 300 300 490 40)
-      (wrap-text-left ctx "Dr. Seirian Sumner, University College London" 760 580 600 40)
+      (wrap-text-left ctx "By studying what makes wasps cooperate we can learn how and why social life evolves. Workers and queens are mutually dependent on each other, like cogs in the same finely-tuned machine. It is incredible that such complexity can evolve." 300 320 570 40)
+      (wrap-text-left ctx "Dr. Seirian Sumner, University College London" 300 550 600 40)
       (set! ctx.font "normal 30pt pompiere")
       
       ;;(set! ctx.globalAlpha 0.5)
-      (ctx.drawImage (find-image "seirian.jpg") 800 270)
+      (ctx.drawImage (find-image "seirian.jpg") 880 290)
       ;;(set! ctx.globalAlpha 1.0)      
       
       (ctx.drawImage (find-image "title-wildflowers1.png") -50 290)
@@ -349,17 +351,31 @@
       )
 
     (game-modify-buttons
-     (list
-      (rect-button
-       "BACK"
-       default-button-x
-       (+ default-button-y 50)
-       default-button-width 
-       default-button-height 
-       "jumpy"
-       (lambda (c)
-         (button-sound)
-         (nightjar-intro c))))
+     (append
+      (if (not installation-mode)
+	  (list
+	   (rect-button
+	    "SEIRIAN'S WEBSITE"
+	    (+ default-button-x 250)
+	    (+ default-button-y 50)
+	    default-button-width 
+	    default-button-height 
+	    "jumpy"
+	    (lambda (c)
+	      (button-sound)
+	      (set! window.location "http://www.sumnerlab.co.uk"))))
+	  '())
+      (list
+       (rect-button
+	"BACK"
+	(if installation-mode default-button-x (- default-button-x 250))
+	(+ default-button-y 50)
+	default-button-width 
+	default-button-height 
+	"jumpy"
+	(lambda (c)
+	  (button-sound)
+	  (nightjar-intro c)))))
      c)))
 
 
