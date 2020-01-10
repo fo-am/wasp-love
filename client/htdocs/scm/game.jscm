@@ -503,9 +503,50 @@
        c)
      (game-modify-buttons
       (list
+
        (rect-button
-	"BACK"
+	"PLAY AGAIN"
+	(- default-button-x 350)
+	default-button-y
+	default-button-width default-button-height
+	"jumpy"
+	(lambda (c)
+	  (button-sound)
+	  (nightjar-location c)
+	  ))
+       
+       (rect-button
+	"LEADERBOARD"
 	default-button-x
+	default-button-y
+	default-button-width default-button-height
+	"jumpy"
+	(lambda (c)
+	  (button-sound)
+	  (server-call-mutate
+	   "hiscores"
+	   (list)
+	   (lambda (c scores)	      
+	     ;; restart the demo!
+	     (nightjar-hiscores
+	      (game-modify-update
+	       (lambda (t c)
+		 ;; update loop
+		 (game-modify-data
+		  (lambda (d)
+		    (demo-update (game-data c) (/ t 1000) (game-delta c)))
+		  c))
+	       ;; init the demo
+	       (game-modify-data
+		(lambda (d)
+		  (make-new-demo))
+		c))
+	      (JSON.parse scores))))
+	  c))
+       
+       (rect-button
+	"QUIT"
+	(+ default-button-x 350)
 	default-button-y
 	default-button-width 
 	default-button-height 
