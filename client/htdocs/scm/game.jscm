@@ -293,12 +293,17 @@
 
       (wrap-text-left ctx "The game is based on the 'European paper wasp' using scientific research that has helped us understand the complex social lives of these fascinating insects." 300 350 530 40)
 
-      (set! ctx.font "normal 30pt pompiere")
 
       (ctx.drawImage (find-image "logos.png") 300 510)
 
       ;;(set! ctx.globalAlpha 0.5)
       (ctx.drawImage (find-image "wasp.jpg") 860 290)
+
+      (set! ctx.font "normal 15pt pompiere")
+      (wrap-text-left ctx "Photo by Joaquim Alves Gaspar / CC BY" 940 600 530 40)
+      (set! ctx.font "normal 30pt pompiere")
+
+
       ;;(set! ctx.globalAlpha 1.0)      
 
       (ctx.drawImage (find-image "title-wildflowers1.png") -50 290)
