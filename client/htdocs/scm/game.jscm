@@ -136,31 +136,32 @@
   (server-call-mutate
    "score"
    (list
-	 (list "game_id" (nest-game-id (game-data c)))
-	 (list "new_nests" (scores-new-nests))
-	 (list "num_workers_laid" (scores-num-workers-laid))
-	 (list "num_workers_hatched" (scores-num-workers-hatched))
-	 (list "cells_built" (scores-cells-built))
-	 (list "events_survived" (scores-events-survived))
-	 (list "num_reproductives_hatched" (scores-num-reproductives-hatched))
-	 (list "energy_foraged" (scores-energy-foraged))
-	 (list "survival_time" (nest-time-of-year (game-data c)))
-	 (list "forages" (scores-forages))
-	 (list "score" (+ (scores-forages) (* score-per-mating (scores-new-nests))))
-	 )
+    (list "game_id" (nest-game-id (game-data c)))
+    (list "new_nests" (scores-new-nests))
+    (list "num_workers_laid" (scores-num-workers-laid))
+    (list "num_workers_hatched" (scores-num-workers-hatched))
+    (list "cells_built" (scores-cells-built))
+    (list "events_survived" (scores-events-survived))
+    (list "num_reproductives_hatched" (scores-num-reproductives-hatched))
+    (list "energy_foraged" (scores-energy-foraged))
+    (list "survival_time" (nest-time-of-year (game-data c)))
+    (list "forages" (scores-forages))
+    (list "score" (+ (scores-forages) (* score-per-mating (scores-new-nests))))
+    )
    (lambda (c score-pos)
      (nightjar-enter-name c (JSON.parse score-pos))))
   c)
 
 (define (register c location)
-  (if (< player-id 0)
-      (server-call-mutate
-       "player"
-       '() 
-       (lambda (c id)	 
-	 (set! player-id id)
-	 (register-game c player-id location)))
-      (register-game c player-id location)))
+  ;; fixed one player per game...
+  (set! player-name "???")
+  (server-call-mutate
+   "player"
+   '() 
+   (lambda (c id)	 
+     (set! player-id id)
+     (register-game c player-id location)))
+  c)
 
 (define (nightjar-intro c)
     (game-modify-timeout
